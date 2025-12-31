@@ -2,7 +2,9 @@
 
 namespace Hydrogen
 {
-	Model::Model(std::string& pPath)
+
+
+	int Model::LoadModel(std::string & pPath)
 	{
 		FileExtension File = GetFileExtension(pPath);
 
@@ -10,13 +12,12 @@ namespace Hydrogen
 		{
 		case FILE_GLTF:
 			//Load GLTF
-			ParseGLTF(pPath);
-			break;
+			return ParseGLTF(pPath);
 		case FILE_GLB:
 			//Load GLB
-			ParseGLB(pPath);
-			break;
+			return ParseGLB(pPath);
 		}
+		return HYD_INVALID_FILE;
 	}
 
 	int Model::Free()
@@ -27,12 +28,9 @@ namespace Hydrogen
 		return 0;
 	}
 
-	void Model::RenderScene()
+	void Model::RenderScene(Shader& pShader, uint32 pTargetScene)
 	{
-		for (auto& i: m_Meshes)
-		{
-			i.Render(this);
-		}
+		m_Scenes[pTargetScene].RenderScene(pShader, this);
 	}
 
 
@@ -48,16 +46,124 @@ namespace Hydrogen
 		m_GLTF = json::parse(Source);
 		Source.close();
 
-		std::string RootPath = pPath.substr(0, pPath.find_last_of("\\")+1);
+		m_RootPath = pPath.substr(0, pPath.find_last_of("\\") + 1);
+		ProcessGLTF(m_GLTF, GLTF);
+
+		//Clear the Json File
+		m_GLTF.clear();
+		return HYD_OK;
+	}
+
+
+	int Model::ParseGLB(std::string & pPath)
+	{
+
+		m_RootPath = pPath.substr(0, pPath.find_last_of("\\") + 1);
+
+		std::ifstream SourceFile(pPath, std::ios::in | std::ios::binary);
+		if (SourceFile.fail())
+		{
+			return HYD_INVALID_PATH;
+		}
+
+		//Retrive the File Size in bytes:
+		SourceFile.seekg(0, SourceFile.end);
+		uint32 FileSize = SourceFile.tellg();
+		SourceFile.seekg(0, SourceFile.beg);
+
+
+		std::string GLBContent;
+		GLBContent.resize(FileSize);
+		SourceFile.read(&GLBContent[0], FileSize);
+
+		SourceFile.close();
 		
+		std::string Header = GLBContent.substr(0, 12);
+
+		//Header Properties:
+		uint32 Magic = 0;
+		uint32 Version = 0;
+		uint32 Length = 0;
+
+		//Retrive the Properties:
+		memcpy((void*)&Magic, (void*)&(Header.substr(0, 4)),   sizeof(uint32));
+		memcpy((void*)&Version, (void*)&(Header.substr(4, 8)), sizeof(uint32));
+		memcpy((void*)&Length, (void*)&(Header.substr(8, 12)), sizeof(uint32));
+
+		//Check the Magic Code:
+		if (Magic != GLB_MAGIC)
+		{
+			return HYD_INVALID_GLB;
+		}
+
+		// we check to make sure the file is NOT Currepted
+		if (Length > FileSize)
+		{
+			return HYD_CORRUPTED_GLB;
+		}
+
+
+		std::string Chunks;
+		Chunks.resize(Length - 12);
+		memcpy((void*)&Chunks[0], (void*)&GLBContent.substr(12)[0], Length - 12);
+
+		std::string JsonData;
+		std::string BinData;
+
+		uint32 Offset = 0;
+		while (Offset < Length-12)
+		{
+			uint32 ChunkType = 0;
+			uint32 ChunkLength = 0;
+
+			memcpy((void*)&ChunkLength, (void*)&(Chunks.substr(Offset, Offset + 4))[0], 4);
+			memcpy((void*)&ChunkType, (void*)&(Chunks.substr(Offset+4, Offset + 8))[0], 4);
+
+			Offset += 8;
+
+			switch (ChunkType)
+			{
+			case GLB_JSON_TYPE:
+				JsonData.resize(ChunkLength);
+				memcpy((void*)&JsonData[0], (void*)&(Chunks.substr(Offset, Offset + ChunkLength))[0], ChunkLength);
+				break;
+			case GLB_BIN_TYPE:
+				BinData.resize(ChunkLength);
+				memcpy((void*)&BinData[0], (void*)&(Chunks.substr(Offset, Offset + ChunkLength))[0], ChunkLength);
+				break;
+			}
+
+			Offset += (ChunkLength);
+		}
+
+
+		m_GLTF = json::parse(JsonData);
+		int Err = ProcessGLTF(m_GLTF, GLB, &BinData);
+		m_GLTF.clear();
+
+		return Err;
+	}
+
+	int Model::ProcessGLTF(json & pGLTF, FileFormat pFormat, std::string* pGLBbinary)
+	{
 		//Load URIs:
 		std::vector<std::string> URIBuffers;
 
-		int Err = LoadURI(m_GLTF["buffers"], RootPath, URIBuffers);
-		if(Err != HYD_OK)
+		int Err = 0;
+
+		if (pFormat == GLTF)
 		{
-			std::cout << "Can not access the uris\n";
-			return Err;
+			Err = LoadURI(m_GLTF["buffers"], m_RootPath, URIBuffers);
+			if (Err != HYD_OK)
+			{
+				std::cout << "Can not access the uris\n";
+				return Err;
+			}
+		}
+
+		else if (pFormat == GLB)
+		{
+			URIBuffers.push_back(*pGLBbinary);
 		}
 
 		//Construct Buffer Views
@@ -94,14 +200,14 @@ namespace Hydrogen
 			return Err;
 		}
 
-		//Clear the Json File
-		m_GLTF.clear();
-		return HYD_OK;
-	}
+		Err = SetupScenes(m_GLTF["scenes"]);
+		if (Err != HYD_OK)
+		{
+			return Err;
+		}
 
-	int Model::ParseGLB(std::string & pPath)
-	{
-		return 0;
+		m_DefaultScene = m_GLTF.value("scene", -1);
+		return HYD_OK;
 	}
 
 	FileExtension Model::GetFileExtension(std::string & pPath)
@@ -185,7 +291,7 @@ namespace Hydrogen
 			//Consturct Mesh Object
 			//----------------
 			m_Meshes.push_back(Mesh(i.value("name", "Unknown"), Primitives));
-			std::cout << "Mesh Constructed. Name:" << m_Meshes[m_Meshes.size() - 1].GetMeshName() << '\n';
+			//std::cout << "Mesh Constructed. Name:" << m_Meshes[m_Meshes.size() - 1].GetMeshName() << '\n';
 		}
 
 		return HYD_OK;
@@ -198,9 +304,48 @@ namespace Hydrogen
 		
 		for (auto& i : pNodes)
 		{
-			std::cout << i.dump(4) << '\n';
+			Node node(i.value("name", "unnamed"), 
+			((i.value("mesh", -1) != -1)?&m_Meshes[i["mesh"]] : nullptr));
+
+			//TRS Properties:
+			if (i.find("translation") != i.end())
+			{
+				node.m_Translation.X = i["translation"][0];
+				node.m_Translation.Y = i["translation"][1];
+				node.m_Translation.Z = i["translation"][2];
+			}
+
+			if (i.find("scale") != i.end())
+			{
+				node.m_Scale.X = i["scale"][0];
+				node.m_Scale.Y = i["scale"][1];
+				node.m_Scale.Z = i["scale"][2];
+			}
+
+
+			m_Nodes.push_back(node);
+
+			//std::cout << "Node:" << i.value("name", "unnamed") << '\n';
 		}
 		
+		return HYD_OK;
+	}
+
+	int Model::SetupScenes(json pScenes)
+	{
+		if (pScenes == nullptr)
+			return HYD_CORRUPTED_GLTF;
+
+		for (auto &i : pScenes)
+		{
+			Scene scene(i.value("name", "unnamed"));
+			for (auto &node: i["nodes"])
+			{
+				scene.m_Nodes.push_back(&m_Nodes[node]);
+			}
+			m_Scenes.push_back(scene);
+		}
+
 		return HYD_OK;
 	}
 

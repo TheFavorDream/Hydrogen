@@ -1,6 +1,6 @@
 #include "Shader.h"
 
-namespace HydrogenViewer
+namespace Hydrogen
 {
 
 	Shader::Shader(std::string pShaderPath)
@@ -138,12 +138,13 @@ namespace HydrogenViewer
 		glProgramUniform3i(m_ProgramID, Location, pValue1, pValue2, pValue3);
 	}
 
-	void Shader::SetUniformMat4(const char * pName, glm::mat4 & pValue) const
+
+	void Shader::SetUniformMat4(const char * pName, float * pValue) const
 	{
 		int Location = GetUniformLocation(pName);
 		if (Location < 0)
 			return;
-		glProgramUniformMatrix4fv(m_ProgramID, Location, 1, GL_TRUE, glm::value_ptr(pValue));
+		glProgramUniformMatrix4fv(m_ProgramID, Location, 1, GL_FALSE, pValue);
 	}
 
 	int32 Shader::GetUniformLocation(const char * pName) const
@@ -193,14 +194,14 @@ namespace HydrogenViewer
 
 		for (int i = 0; i <= pShaderSource.length(); i++)
 		{
-#ifdef WINDOWS
+#ifdef HYD_PLATFORM_WINDOWS
 			if ((pShaderSource[i] == char(13) && pShaderSource[i + 1] == char(10)) || i == pShaderSource.length())
 #else
 			if (pShaderSource[i] == char(10) || i == pShaderSource.length())
 #endif			
 			{
 
-#ifdef WINDOWS
+#ifdef HYD_PLATFORM_WINDOWS
 				i++; //Carrige Return
 #endif
 				if (Line.length() == 0)//Skip Empty Lines

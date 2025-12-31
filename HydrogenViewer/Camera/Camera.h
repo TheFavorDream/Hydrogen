@@ -14,7 +14,7 @@ namespace HydrogenViewer
 
 
 		void SetupCamera(float pFOV, glm::vec3 pPosition, float pAspectRatio = 2.0f, float pNearPlane = 0.1, float pFarPlane = 1000.0f);
-		void HandleCameraMovement();
+		void HandleCameraMovement(float pDeltaTime);
 		void HandleCameraLooking();
 
 		void DisableCameraMovement(bool pDisableCamera);
@@ -32,7 +32,7 @@ namespace HydrogenViewer
 		float m_NearPlane = 0.1f;
 		float m_FarPlane = 1000.0f;
 		float m_AspectRatio = 0.0f;
-		float m_Speed = 0.01f;
+		float m_Speed = 0.5f;
 
 		float m_Sensitivity = 0.1f;
 

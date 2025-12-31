@@ -14,9 +14,15 @@
 #define HYD_OPENGL_VERTEX_BUFFER_FAILED 0x07
 #define HYD_GLEW_FAILED  0x08
 #define HYD_CORRUPTED_GLTF 0x09
-#define HYD_URI_FAILED 0x10
-#define HYD_INVALID_COUNT 0x11
-#define HYD_INVALID_TARGET 0x12
+#define HYD_CORRUPTED_GLB  0x10
+#define HYD_URI_FAILED 0x11
+#define HYD_INVALID_COUNT 0x12
+#define HYD_INVALID_TARGET 0x13
+
+
+#define GLB_MAGIC     0x46546C67
+#define GLB_JSON_TYPE 0x4E4F534A
+#define GLB_BIN_TYPE  0x004E4942
 
 #define GL_CALL(x) x;Hydrogen::CheckOpenGLErrors(__FILE__, __LINE__);
 
@@ -37,7 +43,7 @@ namespace Hydrogen
 	class Loader;
 	class Model;
 	class Scene;
-	class Object;
+	class Node;
 	class Mesh;
 	class Material;
 	class Matrix;
@@ -84,6 +90,7 @@ namespace Hydrogen
 		Attribute Attributes;
 	};
 
+	enum FileFormat {GLTF, GLB};
 
 	void CheckOpenGLErrors(const char* file, uint32 Line);
 };

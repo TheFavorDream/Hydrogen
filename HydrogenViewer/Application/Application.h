@@ -6,7 +6,8 @@
 #include "Event/Keyboard.h"
 #include "Event/Mouse.h"
 #include "Camera/Camera.h"
-#include "Render/Shader.h"
+#include "../glm/common.hpp"
+#include "../glm/gtc/type_ptr.hpp"
 
 //ImGui (temp)
 #include "imgui.h"
@@ -33,15 +34,16 @@ namespace HydrogenViewer
 
 	private:
 
-
-
-
 		Window m_Window;
 
-		Shader m_Shader;
 		Camera m_Camera;
+		Hydrogen::Shader m_Shader;
+		
+		std::vector<std::string> ModelNames;
+		std::vector<Hydrogen::Model*> m_Models;
+		Hydrogen::Model* m_CurrentModel = NULL;
 
-		Hydrogen::Model* m_Model = NULL;
+		float m_deltaTime = 0.0f;
 
 		bool m_IsRunning;
 	};

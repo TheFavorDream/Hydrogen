@@ -15,7 +15,7 @@ out vec3 OutColor;
 
 void main()
 {
-	OutColor = vec3(Model * Tangents);
+	OutColor = normalize(Normals);
 	gl_Position = Projection * View * Model* vec4(Position, 1.0f);
 }
 
@@ -26,5 +26,5 @@ in vec3 OutColor;
 out vec4 FragColor;
 void main ()
 {
-	FragColor = vec4(0.2f, 0.5f, 0.1f, 1.0f);
+	FragColor = vec4(OutColor, 1.0f);
 }

@@ -21,7 +21,9 @@ namespace HydrogenViewer
 
 	Application::~Application()
 	{
-		Hydrogen::Loader::Free(&m_Model);
+		for (auto &i : m_Models)
+			Hydrogen::Loader::Free(&i);
+
 		m_Window.DestroyWindow();
 		glfwTerminate();
 	}
@@ -30,11 +32,18 @@ namespace HydrogenViewer
 	{
 		Setup();
 
+		static double LastTime = 0;
 		while (m_IsRunning)
 		{
+			
+
 			Event();
 			Update();
 			Render();
+
+			double Current = glfwGetTime();
+			m_deltaTime = (Current-LastTime)*600.0f;
+			LastTime = Current;
 		}
 	}
 
@@ -44,6 +53,7 @@ namespace HydrogenViewer
 	void Application::Setup()
 	{
 
+
 		//Configure the keyboard and keys
 		Keyboard::InitKeyboard(m_Window.GetWindow());
 
@@ -51,12 +61,24 @@ namespace HydrogenViewer
 		Mouse::InitMouse(m_Window.GetWindow());
 
 		Hydrogen::Loader::SetUpHydrogen(Hydrogen::OPENGL);
-		m_Model = Hydrogen::Loader::Load("C:\\Users\\TheVoltage\\Desktop\\Dev\\Hydrogen\\HydrogenViewer\\Resources\\Models\\Cone.gltf");
 
-		if (!m_Model)
+		std::string RootPath = "C:\\Users\\TheVoltage\\Desktop\\Dev\\Hydrogen\\HydrogenViewer\\Resources\\Models\\";
+		ModelNames = { "Cage.glb" , "ComplexModel.gltf", "Cone.gltf", "scene.gltf"};
+		
+
+		for (auto &i : ModelNames)
 		{
-			std::cout << "Failed to Load the Model\n";
+			Hydrogen::Model* model = Hydrogen::Loader::Load(RootPath+i);
+			if (!model)
+			{
+				std::cout << "Failed to Load the Model\n";
+				continue;
+			}
+			m_Models.push_back(model);
 		}
+
+		m_CurrentModel = (m_Models.size() != 0)? m_Models[0] : nullptr;
+
 
 		m_Shader.CreateShader("C:\\Users\\TheVoltage\\Desktop\\Dev\\Hydrogen\\HydrogenViewer\\Resources\\Shaders\\base.glsl");
 
@@ -65,27 +87,27 @@ namespace HydrogenViewer
 
 
 		//ImGui Setup
-		//IMGUI_CHECKVERSION();
-		//ImGui::CreateContext();
-		//
-		//ImGui_ImplGlfw_InitForOpenGL(m_Window.GetWindow(), true);
-		//ImGui_ImplOpenGL3_Init("#version 330");
+		IMGUI_CHECKVERSION();
+		ImGui::CreateContext();
+		
+		ImGui_ImplGlfw_InitForOpenGL(m_Window.GetWindow(), true);
+		ImGui_ImplOpenGL3_Init("#version 330");
 
 	}
 
 	void Application::Event()
 	{
 
-		//if (ImGui::GetIO().WantCaptureKeyboard || ImGui::GetIO().WantCaptureMouse)
-		//{
-		//	m_Camera.DisableCameraMovement(true);
-		//}
-		//else
-		//{
-		//	m_Camera.DisableCameraMovement(false);
-		//}
+		if (ImGui::GetIO().WantCaptureKeyboard || ImGui::GetIO().WantCaptureMouse)
+		{
+			m_Camera.DisableCameraMovement(true);
+		}
+		else
+		{
+			m_Camera.DisableCameraMovement(false);
+		}
 
-		m_Camera.HandleCameraMovement();
+		m_Camera.HandleCameraMovement(m_deltaTime);
 		m_Camera.HandleCameraLooking();
 
 		glfwPollEvents();
@@ -94,27 +116,20 @@ namespace HydrogenViewer
 
 	void Application::Update()
 	{
-		glm::mat4 Model = glm::mat4(1.0f);
-
-		Model = glm::scale(Model, glm::vec3(0.1f));
-		Model = glm::rotate(Model, glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		Model = glm::translate(Model, glm::vec3(3.0f, 0.0f, -3.0f));
-
-		m_Shader.SetUniformMat4("Model", Model);
-		m_Shader.SetUniformMat4("View", m_Camera.GetView());
-		m_Shader.SetUniformMat4("Projection", m_Camera.GetProjection());
-
+		m_Shader.SetUniformMat4("View", glm::value_ptr (m_Camera.GetView()));
+		m_Shader.SetUniformMat4("Projection", glm::value_ptr(m_Camera.GetProjection()));
+		
 	}
 
 	void Application::Render()
 	{
-		glClearColor(0.2f, 0.1f, 0.05f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		m_Shader.Bind();
-		m_Model->RenderScene();
+		if (m_CurrentModel != nullptr)
+			m_CurrentModel->RenderScene(m_Shader, m_CurrentModel->GetDefaultScene());
 
-		//RenderUI();
+		RenderUI();
 
 		m_Window.ProcessWindow();
 	}
@@ -125,8 +140,17 @@ namespace HydrogenViewer
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		ImGui::Begin("Hello, World");
-		ImGui::Text("Emma Myers is my crush now");
+		ImGui::Begin("Run Status");
+		ImGui::Text("deltaTime: %f", m_deltaTime);
+		
+		for (int i = 0; i < ModelNames.size(); i++)
+		{
+			if (ImGui::Button(ModelNames[i].c_str()))
+			{
+				m_CurrentModel = (m_Models.size() > i) ? m_Models[i] : nullptr;
+			}
+		}
+
 		ImGui::End();
 
 		ImGui::Render();

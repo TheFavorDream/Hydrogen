@@ -23,6 +23,8 @@ namespace HydrogenViewer
 		if (m_Window != NULL)
 			return HYD_WINDOW_FAILD;
 
+		glfwWindowHint(GLFW_SAMPLES, 6);
+
 		m_Window = glfwCreateWindow(pWidth, pHeight, pTitle, NULL, NULL);
 			
 		if (m_Window == NULL)

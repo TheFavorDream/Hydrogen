@@ -20,12 +20,23 @@ namespace Hydrogen
 			break;
 		}
 
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_MULTISAMPLE);
+
 		return HYD_OK;
 	}
 
 	Model* Loader::Load(std::string pModelPath, int pFlag)
 	{
-		return new Model(pModelPath);
+		Model *model = new Model();
+		uint32 Err = model->LoadModel(pModelPath);
+		if (Err != HYD_OK)
+		{
+			model->Free();
+			delete model;
+			return nullptr;
+		}
+		return  model;
 	}
 
 	int Loader::Free(Model ** pModel)

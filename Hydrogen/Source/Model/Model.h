@@ -5,7 +5,10 @@
 #include "../Parser/Json.h"
 #include "../Platform/OpenGL/Buffer.h"
 #include "../Platform/OpenGL/VertexArray.h"
+#include "../Scene/Node.h"
+#include "../Scene/Scene.h"
 #include "../Geometry/Mesh.h"
+#include "../Shader/Shader.h"
 
 
 using json = nlohmann::json;
@@ -17,10 +20,12 @@ namespace Hydrogen
 	{
 	public:
 
-		Model(std::string& pPath);
+
+		int LoadModel(std::string& pPath);
 		int Free();
 
-		void RenderScene();
+		void RenderScene(Shader& pShader, uint32 pTargetScene=0);
+		inline uint32 GetDefaultScene() { return m_DefaultScene; }
 
 	private:
 
@@ -29,11 +34,14 @@ namespace Hydrogen
 		int SetupAccessors(json& pAccessor, std::vector<Accessor>& pAccessors, std::vector<BufferView>& pBufferViews);
 		int SetupMeshes(json& pMeshes, std::vector<Accessor>& pAccessors);
 		int SetupNodes(json& pNodes);
-		
+		int SetupScenes(json pScenes);
+
 		int ProcessPrimitives(json& pPrimitive, std::vector<Accessor>& pAccessors,  std::vector<Primitive>& pPrimitives);
 		int ProcessElementBuffer(Accessor& pAccessors, int32& pEboID);
 		int ProcessAttributes(json& pAttribute, std::vector<Accessor>& pAccessors, Primitive & pPrimitiveRef);
 
+
+		int ProcessGLTF(json& pGLTF, FileFormat pFormat, std::string* pGLBbinary=nullptr);
 
 		int ParseGLTF(std::string& pPath);
 		int ParseGLB(std::string& pPath);
@@ -42,10 +50,17 @@ namespace Hydrogen
 
 	private:
 		json m_GLTF;
+		std::string m_RootPath;
+		
 		std::vector<Buffer>		 m_Buffers;
 		std::vector<VertexArray> m_VertexArrays;
 		std::vector<Mesh>		 m_Meshes;
+		std::vector<Node>        m_Nodes;
+		std::vector<Scene>       m_Scenes;
+
+		int32 m_DefaultScene = -1;
 
 		friend class Mesh;
+		friend class Scene;
 	};
 };

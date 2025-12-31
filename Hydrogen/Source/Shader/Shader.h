@@ -7,17 +7,15 @@
 */
 #pragma once
 
-#include "Hydrogen.h"
 #include <unordered_map>
 #include <vector>
 #include <string>
 #include <fstream>
-#include "Common.h"
+#include "../Common.h"
+#include "../Glew/glew.h"
 	
-#include "../3rdParty/glm/mat4x4.hpp"
-#include "../3rdParty/glm/gtc/type_ptr.hpp"
 
-namespace HydrogenViewer
+namespace Hydrogen
 {
 	class Shader
 	{
@@ -43,7 +41,8 @@ namespace HydrogenViewer
 		void SetUniformInt2(const char* pName, int32 pValue1, int32 pValue2) const;
 		void SetUniformInt3(const char* pName, int32 pValue1, int32 pValue2, int32 pValue3) const;
 
-		void SetUniformMat4(const char* pName, glm::mat4& pValue) const;
+		void SetUniformMat4(const char* pName, float* pValue) const;
+
 
 		inline const std::string GetShaderName() const { return m_ShaderPath.substr(m_ShaderPath.find_last_of('/') + 1); }
 		inline const std::string& GetShaderPath() const { return m_ShaderPath; }

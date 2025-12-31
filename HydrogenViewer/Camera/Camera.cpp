@@ -18,7 +18,7 @@ namespace HydrogenViewer
 
 	}
 
-	void Camera::HandleCameraMovement()
+	void Camera::HandleCameraMovement(float pDeltaTime)
 	{
 
 		if (m_CameraLocked)
@@ -26,28 +26,28 @@ namespace HydrogenViewer
 
 		if (Keyboard::GetKeyState(GLFW_KEY_W) == KEY_DOWN)
 		{
-			m_Position += m_Front * m_Speed;
+			m_Position += m_Front * m_Speed*pDeltaTime;
 		}
 		if (Keyboard::GetKeyState(GLFW_KEY_S) == KEY_DOWN)
 		{
-			m_Position += -m_Front * m_Speed;
+			m_Position += -m_Front * m_Speed*pDeltaTime;
 		}
 		if (Keyboard::GetKeyState(GLFW_KEY_D) == KEY_DOWN)
 		{
-			m_Position += glm::normalize(glm::cross(m_Front, m_Up))* m_Speed;
+			m_Position += glm::normalize(glm::cross(m_Front, m_Up))* m_Speed*pDeltaTime;
 		}
 		if (Keyboard::GetKeyState(GLFW_KEY_A) == KEY_DOWN)
 		{
-			m_Position += -glm::normalize(glm::cross(m_Front, m_Up))* m_Speed;
+			m_Position += -glm::normalize(glm::cross(m_Front, m_Up))* m_Speed*pDeltaTime;
 		}
 
 		if (Keyboard::GetKeyState(GLFW_KEY_SPACE) == KEY_DOWN)
 		{
-			m_Position += m_Up * m_Speed;
+			m_Position += m_Up * m_Speed*pDeltaTime;
 		}
 		if (Keyboard::GetKeyState(GLFW_KEY_LEFT_SHIFT) == KEY_DOWN)
 		{
-			m_Position += -m_Up * m_Speed;
+			m_Position += -m_Up * m_Speed*pDeltaTime;
 		}
 	}
 

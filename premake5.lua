@@ -79,7 +79,8 @@ workspace "HydrogenViewer"
         filter {"configurations:Release"}
             defines {"HYD_RELEASE"}
             optimize "on"
-        
+        filter ("system:windows")
+			defines {"HYD_PLATFORM_WINDOWS"}
 
         includedirs{
             "./Hydrogen"
@@ -87,7 +88,7 @@ workspace "HydrogenViewer"
         libdirs{
             "./Hydrogen/Source/Glew"
         }
-        links {"opengl32", "glew32"}
+        links {"opengl32", "glew32s"}
 
     project "glfw"
         location "./3rdParty/glfw"
