@@ -3,7 +3,7 @@
 
 namespace Hydrogen
 {
-	Matrix::Matrix():
+	Matrix::Matrix(float pDefaultValue):
 		m_Height(4), m_Width(4)
 	{
 		m_Ptr = new float[m_Height*m_Width];
@@ -13,7 +13,7 @@ namespace Hydrogen
 		{
 			for (int i = 0; i < m_Width; i++)
 			{
-				At(i, j) = (i == j) ? 1.0f : 0.0f;
+				At(i, j) = (i == j) ? pDefaultValue : 0.0f;
 			}
 		}
 	}
@@ -56,7 +56,16 @@ namespace Hydrogen
 	}
 
 
-	Matrix Matrix::operator+(Matrix & pOther)
+	void Matrix::operator=(Matrix && pOther)
+	{
+		m_Ptr = pOther.m_Ptr;
+		m_Height = pOther.m_Height;
+		m_Width = pOther.m_Width;
+
+		pOther.m_Ptr = nullptr;
+	}
+
+	Matrix Matrix::operator+(const Matrix & pOther)
 	{
 		uint32 Width = (m_Width > pOther.m_Width) ? pOther.m_Width : m_Width;
 		uint32 Height = (m_Height > pOther.m_Height) ? pOther.m_Height : m_Height;
@@ -73,7 +82,7 @@ namespace Hydrogen
 		return Result;
 	}
 
-	Matrix Matrix::operator-(Matrix & pOther)
+	Matrix Matrix::operator-(const Matrix & pOther)
 	{
 		uint32 Width = (m_Width > pOther.m_Width) ? pOther.m_Width : m_Width;
 		uint32 Height = (m_Height > pOther.m_Height) ? pOther.m_Height : m_Height;
@@ -90,10 +99,54 @@ namespace Hydrogen
 		return Result;
 	}
 
-	float& Matrix::At(uint32 pI, uint32 pJ)
+	Matrix Matrix::operator*(const Matrix & pOther)
 	{
+
+		//If "this" matrix is identity we skip the multipication:
+
+
+
+		if (m_Width != pOther.m_Height) // If two matrix didn't meet the multipication needs we return "This" Matrix: 
+			return *this;
+
+		Matrix Result(m_Height, m_Height);
+		for (int j = 0; j < m_Height; j++)
+		{
+			for (int i = 0; i < pOther.m_Width; i++)
+			{
+				float Sum = 0.0f;
+				for (int k = 0; k < m_Width; k++)
+				{
+					Sum += (At(k, j) * pOther.At(i, k));
+				}
+				Result.At(i, j) = Sum;
+			}
+		}
+
+		return Result;
+	}
+
+	void Matrix::CopyDataToMatrix(const std::vector<float>& pData)
+	{
+		memcpy((void*)m_Ptr, (void*)&pData[0], (m_Width*m_Height)*sizeof(float));
+
+	}
+
+	float& Matrix::At(uint32 pI, uint32 pJ) const
+	{
+
 		//Retriving Elements in Column-Major Order
 		return m_Ptr[(pI*m_Height)+pJ];
+	}
+
+	bool Matrix::IsIdentity()
+	{
+		for (int i = 0; i < m_Width; i++)
+		{
+			if (At(i, i) != 1.0f)
+				return false;
+		}
+		return true;
 	}
 
 	void Matrix::PrintMatrix()
@@ -108,5 +161,56 @@ namespace Hydrogen
 		}
 	}
 
+
+
+	Matrix Scale(const Matrix & pMatrix, const Vec3 & pScale)
+	{
+		Matrix Scale;
+
+		float* ScaleVec = (float*)&pScale;
+		for (int i = 0; i < Scale.GetHeight()-1; i++)
+		{
+			Scale.At(i, i) = ScaleVec[i];
+		}
+
+		//std::cout << "\nScaling:\n";
+		//Result.PrintMatrix();
+		return (Scale*pMatrix);
+	}
+
+	Matrix Translation(const Matrix & pMatrix, const Vec3 & pTranslation)
+	{
+		Matrix Translate;
+
+		float* TranslateVec = (float*)&pTranslation;
+		for (int i = 0; i < Translate.GetHeight()-1; i++)
+		{
+			Translate.At(3, i) = TranslateVec[i];
+		}
+		//std::cout << "\Translating:\n";
+		//Result.PrintMatrix();
+		return (Translate*pMatrix);
+	}
+
+	Matrix RotateQuaternion(const Matrix & pMatrix, const Vec4 & pRotation)
+	{
+		Matrix Result;
+
+		Result.At(0, 0) = 2.0f*((pRotation.W*pRotation.W) + (pRotation.X*pRotation.X)) - 1.0f;
+		Result.At(1, 0) = 2.0f*((pRotation.X*pRotation.Y) - (pRotation.W*pRotation.Z));
+		Result.At(2, 0) = 2.0f*((pRotation.X*pRotation.Z)+(pRotation.W*pRotation.Y));
+
+		Result.At(0, 1) = 2.0f*((pRotation.X*pRotation.Y) + (pRotation.W*pRotation.Z));
+		Result.At(1, 1) = 2.0f*((pRotation.W*pRotation.W) + (pRotation.Y*pRotation.Y))-1.0f;
+		Result.At(2, 1) = 2.0f*((pRotation.Y*pRotation.Z) - (pRotation.W*pRotation.X));
+
+		Result.At(0, 2) = 2.0f*((pRotation.X*pRotation.Z) - (pRotation.W*pRotation.Y));
+		Result.At(1, 2) = 2.0f*((pRotation.Y*pRotation.Z) + (pRotation.W*pRotation.X));
+		Result.At(2, 2) = 2.0f*((pRotation.W*pRotation.W) + (pRotation.Z*pRotation.Z)) - 1.0f;
+
+		//std::cout << "\Rotation:\n";
+		//Result.PrintMatrix();
+		return (Result*pMatrix);
+	}
 
 };

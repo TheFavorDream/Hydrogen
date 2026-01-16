@@ -28,9 +28,9 @@ namespace Hydrogen
 		return 0;
 	}
 
-	void Model::RenderScene(Shader& pShader, uint32 pTargetScene)
+	void Model::RenderScene(Shader& pShader, uint32 pTargetScene, Matrix* pModelTransformation)
 	{
-		m_Scenes[pTargetScene].RenderScene(pShader, this);
+		m_Scenes[pTargetScene].RenderScene(pShader, this, pModelTransformation);
 	}
 
 
@@ -41,6 +41,7 @@ namespace Hydrogen
 		std::ifstream Source(pPath);
 		if (Source.fail())
 		{
+			Log::SetError(HYD_INVALID_PATH, __FILE__, __LINE__);
 			return HYD_INVALID_PATH;
 		}
 		m_GLTF = json::parse(Source);
@@ -63,6 +64,7 @@ namespace Hydrogen
 		std::ifstream SourceFile(pPath, std::ios::in | std::ios::binary);
 		if (SourceFile.fail())
 		{
+			Log::SetError(HYD_INVALID_PATH, __FILE__, __LINE__);
 			return HYD_INVALID_PATH;
 		}
 
@@ -93,12 +95,14 @@ namespace Hydrogen
 		//Check the Magic Code:
 		if (Magic != GLB_MAGIC)
 		{
+			Log::SetError(HYD_INVALID_GLB, __FILE__, __LINE__);
 			return HYD_INVALID_GLB;
 		}
 
 		// we check to make sure the file is NOT Currepted
 		if (Length > FileSize)
 		{
+			Log::SetError(HYD_CORRUPTED_GLB, __FILE__, __LINE__);
 			return HYD_CORRUPTED_GLB;
 		}
 
@@ -226,6 +230,7 @@ namespace Hydrogen
 	{
 		if (pBuffer == nullptr)
 		{
+			Log::SetError(HYD_CORRUPTED_GLTF, __FILE__, __LINE__);
 			return HYD_CORRUPTED_GLTF;
 		}
 
@@ -234,7 +239,10 @@ namespace Hydrogen
 		{
 			Uri.open(pRootPath + i.value("uri", ""), std::ios::binary);
 			if (Uri.fail())
+			{
+				Log::SetError(HYD_URI_FAILED, __FILE__, __LINE__);
 				return HYD_URI_FAILED;
+			}
 
 			std::string Data;
 			Data.resize(i.value("byteLength", 0));
@@ -248,7 +256,10 @@ namespace Hydrogen
 	int Model::SetupBufferViews(json & pBufferView, std::vector<BufferView>& pBufferViews, std::vector<std::string>& pBuffers)
 	{
 		if (pBufferView == nullptr)
+		{
+			Log::SetError(HYD_CORRUPTED_GLTF, __FILE__, __LINE__);
 			return HYD_CORRUPTED_GLTF;
+		}
 
 		for (auto &i : pBufferView)
 		{
@@ -264,8 +275,10 @@ namespace Hydrogen
 	int Model::SetupAccessors(json & pAccessor, std::vector<Accessor>& pAccessors, std::vector<BufferView>& pBufferViews)
 	{
 		if (pAccessor == nullptr)
+		{
+			Log::SetError(HYD_CORRUPTED_GLTF, __FILE__, __LINE__);
 			return HYD_CORRUPTED_GLTF;
-
+		}
 		for (auto &i : pAccessor)
 		{
 			pAccessors.push_back({});
@@ -281,7 +294,10 @@ namespace Hydrogen
 	int Model::SetupMeshes(json & pMeshes, std::vector<Accessor>& pAccessors)
 	{
 		if (pMeshes == nullptr)
+		{
+			Log::SetError(HYD_CORRUPTED_GLTF, __FILE__, __LINE__);
 			return HYD_CORRUPTED_GLTF;
+		}
 
 		for (auto &i : pMeshes)
 		{
@@ -297,15 +313,47 @@ namespace Hydrogen
 		return HYD_OK;
 	}
 
+	int Model::SetupMaterials(json & pMaterial)
+	{
+		if (pMaterial == nullptr)
+			return HYD_CORRUPTED_GLTF;
+
+
+
+		return HYD_OK;
+	}
+
 	int Model::SetupNodes(json & pNodes)
 	{
 		if (pNodes == nullptr)
+		{
+			Log::SetError(HYD_CORRUPTED_GLTF, __FILE__, __LINE__);
 			return HYD_CORRUPTED_GLTF;
-		
+		}
+
 		for (auto& i : pNodes)
 		{
 			Node node(i.value("name", "unnamed"), 
 			((i.value("mesh", -1) != -1)?&m_Meshes[i["mesh"]] : nullptr));
+
+
+			if (i.find("scale") != i.end())
+			{
+				node.m_Scale.X = i["scale"][0];
+				node.m_Scale.Y = i["scale"][1];
+				node.m_Scale.Z = i["scale"][2];
+
+				node.GetModelMatrix() = Scale(node.GetModelMatrix(), node.m_Scale);
+			}
+
+			if (i.find("rotation") != i.end())
+			{
+				node.m_Rotation.X = i["rotation"][0];
+				node.m_Rotation.Y = i["rotation"][1];
+				node.m_Rotation.Z = i["rotation"][2];
+				node.m_Rotation.W = i["rotation"][3];
+				node.GetModelMatrix() = RotateQuaternion(node.GetModelMatrix(), node.m_Rotation);
+			}
 
 			//TRS Properties:
 			if (i.find("translation") != i.end())
@@ -313,19 +361,31 @@ namespace Hydrogen
 				node.m_Translation.X = i["translation"][0];
 				node.m_Translation.Y = i["translation"][1];
 				node.m_Translation.Z = i["translation"][2];
+				node.GetModelMatrix() = Translation(node.GetModelMatrix(), node.m_Translation);
 			}
+			//Matrix (if Present):
 
-			if (i.find("scale") != i.end())
+
+			if (i.find("matrix") != i.end())
 			{
-				node.m_Scale.X = i["scale"][0];
-				node.m_Scale.Y = i["scale"][1];
-				node.m_Scale.Z = i["scale"][2];
+				json& Matrix = i["matrix"];
+				std::vector<float> Values;
+				for (auto& j : Matrix)
+				{
+					Values.push_back(float(j));
+				}
+				node.m_LocalTransformation.CopyDataToMatrix(Values);
 			}
 
 
-			m_Nodes.push_back(node);
+			for (auto& child : i["children"])
+			{
+				node.m_Children.push_back(child);
+			}
 
-			//std::cout << "Node:" << i.value("name", "unnamed") << '\n';
+			//node.m_LocalTransformation.PrintMatrix();
+			//std::cout << '\n';
+			m_Nodes.push_back(node);
 		}
 		
 		return HYD_OK;
@@ -334,8 +394,10 @@ namespace Hydrogen
 	int Model::SetupScenes(json pScenes)
 	{
 		if (pScenes == nullptr)
+		{
+			Log::SetError(HYD_CORRUPTED_GLTF, __FILE__, __LINE__);
 			return HYD_CORRUPTED_GLTF;
-
+		}
 		for (auto &i : pScenes)
 		{
 			Scene scene(i.value("name", "unnamed"));
@@ -352,8 +414,10 @@ namespace Hydrogen
 	int Model::ProcessPrimitives(json& pPrimitive, std::vector<Accessor>& pAccessors, std::vector<Primitive>& pPrimitives)
 	{
 		if (pPrimitive == nullptr)
+		{
+			Log::SetError(HYD_CORRUPTED_GLTF, __FILE__, __LINE__);
 			return HYD_CORRUPTED_GLTF;
-
+		}
 		for (auto &i : pPrimitive)
 		{
 			Primitive primitive;
@@ -365,6 +429,7 @@ namespace Hydrogen
 			{
 				ProcessElementBuffer(pAccessors[i["indices"]], primitive.EboID);
 			}
+			primitive.MaterialID = i.value("material", -1);
 			pPrimitives.push_back(primitive);
 		}
 		return HYD_OK;
@@ -467,15 +532,6 @@ namespace Hydrogen
 		else if (pType == "MAT4")
 			return MAT4;
 		return INVALID;
-	}
-
-	void CheckOpenGLErrors(const char* file, uint32 Line)
-	{
-		GLenum ErrorCode = 0;
-		while ((ErrorCode = glGetError()) != GL_NO_ERROR)
-		{
-			std::cout << "[OpenGL Error] File:" << file << "=>Line:" << Line << "=>ErrorCode:" << ErrorCode << '\n';
-		}
 	}
 
 };

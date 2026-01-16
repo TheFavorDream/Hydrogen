@@ -3,7 +3,7 @@
 
 int main (int argc, char** arvg)
 {
-	HydrogenViewer::Application* App = new HydrogenViewer::Application;
+	Application* App = new Application;
 	App->Run();
 	delete App;
     return 0;

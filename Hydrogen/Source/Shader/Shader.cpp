@@ -147,6 +147,14 @@ namespace Hydrogen
 		glProgramUniformMatrix4fv(m_ProgramID, Location, 1, GL_FALSE, pValue);
 	}
 
+	void Shader::SetUniformMat4(const char * pName, double * pValue) const
+	{
+		int Location = GetUniformLocation(pName);
+		if (Location < 0)
+			return;
+		glProgramUniformMatrix4dv(m_ProgramID, Location, 1, GL_FALSE, pValue);
+	}
+
 	int32 Shader::GetUniformLocation(const char * pName) const
 	{
 		if (m_UniformLookUp.find(pName) != m_UniformLookUp.end())

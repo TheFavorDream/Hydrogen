@@ -1,7 +1,3 @@
-/*
-	Hydrogen is a GLTF asset loader designed by Pooya aka TheVoltage.
-	Hydrogen is fast and reliable 3D gltf asset parser that can work with any Graphical API.
-*/
 #pragma once
 
 #define HYD_OK		     0x00		
@@ -17,14 +13,18 @@
 #define HYD_CORRUPTED_GLB  0x10
 #define HYD_URI_FAILED 0x11
 #define HYD_INVALID_COUNT 0x12
-#define HYD_INVALID_TARGET 0x13
-
+#define HYD_INVALID_TARGET 0x13	
+#define HYD_WINDOW_FAILD 0x14
+#define HYD_FAILED_TEXTURE_CREATION 0x15
+#define HYD_INVALID_VALUE 0x16
+#define HYD_UI_INVALID_WINDOW 0x17
+#define HYD_UI_INVALID_ELEMENT 0x18
 
 #define GLB_MAGIC     0x46546C67
 #define GLB_JSON_TYPE 0x4E4F534A
 #define GLB_BIN_TYPE  0x004E4942
 
-#define GL_CALL(x) x;Hydrogen::CheckOpenGLErrors(__FILE__, __LINE__);
+#define GL_CALL(x) x;Hydrogen::Log::CheckOpenGLErrors(__FILE__, __LINE__);
 
 typedef unsigned long long int uint64;
 typedef unsigned int		   uint32;
@@ -37,6 +37,8 @@ typedef char				   int8;
 
 #include <iostream>
 #include <fstream>
+#include "Log/Log.h"
+
 
 namespace Hydrogen
 {
@@ -47,52 +49,6 @@ namespace Hydrogen
 	class Mesh;
 	class Material;
 	class Matrix;
-
-	struct BufferView
-	{
-		std::string  Data;
-		uint32 Target;
-	};
-
-	enum Type { INVALID = 0, SCALER = 1, VEC2 = 2, VEC3 = 3, VEC4 = 4, MAT2 = 4, MAT3 = 9, MAT4 = 16 };
-	struct Accessor
-	{
-
-		BufferView Data;
-		uint32 Count;
-		uint32 ComponentType;
-		Type DataType;
-
-		static Type RetriveType(std::string& pType);
-	};
-
-	/*
-		Each Primitive has a Attribute.
-		Attribute Objects store the Index for the specific Vertex Array Attrib Pointer.
-	*/
-	struct Attribute
-	{
-		int32 POSITION = -1;
-		int32 NORMALS = -1;
-		int32 TANGENT = -1;
-		int32 TEXCOORDS_0 = -1;
-		int32 TEXCOORDS_1 = -1;
-		int32 COLOR_0 = -1;
-	};
-
-	struct Primitive
-	{
-		int32 VboID=-1;//-1 means no buffer is setted
-		int32 EboID=-1;//-1 means no buffer is setted
-		int32 VaoID=-1;//-1 means no buffer is setted
-		int32 MaterialID;
-		int32 RenderingMode=4;
-		Attribute Attributes;
-	};
-
-	enum FileFormat {GLTF, GLB};
-
-	void CheckOpenGLErrors(const char* file, uint32 Line);
 };
 
 

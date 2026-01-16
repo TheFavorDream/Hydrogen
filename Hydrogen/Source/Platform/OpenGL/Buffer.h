@@ -5,8 +5,9 @@
 #pragma once
 
 
-#include "../../Glew/glew.h"
-#include "../../Common.h"
+#include "Glew/glew.h"
+#include "Common.h"
+
 
 namespace Hydrogen
 {

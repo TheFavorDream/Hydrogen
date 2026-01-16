@@ -1,8 +1,9 @@
 #pragma once
 
-#include "../../Common.h"
-#include "../../Glew/glew.h"
+#include "Common.h"
+#include "Glew/glew.h"
 #include "Buffer.h"
+#include "Model/Definitions.h"
 #include <vector>
 
 namespace Hydrogen

@@ -42,6 +42,8 @@ namespace Hydrogen
 		void SetUniformInt3(const char* pName, int32 pValue1, int32 pValue2, int32 pValue3) const;
 
 		void SetUniformMat4(const char* pName, float* pValue) const;
+		void SetUniformMat4(const char* pName, double* pValue) const;
+
 
 
 		inline const std::string GetShaderName() const { return m_ShaderPath.substr(m_ShaderPath.find_last_of('/') + 1); }

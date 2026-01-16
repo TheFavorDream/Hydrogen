@@ -1,50 +1,19 @@
 #pragma once
 
-#include "Common.h"
 #include "Hydrogen.h"
-#include "Window.h"
-#include "Event/Keyboard.h"
-#include "Event/Mouse.h"
-#include "Camera/Camera.h"
-#include "../glm/common.hpp"
-#include "../glm/gtc/type_ptr.hpp"
+#include "ApplicationLayer.h"
+#include "UILayer.h"
 
-//ImGui (temp)
-#include "imgui.h"
-#include "imgui_impl_opengl3.h"
-#include "imgui_impl_glfw.h"
-
-namespace HydrogenViewer
+class Application : public Hydrogen::Core
 {
-	class Application
-	{
-	public:
+public:
+	Application();
+	~Application();
 
-		 Application();
-		~Application();
+	void Run();
 
-		void Run();
-
-	private:
-		void Setup();
-		void Event();
-		void Update();
-		void Render();
-		void RenderUI();
-
-	private:
-
-		Window m_Window;
-
-		Camera m_Camera;
-		Hydrogen::Shader m_Shader;
-		
-		std::vector<std::string> ModelNames;
-		std::vector<Hydrogen::Model*> m_Models;
-		Hydrogen::Model* m_CurrentModel = NULL;
-
-		float m_deltaTime = 0.0f;
-
-		bool m_IsRunning;
-	};
+private:
+	Hydrogen::Layer* m_UILayer = nullptr;
+	Hydrogen::Layer* m_AppLayer = nullptr;
 };
+

@@ -1,14 +1,17 @@
 #pragma once
 
-#include "../Common.h"
-#include "../Loader.h"
-#include "../Parser/Json.h"
-#include "../Platform/OpenGL/Buffer.h"
-#include "../Platform/OpenGL/VertexArray.h"
-#include "../Scene/Node.h"
-#include "../Scene/Scene.h"
-#include "../Geometry/Mesh.h"
-#include "../Shader/Shader.h"
+#include "Common.h"
+#include "Definitions.h"
+#include "Loader.h"
+#include "Parser/Json.h"
+#include "Platform/OpenGL/Buffer.h"
+#include "Platform/OpenGL/VertexArray.h"
+#include "Model/Scene/Node.h"
+#include "Model/Scene/Scene.h"
+#include "Model/Geometry/Mesh.h"
+#include "Model/Material/Texture/Texture.h"
+#include "Shader/Shader.h"
+#include "Math/Matrix/Matrix.h"
 
 
 using json = nlohmann::json;
@@ -24,7 +27,7 @@ namespace Hydrogen
 		int LoadModel(std::string& pPath);
 		int Free();
 
-		void RenderScene(Shader& pShader, uint32 pTargetScene=0);
+		void RenderScene(Shader& pShader,  uint32 pTargetScene=0, Matrix* pModelTransformation = nullptr);
 		inline uint32 GetDefaultScene() { return m_DefaultScene; }
 
 	private:
@@ -33,8 +36,10 @@ namespace Hydrogen
 		int SetupBufferViews(json& pBufferView, std::vector<BufferView>& pBufferViews, std::vector<std::string>& pBuffers);
 		int SetupAccessors(json& pAccessor, std::vector<Accessor>& pAccessors, std::vector<BufferView>& pBufferViews);
 		int SetupMeshes(json& pMeshes, std::vector<Accessor>& pAccessors);
+		int SetupMaterials(json& pMaterial);
 		int SetupNodes(json& pNodes);
 		int SetupScenes(json pScenes);
+
 
 		int ProcessPrimitives(json& pPrimitive, std::vector<Accessor>& pAccessors,  std::vector<Primitive>& pPrimitives);
 		int ProcessElementBuffer(Accessor& pAccessors, int32& pEboID);
@@ -57,10 +62,14 @@ namespace Hydrogen
 		std::vector<Mesh>		 m_Meshes;
 		std::vector<Node>        m_Nodes;
 		std::vector<Scene>       m_Scenes;
+		std::vector<Texture>     m_Textures;//This is temporary
 
 		int32 m_DefaultScene = -1;
 
 		friend class Mesh;
 		friend class Scene;
+		friend class Node;
 	};
+	typedef Model* ModelRef;
 };
+

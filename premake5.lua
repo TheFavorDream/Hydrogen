@@ -39,22 +39,17 @@ workspace "HydrogenViewer"
         }
 
         includedirs{
-            "./3rdParty/glfw/include/",
-            "./3rdParty/imgui",
             "./HydrogenViewer/",
-            "./Hydrogen/"
-
+            "./Hydrogen/",
+            "./Hydrogen/Source/",
         }
 
         libdirs{
-			"./bin/"..OutputDir.."/glfw",
-			"./bin/"..OutputDir.."/imgui",
             "./bin/"..OutputDir.."/Hydrogen",
             "./Hydrogen/Source/Glew"
         }
 
-        links {"Hydrogen","opengl32", "glew32s","imgui", "glfw","kernel32", "user32" , "gdi32", "winspool", "comdlg32", "advapi32", "shell32","ole32", 
-		"oleaut32", "uuid", "odbc32", "odbccp32"}
+        links {"Hydrogen","opengl32", "glew32s","kernel32", "user32" , "gdi32", "winspool", "comdlg32", "advapi32", "shell32","ole32", "oleaut32", "uuid", "odbc32", "odbccp32"}
 
 
     project "Hydrogen"
@@ -82,16 +77,24 @@ workspace "HydrogenViewer"
         filter ("system:windows")
 			defines {"HYD_PLATFORM_WINDOWS"}
 
+
         includedirs{
-            "./Hydrogen"
+            "./Hydrogen/Source/",
+            "./Hydrogen/Source/3rdParty/",
+            "./Hydrogen/Source/3rdParty/glfw/include/",
+            "./Hydrogen/Source/3rdParty/imgui/"
         }
+
         libdirs{
-            "./Hydrogen/Source/Glew"
+            "./Hydrogen/Source/Glew",
+			"./bin/"..OutputDir.."/glfw",
+			"./bin/"..OutputDir.."/imgui"
         }
-        links {"opengl32", "glew32s"}
+
+        links {"opengl32", "glew32s", "glfw", "imgui"}
 
     project "glfw"
-        location "./3rdParty/glfw"
+        location "./Hydrogen/Source/3rdParty/glfw"
         kind "SharedLib"
 		language "C"
 
@@ -100,8 +103,8 @@ workspace "HydrogenViewer"
 
 
         files {
-            "./3rdParty/glfw/src/**.c",
-            "./3rdParty/glfw/include/**.h"
+            "./Hydrogen/Source/3rdParty/glfw/src/**.c",
+            "./Hydrogen/Source/3rdParty/glfw/include/**.h"
         }
 
         filter ("system:windows")
@@ -123,7 +126,7 @@ workspace "HydrogenViewer"
 
 
     project "ImGui"
-       location "./3rdParty/Imgui"
+       location "./Hydrogen/Source/3rdParty/Imgui"
         kind "StaticLib"
 		language "C++"
 
@@ -132,12 +135,12 @@ workspace "HydrogenViewer"
 
 
         files {
-            "./3rdParty/imgui/**.cpp",
-            "./3rdParty/imgui/**.h"
+            "./Hydrogen/Source/3rdParty/imgui/**.cpp",
+            "./Hydrogen/Source/3rdParty/imgui/**.h"
         }
 
         includedirs{
-            "./3rdParty/glfw/include/"
+            "./Hydrogen/Source/3rdParty/glfw/include/"
         }
 
 		filter("configurations:Debug")

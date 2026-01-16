@@ -11,20 +11,25 @@ uniform mat4 Model;
 uniform mat4 View;
 uniform mat4 Projection; 
 
-out vec3 OutColor;
+out vec3 Normal;
+out vec2 TexCoords;
 
 void main()
 {
-	OutColor = normalize(Normals);
-	gl_Position = Projection * View * Model* vec4(Position, 1.0f);
+	Normal = Normals;
+	TexCoords = TEX_COORDS;
+	gl_Position = Projection * View * Model *  vec4(Position, 1.0f);
 }
 
 #type:Fragment
 #version 330 core
 
-in vec3 OutColor;
+in vec3 Normal;
+in vec2 TexCoords;
 out vec4 FragColor;
+
+
 void main ()
 {
-	FragColor = vec4(OutColor, 1.0f);
+		FragColor = vec4(Normal, 1.0f);
 }

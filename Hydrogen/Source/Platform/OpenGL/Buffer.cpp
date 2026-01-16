@@ -21,8 +21,10 @@ namespace Hydrogen
 	{
 		GL_CALL(glGenBuffers(1, &m_BufferID));
 		if (m_BufferID == 0)
+		{
+			Log::SetError(HYD_OPENGL_VERTEX_BUFFER_FAILED, __FILE__, __LINE__);
 			return HYD_OPENGL_VERTEX_BUFFER_FAILED;
-
+		}
 		GL_CALL(glBindBuffer(pBufferTarget, m_BufferID));
 		GL_CALL(glBufferData(pBufferTarget, pSize, (void*)pData, GL_STATIC_DRAW));
 
@@ -34,8 +36,10 @@ namespace Hydrogen
 	int Buffer::CopyDataChunk(uint32 pOffset, uint32 pSize, int8 * pData)
 	{
 		if (m_BufferID == 0)
+		{
+			Log::SetError(HYD_OPENGL_VERTEX_BUFFER_FAILED, __FILE__, __LINE__);
 			return HYD_OPENGL_VERTEX_BUFFER_FAILED;
-
+		}
 		Bind();
 		GL_CALL(glBufferSubData(m_BufferTarget, (GLintptr)pOffset, (GLsizeiptr)pSize ,(void*)pData));
 
