@@ -9,14 +9,14 @@ namespace Hydrogen
 	{
 	public:
 
-		Layer();
-		virtual ~Layer();
+		HYD Layer();
+		HYD virtual ~Layer();
 
-		virtual void Setup() = 0;
-		virtual void Shutdown() = 0;
-		virtual void Event(float pDeltaTime) = 0;
-		virtual void Update() = 0;
-		virtual void Render() = 0;
+		HYD virtual void Setup() = 0;
+		HYD virtual void Shutdown() = 0;
+		HYD virtual void Event(float pDeltaTime) = 0;
+		HYD virtual void Update() = 0;
+		HYD virtual void Render() = 0;
 
 
 	

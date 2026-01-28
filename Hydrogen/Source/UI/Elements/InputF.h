@@ -12,20 +12,20 @@ namespace Hydrogen
 	public:
 
 
-		int Setup(const std::string& pTitle, Vec2 pPosition)
+		HYD int Setup(const std::string& pTitle, Vec2 pPosition)
 		{
 			m_Label = pTitle;
 			m_Position = pPosition;
 			return HYD_OK;
 		}
 
-		void Render() override
+		HYD void Render() override
 		{
 			ImGui::SetCursorPos(ImVec2(m_Position.X, m_Position.Y));
 			ImGui::InputFloat(m_Label.c_str(), &m_Value);
 		}
 
-		inline float& GetValue() { return m_Value; }
+		HYD inline float& GetValue() { return m_Value; }
 
 	private:
 		float m_Value;

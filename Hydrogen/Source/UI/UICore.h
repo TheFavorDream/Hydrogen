@@ -13,7 +13,7 @@
 
 #include <unordered_map>
 #include <string>
-
+#include "Log/Log.h"
 namespace Hydrogen
 {
 
@@ -27,17 +27,17 @@ namespace Hydrogen
 	class UICore
 	{
 	public:
-		static UICore* Self();
+		HYD static UICore* Self();
 
 	public:
 
-		int InitUI();
-		int ShutdownUI();
-
-		int CreateUIWindow(std::string pTitle, Vec2 pSize, Vec2 pPos=Vec2(0.0f), RefernceOrigin pOrigin = UP_LEFT,std::string pID="");
-		void Render();
-
-		GuiWindow* GetWindow(std::string pID);
+		HYD int InitUI();
+		HYD int ShutdownUI();
+		 
+		HYD int CreateUIWindow(std::string pTitle, Vec2 pSize, Vec2 pPos=Vec2(0.0f), RefernceOrigin pOrigin = UP_LEFT,std::string pID="");
+		HYD void Render();
+		 
+		HYD GuiWindow* GetWindow(std::string pID);
 
 	private:
 		std::unordered_map<std::string, GuiWindow> m_GUIs;

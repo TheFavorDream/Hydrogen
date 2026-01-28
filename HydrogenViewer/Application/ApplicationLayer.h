@@ -12,6 +12,7 @@ public:
 
 	void Setup() override;
 	void Shutdown() override;
+
 	void Event(float pDeltaTime) override;
 	void Update() override;
 	void Render() override;
@@ -19,18 +20,14 @@ public:
 
 private:
 
-	Hydrogen::Shader m_BaseShader;
-	Hydrogen::Shader m_CharacterShader;
-
-
-	Hydrogen::ModelRef m_Model;
-	Hydrogen::ModelRef m_CharcterModel;
-
-	Hydrogen::Matrix m_ModelMatrix;
-	Hydrogen::Matrix m_CharMatrix;
-
-	Hydrogen::Texture m_CharModelBaseColor;
-
 	Hydrogen::Camera m_Camera;
+
+	Hydrogen::Shader m_BasicShader;
+	Hydrogen::Shader m_MaterialShader;
+
+	//Models
+	Hydrogen::Model* m_Room = nullptr;
+	Hydrogen::Model* m_Char = nullptr;
+
 
 };

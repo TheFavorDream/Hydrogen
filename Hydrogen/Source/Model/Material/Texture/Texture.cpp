@@ -45,7 +45,7 @@ namespace Hydrogen
 
 		if (m_TextureID == 0)
 		{
-			Log::SetError(HYD_FAILED_TEXTURE_CREATION, __FILE__, __LINE__);
+			Log::SetError("Couldn't Create Texture", HYD_FAILED_TEXTURE_CREATION, __FILE__, __LINE__);
 			return HYD_FAILED_TEXTURE_CREATION;
 		}
 
@@ -68,7 +68,7 @@ namespace Hydrogen
 
 		if (!Data)
 		{
-			Log::SetError(HYD_FAILED_TEXTURE_CREATION, __FILE__, __LINE__, "Failed Reading Texture");
+			Log::SetError("Failed Reading Texture", HYD_FAILED_TEXTURE_CREATION, __FILE__, __LINE__);
 			return HYD_FAILED_TEXTURE_CREATION;
 		}
 
@@ -106,7 +106,7 @@ namespace Hydrogen
 		case 4: 
 			return GL_RGBA;
 		}
-		Log::SetError(GL_INVALID_ENUM, __FILE__, __LINE__);
+		Log::SetError("Invalid or unsupported Color Channel", GL_INVALID_ENUM, __FILE__, __LINE__);
 		return GL_INVALID_ENUM;
 	}
 

@@ -3,32 +3,47 @@
 #include "Common.h"
 #include "Glew/glew.h"
 #include "Buffer.h"
-#include "Model/Definitions.h"
 #include <vector>
+#include "Log/Log.h"
+#include "Model/Loader/Definitions.h"
 
 namespace Hydrogen
 {
 
 
+	/*
+		Each Primitive has a Attribute.
+		Attribute Objects store the Index for the specific Vertex Array Attrib Pointer.
+	*/
+	struct Attribute
+	{
+		int32 POSITION = -1;
+		int32 NORMALS = -1;
+		int32 TANGENT = -1;
+		int32 TEXCOORDS_0 = -1;
+		int32 TEXCOORDS_1 = -1;
+		int32 COLOR_0 = -1;
+	};
+
 	class VertexArray
 	{
 	public:
 
-		 VertexArray() = default;
-		 VertexArray(VertexArray&& Other);
-		 ~VertexArray();
+		HYD VertexArray() = default;
+		HYD VertexArray(VertexArray&& Other);
+		HYD ~VertexArray();
 
-		int CreateVertexArray();
-		int DestroyVertexArray();
+		HYD int CreateVertexArray();
+		HYD int DestroyVertexArray();
 
-		int AddAttribute(Accessor& pAccessor);
-		int DisableAttributes();
+		HYD int AddAttribute(const Accessor& pAccessor);
+		HYD int DisableAttributes();
 
-		void Bind();
-		void Unbind();
+		HYD void Bind();
+		HYD void Unbind();
 
 	private:
-		uint32 GetTypeSize(uint32 pType);
+		HYD uint32 GetTypeSize(uint32 pType);
 
 	private:
 		uint32 m_Offset = 0;

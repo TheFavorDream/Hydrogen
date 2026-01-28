@@ -1,4 +1,5 @@
 #include "VectorDef.h"
+#include "Math.h"
 
 namespace Hydrogen
 {

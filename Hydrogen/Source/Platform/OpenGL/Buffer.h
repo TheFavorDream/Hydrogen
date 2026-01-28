@@ -7,7 +7,7 @@
 
 #include "Glew/glew.h"
 #include "Common.h"
-
+#include "Log/Log.h"
 
 namespace Hydrogen
 {
@@ -16,29 +16,28 @@ namespace Hydrogen
 	{
 	public:
 
-		Buffer() = default;
-		~Buffer();
-
+		HYD Buffer() = default;
+		HYD ~Buffer();
 
 		//Move Constructor
-		Buffer(Buffer&& pMove);
+		HYD Buffer(Buffer&& pMove);
 
-		//Creates an OpenGL Vertex Buffer and fills it with Data
-		int CreateBuffer(GLenum pBufferTarget, uint32 pSize, int8* pData=0, uint32 pCount=0);
-		//Copies the data to a specific offset
-		int CopyDataChunk(uint32 pOffset, uint32 pSize, int8* pData);
-		//Free's the Buffer
-		int DestroyBuffer();
-
-		//Binds the Current Vertex Buffer
-		void Bind() const;
-		// Binds the current buffer to zero
-		void Unbind() const;
-
-		inline GLuint GetVertexID() { return m_BufferID; }
-		inline GLuint GetBufferSize() { return m_BufferSize; }
-		inline GLenum GetBufferTarget() const { return m_BufferTarget; }
-		inline uint32 GetCount() const { return m_BufferSize; }
+		 //Creates an OpenGL Vertex Buffer and fills it with Data
+		HYD int CreateBuffer(GLenum pBufferTarget, uint32 pSize, void* pData=0, uint32 pCount=0);
+		 //Copies the data to a specific offset
+		HYD int CopyDataChunk(uint32 pOffset, uint32 pSize, void* pData);
+		 //Free's the Buffer
+		HYD int DestroyBuffer();
+		 
+		 //Binds the Current Vertex Buffer
+		HYD void Bind() const;
+		 // Binds the current buffer to zero
+		HYD void Unbind() const;
+		 
+		HYD inline GLuint GetVertexID() { return m_BufferID; }
+		HYD inline GLuint GetBufferSize() { return m_BufferSize; }
+		HYD inline GLenum GetBufferTarget() const { return m_BufferTarget; }
+		HYD inline uint32 GetCount() const { return m_BufferSize; }
 
 	private:
 		GLenum m_BufferTarget;

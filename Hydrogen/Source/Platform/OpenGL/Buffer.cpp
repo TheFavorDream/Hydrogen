@@ -17,31 +17,31 @@ namespace Hydrogen
 		pMove.m_BufferSize = 0;
 	}
 
-	int Buffer::CreateBuffer(GLenum pBufferTarget, uint32 pSize, int8 * pData, uint32 pCount)
+	int Buffer::CreateBuffer(GLenum pBufferTarget, uint32 pSize, void* pData, uint32 pCount)
 	{
 		GL_CALL(glGenBuffers(1, &m_BufferID));
 		if (m_BufferID == 0)
 		{
-			Log::SetError(HYD_OPENGL_VERTEX_BUFFER_FAILED, __FILE__, __LINE__);
+			Log::SetError("Couldn't Create Buffer", HYD_OPENGL_VERTEX_BUFFER_FAILED, __FILE__, __LINE__);
 			return HYD_OPENGL_VERTEX_BUFFER_FAILED;
 		}
 		GL_CALL(glBindBuffer(pBufferTarget, m_BufferID));
-		GL_CALL(glBufferData(pBufferTarget, pSize, (void*)pData, GL_STATIC_DRAW));
+		GL_CALL(glBufferData(pBufferTarget, pSize, pData, GL_STATIC_DRAW));
 
 		m_BufferTarget = pBufferTarget;
 		m_BufferSize = pCount;
 		return HYD_OK;
 	}
 
-	int Buffer::CopyDataChunk(uint32 pOffset, uint32 pSize, int8 * pData)
+	int Buffer::CopyDataChunk(uint32 pOffset, uint32 pSize, void* pData)
 	{
 		if (m_BufferID == 0)
 		{
-			Log::SetError(HYD_OPENGL_VERTEX_BUFFER_FAILED, __FILE__, __LINE__);
+			Log::SetError("Trying to copy into an empty buffer",HYD_OPENGL_VERTEX_BUFFER_FAILED, __FILE__, __LINE__);
 			return HYD_OPENGL_VERTEX_BUFFER_FAILED;
 		}
 		Bind();
-		GL_CALL(glBufferSubData(m_BufferTarget, (GLintptr)pOffset, (GLsizeiptr)pSize ,(void*)pData));
+		GL_CALL(glBufferSubData(m_BufferTarget, (GLintptr)pOffset, (GLsizeiptr)pSize ,pData));
 
 		return HYD_OK;
 	}

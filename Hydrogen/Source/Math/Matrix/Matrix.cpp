@@ -56,13 +56,14 @@ namespace Hydrogen
 	}
 
 
-	void Matrix::operator=(Matrix && pOther)
+	void Matrix::operator=(const Matrix& pOther)
 	{
-		m_Ptr = pOther.m_Ptr;
+		
 		m_Height = pOther.m_Height;
 		m_Width = pOther.m_Width;
 
-		pOther.m_Ptr = nullptr;
+		m_Ptr = new float[m_Width*m_Height];
+		memcpy((void*)m_Ptr, (void*)pOther.m_Ptr, (m_Height*m_Width*sizeof(float)));
 	}
 
 	Matrix Matrix::operator+(const Matrix & pOther)
@@ -103,8 +104,6 @@ namespace Hydrogen
 	{
 
 		//If "this" matrix is identity we skip the multipication:
-
-
 
 		if (m_Width != pOther.m_Height) // If two matrix didn't meet the multipication needs we return "This" Matrix: 
 			return *this;
@@ -155,9 +154,9 @@ namespace Hydrogen
 		{
 			for (int i = 0; i < m_Width; i++)
 			{
-				std::cout << At(i, j) << ' ';
+				//std::cout << At(i, j) << ' ';
 			}
-			std::cout << '\n';
+			//std::cout << '\n';
 		}
 	}
 

@@ -1,5 +1,16 @@
 #pragma once
 
+
+
+
+#ifdef HYD_DLL_BUILD
+	#define HYD _declspec(dllexport)
+#else
+	#define HYD _declspec(dllimport)
+#endif
+
+//#define HYD
+
 #define HYD_OK		     0x00		
 #define HYD_INVALID_FILE 0x01
 #define HYD_INVALID_PATH 0x02
@@ -19,12 +30,12 @@
 #define HYD_INVALID_VALUE 0x16
 #define HYD_UI_INVALID_WINDOW 0x17
 #define HYD_UI_INVALID_ELEMENT 0x18
+#define HYD_SHADER_FAILED 0x19
+
 
 #define GLB_MAGIC     0x46546C67
 #define GLB_JSON_TYPE 0x4E4F534A
 #define GLB_BIN_TYPE  0x004E4942
-
-#define GL_CALL(x) x;Hydrogen::Log::CheckOpenGLErrors(__FILE__, __LINE__);
 
 typedef unsigned long long int uint64;
 typedef unsigned int		   uint32;
@@ -37,18 +48,27 @@ typedef char				   int8;
 
 #include <iostream>
 #include <fstream>
-#include "Log/Log.h"
 
 
+//Decleartions
 namespace Hydrogen
 {
-	class Loader;
+
+	enum APIs {OPENGL, VULKAN};
+
+
 	class Model;
-	class Scene;
-	class Node;
 	class Mesh;
+	class Scene;
+	class Shader;
 	class Material;
+	class Texture;
 	class Matrix;
+	class GLTFLoader;
+
+	class Mouse;
+	class Keyboard;
+	
 };
 
 

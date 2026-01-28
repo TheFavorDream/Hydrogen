@@ -30,7 +30,7 @@ namespace Hydrogen
 		return 0;
 	}
 
-	int VertexArray::AddAttribute(Accessor& pAccessor)
+	int VertexArray::AddAttribute(const Accessor& pAccessor)
 	{		
 		uint32 CountPerAttrib = (uint32)pAccessor.DataType;
 		uint32 Stride = CountPerAttrib *GetTypeSize(pAccessor.ComponentType);

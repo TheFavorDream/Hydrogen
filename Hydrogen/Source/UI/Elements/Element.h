@@ -10,12 +10,12 @@ namespace Hydrogen
 	{
 	public:
 
-		virtual void Render() = 0;
+		HYD virtual void Render() = 0;
 
 
-		inline std::string& GetLabel() { return m_Label; }
-		inline Vec2 GetSize() { return m_Size; }
-		inline Vec2 GetPosition() { return m_Position; }
+		HYD inline std::string& GetLabel() { return m_Label; }
+		HYD inline Vec2 GetSize() { return m_Size; }
+		HYD inline Vec2 GetPosition() { return m_Position; }
 
 	protected:
 		std::string m_Label;

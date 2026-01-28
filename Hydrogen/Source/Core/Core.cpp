@@ -8,10 +8,20 @@ namespace Hydrogen
 
 	}
 
-	Core::Core(int32 pWidth, int32 pHeight, const char* pTitle)
+	Core::Core(int32 pWidth, int32 pHeight, const char* pTitle, APIs pAPI)
 	{
+		Log::SetLevel(LV3);
+		Log::EnableFile();
+
 		m_Window.MakeWindow(pWidth, pHeight, pTitle);
-		Loader::SetUpHydrogen(OPENGL);
+
+		m_GraphicAPI = pAPI;
+		uint32 Err;
+		if ((Err = InitAPI()) != HYD_OK)
+		{
+			Log::SetError("Failed in Initializing Rendering API", HYD_GLEW_FAILED);
+		}
+
 
 		Mouse::InitMouse(m_Window.GetWindow());
 		Keyboard::InitKeyboard(m_Window.GetWindow());
@@ -29,10 +39,6 @@ namespace Hydrogen
 			delete m_Layers[i];
 		}
 		m_Running = false;
-
-		Loader::FreeModelPool();
-
-		Log::EngineDump("Dump.txt");
 	}
 
 	int Core::PushLayer(Layer * pLayer)
@@ -67,6 +73,24 @@ namespace Hydrogen
 	}
 
 
+	uint32 Core::InitAPI()
+	{
+
+		switch (m_GraphicAPI)
+		{
+		case OPENGL:
+
+			if (glewInit() != 0)
+				return HYD_GLEW_FAILED;
+
+			glEnable(GL_DEPTH_TEST);
+
+			break;
+		}
+
+		return HYD_OK;
+	}
+
 	void Core::Event()
 	{
 		glfwPollEvents();
@@ -86,7 +110,7 @@ namespace Hydrogen
 
 	void Core::Render()
 	{
-		GL_CALL(glClearColor(0.0f, 0.0f, 0.0, 1.0f));
+		GL_CALL(glClearColor(0.2f, 0.2f, 0.2f, 1.0f));
 		GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
 		for (auto& i : m_Layers)

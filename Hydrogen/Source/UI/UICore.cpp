@@ -78,7 +78,7 @@ namespace Hydrogen
 	{
 		if (m_GUIs.find(pID) != m_GUIs.end())
 		{
-			Log::SetError(HYD_UI_INVALID_WINDOW, __FILE__, __LINE__, std::string("ID:" + pID + " Already exists!").c_str());
+			Log::SetError(std::string("ID:" + pID + " Already exists!").c_str(), HYD_UI_INVALID_WINDOW, __FILE__, __LINE__);
 			return HYD_UI_INVALID_WINDOW;
 		}
 

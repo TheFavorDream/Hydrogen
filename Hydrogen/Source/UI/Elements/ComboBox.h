@@ -2,6 +2,8 @@
 
 #include "Common.h"
 #include "Element.h"
+#include <vector>
+
 
 namespace Hydrogen
 {
@@ -12,7 +14,7 @@ namespace Hydrogen
 	public:
 
 
-		int Setup(const std::string& pTitle, const std::vector<std::string>& pItems, Vec2 pPosition)
+		HYD int Setup(const std::string& pTitle, const std::vector<std::string>& pItems, Vec2 pPosition)
 		{
 			m_Label = pTitle;
 			m_Position = pPosition;
@@ -20,7 +22,7 @@ namespace Hydrogen
 			return HYD_OK;
 		}
 
-		void Render() override
+		HYD void Render() override
 		{
 			ImGui::SetCursorPos(ImVec2(m_Position.X, m_Position.Y));
 
@@ -46,8 +48,8 @@ namespace Hydrogen
 			
 		}
 
-		inline int32& GetCurrentItem() { return m_CurrentItem; }
-		inline std::vector<std::string>& GetItems() { return m_Items; }
+		HYD inline int32& GetCurrentItem() { return m_CurrentItem; }
+		HYD inline std::vector<std::string>& GetItems() { return m_Items; }
 
 	private:
 		int32 m_CurrentItem =0;

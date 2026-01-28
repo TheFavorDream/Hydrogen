@@ -12,7 +12,7 @@ namespace Hydrogen
 	public:
 
 
-		int Setup(const std::string& pTitle, Vec2 pPosition, float pMin=0.0f, float pMax=1.0f)
+		HYD int Setup(const std::string& pTitle, Vec2 pPosition, float pMin=0.0f, float pMax=1.0f)
 		{
 			m_Label = pTitle;
 			m_Position = pPosition;
@@ -21,15 +21,15 @@ namespace Hydrogen
 			return HYD_OK;
 		}
 
-		void Render() override
+		HYD void Render() override
 		{
 			ImGui::SetCursorPos(ImVec2(m_Position.X, m_Position.Y));
 			ImGui::SliderFloat(m_Label.c_str(), &m_Value, m_Min, m_Max);
 		}
 
-		inline float& GetValue() { return m_Value; }
-		inline float& GetMin() { return m_Min; }
-		inline float& GetMax() { return m_Max; }
+		HYD inline float& GetValue() { return m_Value; }
+		HYD inline float& GetMin() { return m_Min; }
+		HYD inline float& GetMax() { return m_Max; }
 
 
 	private:

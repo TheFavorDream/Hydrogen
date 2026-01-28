@@ -1,75 +1,98 @@
+/*
+
+	By: Pouya Alizadeh
+	Created On: 26/1/17
+
+	Purpose:
+		Model contains Meshes, and it's own Global Transformation 
+		Curcial for Scene construction.
+
+*/
+
+
+
 #pragma once
 
 #include "Common.h"
-#include "Definitions.h"
-#include "Loader.h"
-#include "Parser/Json.h"
+
+#include <vector>
+#include <string>
+#include "Math/Matrix/Matrix.h"
+#include "Geometry/Mesh.h"
+#include "Shader/Shader.h"
 #include "Platform/OpenGL/Buffer.h"
 #include "Platform/OpenGL/VertexArray.h"
-#include "Model/Scene/Node.h"
-#include "Model/Scene/Scene.h"
-#include "Model/Geometry/Mesh.h"
-#include "Model/Material/Texture/Texture.h"
-#include "Shader/Shader.h"
-#include "Math/Matrix/Matrix.h"
-
-
-using json = nlohmann::json;
+#include "3rdParty/glm/glm.hpp"
+#include "Log/Log.h"
 
 namespace Hydrogen
 {
-	enum FileExtension {FILE_INVALID, FILE_GLTF, FILE_GLB};
+
 	class Model
 	{
+
 	public:
 
+		HYD Model();																					 //Create an Empty Model
+		HYD Model(const std::string& pName);														     //Create an Empty Model with Specified name
+		HYD Model(const std::string& pName, const std::vector<Mesh>& pMeshes);							 //Create Model with a set of input meshes
+		HYD Model(const std::string& pName, const std::vector<Mesh>& pMeshes, const Matrix& pTransform); //Create a Model with Meshes and Transformation;
 
-		int LoadModel(std::string& pPath);
-		int Free();
+		HYD ~Model(); //Destroy the Model
 
-		void RenderScene(Shader& pShader,  uint32 pTargetScene=0, Matrix* pModelTransformation = nullptr);
-		inline uint32 GetDefaultScene() { return m_DefaultScene; }
-
-	private:
-
-		int LoadURI(json& pBuffer, std::string& pRootPath, std::vector<std::string>& pBuffers);
-		int SetupBufferViews(json& pBufferView, std::vector<BufferView>& pBufferViews, std::vector<std::string>& pBuffers);
-		int SetupAccessors(json& pAccessor, std::vector<Accessor>& pAccessors, std::vector<BufferView>& pBufferViews);
-		int SetupMeshes(json& pMeshes, std::vector<Accessor>& pAccessors);
-		int SetupMaterials(json& pMaterial);
-		int SetupNodes(json& pNodes);
-		int SetupScenes(json pScenes);
+		HYD Model(const Model& pOther); //Copy 
+		HYD Model(Model&& pOther);	    //Move
 
 
-		int ProcessPrimitives(json& pPrimitive, std::vector<Accessor>& pAccessors,  std::vector<Primitive>& pPrimitives);
-		int ProcessElementBuffer(Accessor& pAccessors, int32& pEboID);
-		int ProcessAttributes(json& pAttribute, std::vector<Accessor>& pAccessors, Primitive & pPrimitiveRef);
-
-
-		int ProcessGLTF(json& pGLTF, FileFormat pFormat, std::string* pGLBbinary=nullptr);
-
-		int ParseGLTF(std::string& pPath);
-		int ParseGLB(std::string& pPath);
-
-		FileExtension GetFileExtension(std::string& pPath);
-
-	private:
-		json m_GLTF;
-		std::string m_RootPath;
+		//Setup Model
+		HYD uint32 SetupModel(const std::string& pName, const std::vector<Mesh>& pMeshes);
 		
-		std::vector<Buffer>		 m_Buffers;
-		std::vector<VertexArray> m_VertexArrays;
-		std::vector<Mesh>		 m_Meshes;
-		std::vector<Node>        m_Nodes;
-		std::vector<Scene>       m_Scenes;
-		std::vector<Texture>     m_Textures;//This is temporary
+		//Destroy Model:
+		HYD uint32 DestroyModel();
+		 
+		//Transform the Model with Matrix
+		HYD uint32 SetTransform(const glm::mat4& pTransform);
+		//Transform the Model with TRS properties
+		HYD uint32 SetTransform(Vec3 pScale=Vec3(1.0f), Vec3 pTranslate=Vec3(0.0f), Vec4 pRotate=Vec4(0.0f));
+		//Get Transformer
+		HYD inline const glm::mat4& GetTransform() { return m_Transform; }
 
-		int32 m_DefaultScene = -1;
+		//Name Setter & Getter
+		HYD uint32 SetName(std::string pName);
+		HYD inline const std::string& GetName() { return m_Name; };
+
+		//Iterator for Meshes
+		HYD std::vector<Mesh>::iterator begin() { return m_Meshes.begin(); }
+		HYD std::vector<Mesh>::iterator end() { return m_Meshes.end(); }
+
+
+		//the "pTransform" will get multiplied by Global Transformation of the model
+		//Render the Entire model
+		//this function is going to be used by the scene
+		//the owner scene of this model should supply the shader when calling.
+		HYD uint32 RenderModel(const Shader& pShader);
+
+		//Retrive a specific mesh
+		HYD const Mesh& GetMeshByIndex(uint32 pIndex) noexcept;
+		HYD const Mesh& GetMeshByName(std::string pName);
+
+
+	private:
+		//Meshes that make up the model
+		std::vector<Mesh> m_Meshes;
+		//Name of the Model (not guaranteed to be unique)
+		std::string m_Name;
+		//Global Transformation of model which applies to all the meshes
+		//Matrix m_Transform;
+		glm::mat4 m_Transform=glm::mat4(1.0f);
+
+		//Buffer Storage:
+		std::vector<Buffer>		 m_Buffers;
+		std::vector<VertexArray> m_Arrays;
 
 		friend class Mesh;
-		friend class Scene;
-		friend class Node;
-	};
-	typedef Model* ModelRef;
-};
+		friend class GLTFLoader;
 
+	};
+
+};

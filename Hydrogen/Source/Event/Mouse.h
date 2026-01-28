@@ -14,36 +14,36 @@ namespace Hydrogen
 	public:
 
 		//Sets All the needed Call backs
-		static void InitMouse(GLFWwindow* pWindow);
+		HYD static void InitMouse(GLFWwindow* pWindow);
 
 		//Call Backs
-		static void MouseCursorCallBack(GLFWwindow* pWindow, double pMouseX, double pMouseY);
-		static void MouseButtonCallBack(GLFWwindow* pWindow, int pButton, int pAction, int pMods);
-		static void MouseScrollCallBack(GLFWwindow* pWindow, double pOffsetX, double pOffsetY);
+		HYD static void MouseCursorCallBack(GLFWwindow* pWindow, double pMouseX, double pMouseY);
+		HYD static void MouseButtonCallBack(GLFWwindow* pWindow, int pButton, int pAction, int pMods);
+		HYD static void MouseScrollCallBack(GLFWwindow* pWindow, double pOffsetX, double pOffsetY);
 
-		static void DisableCursor(bool pDisable);
+		HYD static void DisableCursor(bool pDisable);
 
 		//Cursor State:
-		static double GetCursorX();
-		static double GetCursorY();
+		HYD static double GetCursorX();
+		HYD static double GetCursorY();
 
-		static double GetOffsetX();
-		static double GetOffsetY();
+		HYD static double GetOffsetX();
+		HYD static double GetOffsetY();
 
 		//Button State:
-		static State  GetRightKeyState();
-		static State  GetLeftKeyState();
-
-		static bool   IsRightKeyPressed();
-		static bool   IsLeftKeyPressed();
-
-		static bool   IsRightKeyReleased();
-		static bool   IsLeftKeyReleased();
+		HYD static State  GetRightKeyState();
+		HYD static State  GetLeftKeyState();
+		 
+		HYD static bool   IsRightKeyPressed();
+		HYD static bool   IsLeftKeyPressed();
+		 
+		HYD static bool   IsRightKeyReleased();
+		HYD static bool   IsLeftKeyReleased();
 
 
 		//Scroll State:
-		static int GetScrollVerticalOffset();
-		static ScrollState GetScrollState();
+		HYD static int GetScrollVerticalOffset();
+		HYD static ScrollState GetScrollState();
 	private:
 
 		//Mouse State:

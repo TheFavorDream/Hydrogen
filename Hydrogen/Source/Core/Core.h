@@ -8,10 +8,11 @@
 #pragma once
 
 #include "Common.h"
-#include "Model/Loader.h"
+#include "Log/Log.h"
 #include "Window/Window.h"
 #include "Event/Mouse.h"
 #include "Event/Keyboard.h"
+#include "Glew/glew.h"
 #include "Layer.h"
 
 #include <vector>
@@ -20,32 +21,37 @@
 namespace Hydrogen
 {
 
+
 	class Core
 	{
 	public:
 		
-		Core(); //Default Constructor
-		Core(int32 pWidth, int32 pHeight, const char* pTitle); //Constructor with a window
-		~Core();
+		HYD  Core(); //Default Constructor
+		HYD  Core(int32 pWidth, int32 pHeight, const char* pTitle, APIs pAPI=OPENGL); //Constructor with a window
+		HYD ~Core();
 
 
-		int PushLayer(Layer* pLayer);
+		HYD int PushLayer(Layer* pLayer);
 
 	protected:
 
-		void Loop();
+		HYD void Loop();
 	
 	private:
 
-		void Event();
-		void Update();
-		void Render();
+		HYD uint32 InitAPI();
+
+		HYD void Event();
+		HYD void Update();
+		HYD void Render();
 
 	private:
 
 		float m_deltaTime =  0.0f;
 		std::vector<Layer*> m_Layers;
 		bool m_Running;
+
+		APIs m_GraphicAPI;
 
 	protected:
 		Window m_Window;

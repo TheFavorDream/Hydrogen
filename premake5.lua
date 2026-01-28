@@ -23,8 +23,8 @@ workspace "HydrogenViewer"
         kind "ConsoleApp"
         language "C++"
 
-        targetdir ("./bin/"..OutputDir.."/PlayGround")
-        objdir ("./bin-obj/"..OutputDir.."/PlayGround")
+        targetdir ("./bin/"..OutputDir.."/HydrogenViewer")
+        objdir ("./bin-obj/"..OutputDir.."/HydrogenViewer")
 
 
         filter ("system:windows")
@@ -51,10 +51,12 @@ workspace "HydrogenViewer"
 
         links {"Hydrogen","opengl32", "glew32s","kernel32", "user32" , "gdi32", "winspool", "comdlg32", "advapi32", "shell32","ole32", "oleaut32", "uuid", "odbc32", "odbccp32"}
 
+		postbuildcommands {"{COPY} ../bin/" .. OutputDir .. "/Hydrogen/Hydrogen.dll ../bin/" .. OutputDir .. "/HydrogenViewer",
+                            "{COPY} ../bin/" .. OutputDir .. "/glfw/glfw.dll ../bin/" .. OutputDir .. "/HydrogenViewer"}
 
     project "Hydrogen"
         location "./Hydrogen"
-        kind "StaticLib"
+        kind "SharedLib"
         language "C++"
 
 
@@ -65,7 +67,7 @@ workspace "HydrogenViewer"
             "./Hydrogen/**.h"
         }
         
-        defines {"GLEW_STATIC"}
+        defines {"GLEW_STATIC", "HYD_DLL_BUILD"}
 
         filter {"configurations:Debug"}
             defines {"HYD_DEBUG"}
@@ -92,6 +94,8 @@ workspace "HydrogenViewer"
         }
 
         links {"opengl32", "glew32s", "glfw", "imgui"}
+
+		postbuildcommands {"{COPY} ../bin/" .. OutputDir .. "/Hydrogen/Hydrogen.dll ../bin/" .. OutputDir .. "/HydrogenViewer"}
 
     project "glfw"
         location "./Hydrogen/Source/3rdParty/glfw"

@@ -3,50 +3,42 @@
 namespace Hydrogen
 {
 
-	Mesh::Mesh(std::string pName, std::vector<Primitive>& pPrimitives, uint32 pDefaultPrimitive)
+	Mesh::Mesh(std::string pName, std::vector<Primitive>& pPrimitives)
 	{
 		m_Name = pName;
-		m_DefaultPrimitive = pDefaultPrimitive;
 		m_Primitives = std::move(pPrimitives);
-	}
-
-	Mesh::Mesh(Mesh && Other)
-	{
-		m_Name = Other.m_Name;
-		m_DefaultPrimitive = Other.m_DefaultPrimitive;
-		m_Primitives = std::move(Other.m_Primitives);
-
-		Other.m_Primitives.clear();
-		Other.m_Name.clear();
 	}
 
 	Mesh::~Mesh()
 	{
 	}
 
-	void Mesh::Render(Model* pModel)
+
+	void Mesh::Render(const Shader & pShader, glm::mat4 * pTransform, Model* pCaller)
 	{
+		glm::mat4 Transformation = m_Transformation;
+		if (pTransform != nullptr)
+			Transformation *= (*pTransform);
 
-
-		for (auto& i: m_Primitives)
+		pShader.Bind();
+		pShader.SetUniformMat4("Model", glm::value_ptr(Transformation));
+		for (auto& i : m_Primitives)
 		{
+			//Rendering Process:
 
-			Buffer& VBO = pModel->m_Buffers[i.VboID];
-			Buffer& EBO = pModel->m_Buffers[i.EboID];
-			VertexArray& VAO = pModel->m_VertexArrays[i.VaoID];
+			pCaller->m_Arrays[i.VaoID].Bind();
+			pCaller->m_Buffers[i.VboID].Bind();
+			pCaller->m_Buffers[i.EboID].Bind();
 
+			GL_CALL(glDrawElements(i.RenderingMode, pCaller->m_Buffers[i.EboID].GetBufferSize(), GL_UNSIGNED_SHORT, 0));
 
-			VAO.Bind();
-			VBO.Bind();
-			EBO.Bind();
+			pCaller->m_Arrays[i.VaoID].Unbind();
+			pCaller->m_Buffers[i.VboID].Unbind();
+			pCaller->m_Buffers[i.EboID].Unbind();
 
-			GL_CALL(glDrawElements(i.RenderingMode, EBO.GetCount(), GL_UNSIGNED_SHORT, 0));
-
-
-			EBO.Unbind();
-			VBO.Unbind();
-			VAO.Unbind();
 		}
+		pShader.Unbind();
 	}
+
 
 };

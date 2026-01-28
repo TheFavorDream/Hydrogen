@@ -1,32 +1,46 @@
 #pragma once
 
 #include "Common.h"
-#include "Model/Definitions.h"
 #include "Platform/OpenGL/VertexArray.h"
 #include "Platform/OpenGL/Buffer.h"
+#include "Math/Matrix/Matrix.h"
+#include "Shader/Shader.h"
 #include "Model/Model.h"
+#include "3rdParty/glm/gtc/type_ptr.hpp"
 
 namespace Hydrogen
 {
+
+	struct Primitive
+	{
+		int32 VboID = -1;//-1 means no buffer is setted
+		int32 EboID = -1;//-1 means no buffer is setted
+		int32 VaoID = -1;//-1 means no buffer is setted
+		int32 MaterialID;
+		int32 RenderingMode = 4;
+		Attribute Attributes;
+	};
 
 	class Mesh
 	{
 	public:
 
-		Mesh()=default;
-		Mesh(std::string pName, std::vector<Primitive>& pPrimitives, uint32 pDefaultPrimitive=0);
-		Mesh(Mesh&& Other);
-		~Mesh();
+		HYD  Mesh() = default;
+		HYD  Mesh(std::string pName, std::vector<Primitive>& pPrimitives);
+		HYD ~Mesh();
 
-		void Render(Model* pModel);
 
-		inline const std::string& GetMeshName() const { return m_Name; }
-		inline const uint32 GetDefaultPrimitive() const { return m_DefaultPrimitive; }
+		HYD void Render(const Shader& pShader, glm::mat4* pTransform, Model* pCaller);
+		HYD inline const std::string& GetMeshName()	const { return m_Name; }
+	
 
 	private:
 		std::string m_Name;
 		std::vector<Primitive> m_Primitives;
-		uint32 m_DefaultPrimitive;
+		//Matrix m_Transformation;
+		glm::mat4 m_Transformation = glm::mat4(1.0f); //Temp
+
+		friend class GLTFLoader;
 	};
 
 };

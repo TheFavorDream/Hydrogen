@@ -14,7 +14,7 @@
 #include "Elements/ComboBox.h"
 #include <unordered_map>
 #include <string>
-
+#include "Log/Log.h"
 namespace Hydrogen
 {
 
@@ -24,49 +24,49 @@ namespace Hydrogen
 	{
 	public:
 
-		GuiWindow() = default;
-		~GuiWindow();
+		HYD GuiWindow() = default;
+		HYD ~GuiWindow();
 
-		int CreateUIWindow(const std::string& pTitle, Vec2 pSize, Vec2 pPosition, RefernceOrigin pOrigin);
-		void Render();
-
-		void ResizeWindow(Vec2 pSize);
-
-		int CreateButton(std::string pLabel, Vec2 pSize, Vec2 pPos, std::string pID="");
-		int CreateText(std::string pText, Vec2 pPos, std::string pID);
-		int CreateInputF(std::string pLabel, Vec2 pPos, std::string pID="");
-		int CreateSliderF(std::string pLabel, Vec2 pPos, float pMin=0.0f, float pMax=1.0f, std::string pID="");
-		int CreateCheckbox(std::string pLabel, Vec2 pPos, std::string pID="");
-		int CreateComboBox(std::string pLabel, std::vector<std::string> Items, Vec2 pPos, std::string pID);
+		HYD int CreateUIWindow(const std::string& pTitle, Vec2 pSize, Vec2 pPosition, RefernceOrigin pOrigin);
+		HYD void Render();
 
 
-		Button* GetButton(std::string pID);
-		Text* GetText(std::string pID);
-		SliderF* GetSliderF(std::string pID);
-		InputF* GetInput(std::string pID);
-		Combo* GetCombo(std::string pID);
+
+		HYD int CreateButton(std::string pLabel, Vec2 pSize, Vec2 pPos, std::string pID="");
+		HYD int CreateText(std::string pText, Vec2 pPos, std::string pID);
+		HYD int CreateInputF(std::string pLabel, Vec2 pPos, std::string pID="");
+		HYD int CreateSliderF(std::string pLabel, Vec2 pPos, float pMin=0.0f, float pMax=1.0f, std::string pID="");
+		HYD int CreateCheckbox(std::string pLabel, Vec2 pPos, std::string pID="");
+		HYD int CreateComboBox(std::string pLabel, std::vector<std::string> Items, Vec2 pPos, std::string pID);
 
 
-		int CreateElement(Element* pElement, std::string pID = "");
-		Element* GetElement(const std::string& pID);
+		HYD Button* GetButton(std::string pID);
+		HYD Text* GetText(std::string pID);
+		HYD SliderF* GetSliderF(std::string pID);
+		HYD InputF* GetInput(std::string pID);
+		HYD Combo* GetCombo(std::string pID);
+
+
+		HYD int CreateElement(Element* pElement, std::string pID = "");
+		HYD Element* GetElement(const std::string& pID);
 
 
 		//Recommended to only use these functions to set your window Size and Pos 
-		void SetWindowSize(float pWidth, float pHeight);
-		void SetWindowPos(float pX, float pY);
+		HYD void SetWindowSize(float pWidth, float pHeight);
+		HYD void SetWindowPos(float pX, float pY);
 
 		//sets the Max and Min values for windows:
-		void SetSizeMax(float pWidth, float pHeight);
-		void SetSizeMin(float pWidth, float pHeight);
+		HYD void SetSizeMax(float pWidth, float pHeight);
+		HYD void SetSizeMin(float pWidth, float pHeight);
 
 
-		inline Vec2 GetMinSize() { return m_MinSize; }
-		inline Vec2 GetMaxSize() { return m_MaxSize; }
+		HYD inline Vec2 GetMinSize() { return m_MinSize; }
+		HYD inline Vec2 GetMaxSize() { return m_MaxSize; }
 
 
-		inline std::string& GetTitle() { return m_Title; }
-		inline Vec2 GetSize() { return m_Size; }
-		inline Vec2 GetPos() { return m_Position; }
+		HYD inline std::string& GetTitle() { return m_Title; }
+		HYD inline Vec2 GetSize() { return m_Size; }
+		HYD inline Vec2 GetPos() { return m_Position; }
 
 	private:
 

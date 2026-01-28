@@ -34,8 +34,7 @@ namespace Hydrogen
 
 		if (m_Window != NULL)
 		{
-			Log::SetError(HYD_WINDOW_FAILD, __FILE__, __LINE__);
-			return HYD_WINDOW_FAILD;
+			Log::SetWarning("Window Already exists");
 		}
 
 		glfwWindowHint(GLFW_SAMPLES, 6);
@@ -44,7 +43,7 @@ namespace Hydrogen
 			
 		if (m_Window == NULL)
 		{
-			Log::SetError(HYD_WINDOW_FAILD, __FILE__, __LINE__);
+			Log::SetError("", HYD_WINDOW_FAILD, __FILE__, __LINE__);
 			return HYD_WINDOW_FAILD;
 		}
 
@@ -88,7 +87,7 @@ namespace Hydrogen
 	{
 		if (pWidth < 0.0f || pHeight < 0.0f)
 		{
-			Log::SetError(HYD_INVALID_VALUE, __FILE__, __LINE__);
+			Log::SetError("Can't use nagative value", HYD_INVALID_VALUE, __FILE__, __LINE__);
 			return HYD_INVALID_VALUE;
 		}
 		m_ViewportRatios.X = pWidth;

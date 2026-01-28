@@ -26,7 +26,7 @@ namespace Hydrogen
 		std::string Content = ReadShaderFile(pShaderPath);
 		if (Content == "")
 		{
-			std::cout << ("Content String was empty");
+			Log::SetError("Shader: Content String was empty");
 			return -1;
 		}
 
@@ -34,20 +34,20 @@ namespace Hydrogen
 
 		if (Lines.size() == 0)
 		{
-			std::cout << ("There were nothing to process");
+			Log::SetError("Shader: There were nothing to process");
 			return -2;
 		}
 
 		if (Preprocess(Lines) < 0)
 		{
-			std::cout << ("Unable to Preprocess Shader Source");
+			Log::SetError("Shader: Unable to Preprocess Shader Source");
 			return -3;
 		}
 
 		int Res = CreateProgram();
 		if (Res != -1)
 		{
-			std::cout << ("Shader Compiled & Linked Successfully. ID:") << Res << '\n';
+			Log::SetInfo("Shader Compiled & Linked Successfully");
 		}
 		return Res;
 	}
@@ -60,7 +60,7 @@ namespace Hydrogen
 		int Res = CreateProgram();
 		if (Res != -1)
 		{
-			std::cout << ("Shader Compiled & Linked Successfully. ID:") << Res << '\n';
+			Log::SetInfo("Shader Compiled & Linked Successfully");
 		}
 		m_ShadersSources.clear();
 		return Res;
@@ -163,7 +163,6 @@ namespace Hydrogen
 		int Loc = glGetUniformLocation(m_ProgramID, pName);
 		if (Loc == -1 && m_ProgramID != 0)
 		{
-			//Log::GetSelf()->SetWarning("Cannot Find Uniform: %c in Program: %i", pName, m_ProgramID);
 			return -1;
 		}
 		m_UniformLookUp[pName] = Loc;
@@ -176,7 +175,7 @@ namespace Hydrogen
 		std::ifstream Source(pShaderPath, std::ios::in | std::ios::binary);
 		if (!Source.is_open())
 		{
-			std::cout << ("Cannot Open Shader File At: %s");
+			Log::SetError(Log::FmtStr("Cannot Open Shader File At: %s", pShaderPath.c_str()), HYD_INVALID_PATH);
 			return "";
 		}
 
@@ -248,10 +247,9 @@ namespace Hydrogen
 			{
 				std::string Name = i.substr(Location + Token.length());
 				CurrentShader = GetShaderEnum(Name);
-				std::cout << ("Current Shader Type:") << Name << '\n';
 				if (CurrentShader == 0)
 				{
-					std::cout << ("Invalid Shader type:") << Name << '\n';
+					Log::SetError(Log::FmtStr("Invalid Shader Type: %s", Name.c_str()), HYD_SHADER_FAILED);
 				}
 				continue;
 			}
@@ -285,7 +283,7 @@ namespace Hydrogen
 			std::string Log;
 			Log.resize(LogSize);
 			glGetShaderInfoLog(Shader, LogSize, &LogSize, &Log[0]);
-			std::cout << ("Can't compile shader:") << Log;
+			Log::SetError(Log::FmtStr("Can't compile shader: %s", Log.c_str()), HYD_SHADER_FAILED);
 
 			glDeleteShader(Shader);
 			return -1;
@@ -304,7 +302,6 @@ namespace Hydrogen
 			int CurrentShader = CompileShader(i.first, i.second);
 			if (CurrentShader == -1)
 			{
-				std::cout << ("No shader compiled");
 				continue;
 			}
 
@@ -329,8 +326,7 @@ namespace Hydrogen
 
 			glGetProgramInfoLog(m_ProgramID, LogSize, &LogSize, &Log[0]);
 
-			std::cout << ("Couldn't Link Program. Message: ") <<  Log << '\n';
-
+			Log::SetError(Log::FmtStr("Couldn't Link Program. Message: %s", Log.c_str()), HYD_SHADER_FAILED);
 			//Detach and Delete Shaders:
 			for (auto &i : Shaders)
 			{

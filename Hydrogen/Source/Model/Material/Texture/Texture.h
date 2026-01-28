@@ -2,6 +2,7 @@
 #include "Common.h"
 #include "Glew/glew.h"
 #include "3rdParty/stb_image/stb_image.h"
+#include "Log/Log.h"
 
 namespace Hydrogen
 {
@@ -10,23 +11,23 @@ namespace Hydrogen
 	{
 	public:
 
-		Texture() = default;
-		Texture(int32 pWidth, int32 pHeight, int32 pChannels=3, uint8* pData=nullptr);
-		~Texture();
-
-		Texture(const Texture& pOther); // Copy Constructor
-		Texture(Texture&& pOther);//Move Constructor
-
-		int CreateTexture(int32 pWidth, int32 pHeight, int32 pChannels = 3, uint8* pData = nullptr);
-		int CreateTexture(std::string pPath);
-		int DestroyTexture();
-
-		void Bind(uint32 pSlot=0);
-		void Unbind();
+		HYD Texture() = default;
+		HYD Texture(int32 pWidth, int32 pHeight, int32 pChannels=3, uint8* pData=nullptr);
+		HYD ~Texture();
 		
-		inline int32 GetTextureID() { return m_TextureID; }
-		inline int32 GetWidth() { return m_Width; }
-		inline int32 GetHeight() { return m_Height; }
+		HYD Texture(const Texture& pOther); // Copy Constructor
+		HYD Texture(Texture&& pOther);//Move Constructor
+		
+		HYD int CreateTexture(int32 pWidth, int32 pHeight, int32 pChannels = 3, uint8* pData = nullptr);
+		HYD int CreateTexture(std::string pPath);
+		HYD int DestroyTexture();
+		
+		HYD void Bind(uint32 pSlot=0);
+		HYD void Unbind();
+		 
+		HYD inline int32 GetTextureID() { return m_TextureID; }
+		HYD inline int32 GetWidth() { return m_Width; }
+		HYD inline int32 GetHeight() { return m_Height; }
 
 	private:
 

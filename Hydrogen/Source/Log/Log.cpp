@@ -4,54 +4,29 @@ namespace Hydrogen
 {
 
 	std::vector<LogHolder> Log::m_Logs;
-
-	void Log::SetError(uint32 pErrorCode, const char * pFilePath, uint32 pLine, const char* pDescription)
-	{
-		std::cout << "[ErrorCode:]" << TranslateErrorCode(pErrorCode) << " [Line:]" << pLine << " [File:]" << pFilePath << " [Description:]" << pDescription << '\n';
-		m_Logs.push_back({pErrorCode, pLine, pFilePath, pDescription});
-	}
-
-	void Log::SetInfo(std::string pText)
-	{
-		SetInfo(pText.c_str());
-	}
-
-	void Log::SetInfo(const char * pText)
-	{
-		std::cout << "[Engine Info]" << pText << '\n';
-	}
+	LogLevel Log::m_Level = LV3;
+	bool Log::m_FileLogging = true;
+	std::ofstream Log::m_File;
+	OutColor Log::m_OutputColor = WHITE;
 
 
-	void Log::EngineDump(const char * pDumpPath)
-	{
-
-		if (m_Logs.size() == 0)
-			return;
-
-		std::fstream DumpFile(pDumpPath, std::ios::out);
-		if (DumpFile.fail())
-			return;
-		for (auto& i : m_Logs)
-		{
-			DumpFile << "[ErrorCode:]" << TranslateErrorCode(i.ErrorCode) << " [Line:]" << i.Line << " [File:]" << i.FilePath << " [Description:]" << i.OptionalText << '\n';
-
-		}
-		DumpFile.close();
-
-	}
-
-	void Log::CheckOpenGLErrors(const char * file, uint32 Line)
+	void Log::CheckOpenGLErrors(std::string pFile, int32 pLine)
 	{
 		GLenum ErrorCode = 0;
 		while ((ErrorCode = glGetError()) != GL_NO_ERROR)
 		{
-			SetError(ErrorCode, file, Line);
+			SetError({ "", (int32)ErrorCode, pLine, pFile });
 		}	
 	}
 
 	std::vector<LogHolder>& Log::GetLogs()
 	{
 		return m_Logs;
+	}
+
+	void Log::SetOutputColor(OutColor pColor)
+	{
+		m_OutputColor = pColor;
 	}
 
 	std::string Log::TranslateErrorCode(uint32 ErrorCode)
@@ -93,6 +68,8 @@ namespace Hydrogen
 				return "HYD_INVALID_VALUE";
 			case HYD_UI_INVALID_WINDOW:
 				return "HYD_UI_INVALID_WINDOW";
+			case HYD_SHADER_FAILED:
+				return "HYD_SHADER_FAILED";
 
 			//OpenGL:
 			case GL_INVALID_ENUM:
@@ -115,5 +92,162 @@ namespace Hydrogen
 		}
 
 		return "Undefined Error Code";
+	}
+
+	void Log::Output(const std::string & pOutputStr)
+	{
+		m_File << pOutputStr;
+
+
+		//Set Color:
+
+		switch (m_OutputColor)
+		{
+		case RED:
+			std::cout << "\x1b[31;20m";
+			break;
+		case YELLOW:
+			std::cout << "\x1b[33;20m";
+			break;
+		case WHITE:
+			std::cout << "\x1b[37;20m";
+			break;
+		case GREEN:
+			std::cout << "\x1b[32;20m";
+			break;
+			case PURPLE:
+			std::cout << "\x1b[35;20m";
+			break;
+		}
+		
+		std::cout << pOutputStr;
+	}
+
+
+
+	void Log::SetLevel(LogLevel pLevel)
+	{
+		m_Level = pLevel;
+	}
+
+
+	std::string Log::FmtStr(std::string pString, ...)
+	{
+		va_list Args;
+		va_start(Args, pString);
+		std::string Res = "";
+		for (int i = 0; i < pString.size()-1; ++i)
+		{
+			if (pString[i] == '%')
+			{
+				char SpecialChar = pString[i + 1];
+
+				switch (SpecialChar)
+				{
+				case 'i':
+					Res += std::to_string(va_arg(Args, int));
+					i++;
+					break;
+				case 'f':
+					Res += std::to_string(va_arg(Args, double));
+					i++;
+					break;
+				case 'c':
+					Res += static_cast<char>(va_arg(Args, char));
+					i++;
+					break;
+				case 's':
+					Res += std::string(va_arg(Args, const char*));
+					i++;
+					break;
+				}
+
+			}
+			else
+			{
+				Res += pString[i];
+			}
+		}
+
+		va_end(Args);
+		return  Res;
+	}
+
+
+	void Log::SetInfo(std::string pDescription)
+	{
+		SetInfo({ pDescription, HYD_OK, -1, ""});
+	}
+
+	void Log::SetInfo(LogHolder pLog)
+	{
+		if (m_Level < LV3)
+			return;
+
+		m_Logs.push_back(pLog);
+		std::string OutputStr = "[Info]" + pLog.Description + "\n";
+		
+		SetOutputColor(WHITE);
+		Output(OutputStr);
+	}
+
+	void Log::SetWarning(std::string pDescription, int32 pErrorCode, std::string pFilePath, int32 pLine)
+	{
+		SetWarning({ pDescription, pErrorCode, pLine, pFilePath });
+	}
+
+	void Log::SetWarning(LogHolder pLog)
+	{
+		if (m_Level < LV2)
+			return;
+
+		m_Logs.push_back(pLog);
+		std::string OutputStr = "[Warning]" + ((pLog.ErrorCode != -1) ? TranslateErrorCode(pLog.ErrorCode) + ":\t" : "")
+		    + pLog.Description + ((pLog.FilePath.size() != 0) ? "=>File:" + pLog.FilePath : "")
+			+ ((pLog.Line != -1) ? "=>Line:" + std::to_string(pLog.Line) : "") + "\n";
+
+		SetOutputColor(YELLOW);
+		Output(OutputStr);
+	}
+
+	void Log::SetError(std::string pDescription, int32 pErrorCode, std::string pFilePath, int32 pLine)
+	{
+		SetError({pDescription, pErrorCode, pLine, pFilePath});
+	}
+
+	void Log::SetError(LogHolder pLog)
+	{
+		if (m_Level < LV1)
+			return;
+
+		m_Logs.push_back(pLog);
+		std::string OutputStr = "[Error]" + ((pLog.ErrorCode != -1) ? TranslateErrorCode(pLog.ErrorCode) + ":\t" : "")
+		    + pLog.Description + ((pLog.FilePath.size() != 0) ? "=>File:" + pLog.FilePath : "")
+			+ ((pLog.Line != -1) ? "=>Line:" + std::to_string(pLog.Line) : "") + "\n";
+
+		SetOutputColor(RED);
+		Output(OutputStr);
+	}
+
+
+	void Log::DebugPrint(const std::string & pContent)
+	{
+		SetOutputColor(GREEN);
+		std::cout << pContent << '\n';
+	}
+
+	void Log::DisableFile()
+	{
+		m_File.close();
+		m_FileLogging = false;
+	}
+
+	void Log::EnableFile(std::string pPath)
+	{
+		if (m_Level == LV0)
+			return;
+
+		m_File.open(pPath);
+		m_FileLogging = true;
 	}
 };

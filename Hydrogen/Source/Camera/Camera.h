@@ -13,19 +13,19 @@ namespace Hydrogen
 	public:
 
 
-		void SetupCamera(float pFOV, glm::vec3 pPosition, float pAspectRatio = 2.0f, float pNearPlane = 0.1, float pFarPlane = 1000.0f);
-		void HandleCameraMovement(float pDeltaTime);
-		void HandleCameraLooking();
+		HYD void SetupCamera(float pFOV, glm::vec3 pPosition, float pAspectRatio = 2.0f, float pNearPlane = 0.1, float pFarPlane = 1000.0f);
+		HYD void HandleCameraMovement(float pDeltaTime);
+		HYD void HandleCameraLooking();
+		 
+		HYD void DisableCameraMovement(bool pDisableCamera);
+		 
+		HYD glm::mat4& GetView();
+		HYD glm::mat4& GetProjection();
 
-		void DisableCameraMovement(bool pDisableCamera);
-
-		glm::mat4& GetView();
-		glm::mat4& GetProjection();
-
-		inline glm::vec3& GetCameraPos() { return m_Position; }
+		HYD inline glm::vec3& GetCameraPos() { return m_Position; }
 	private:
 
-		void CalculateCameraAngle();
+		HYD void CalculateCameraAngle();
 
 	private:
 

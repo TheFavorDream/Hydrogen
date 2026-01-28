@@ -26,15 +26,15 @@ namespace Hydrogen
 	{
 	public:
 
-		static void InitKeyboard(GLFWwindow* pWindow);
-		static void KeyCallBack(GLFWwindow* pWindow, int pKey, int pScancode, int pAction, int pMods);
-
-		static bool IsKeyPressed(int pScanCode);
-		static bool IsKeyReleased(int pScanCode);
-
-		static State GetKeyState(int pScanCode);
-
-		static void SetKeyEventHint(int pScanCode, KeyMode pMode);
+		HYD static void InitKeyboard(GLFWwindow* pWindow);
+		HYD static void KeyCallBack(GLFWwindow* pWindow, int pKey, int pScancode, int pAction, int pMods);
+		 
+		HYD static bool IsKeyPressed(int pScanCode);
+		HYD static bool IsKeyReleased(int pScanCode);
+		
+		HYD static State GetKeyState(int pScanCode);
+		
+		HYD static void SetKeyEventHint(int pScanCode, KeyMode pMode);
 
 	private:
 		static std::unordered_map<int, Event> m_Mapping;

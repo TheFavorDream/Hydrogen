@@ -135,7 +135,7 @@ namespace Hydrogen
 	{
 		if (m_Elements.find(pID) != m_Elements.end())
 		{
-			Log::SetError(HYD_UI_INVALID_ELEMENT, __FILE__, __LINE__, "Element Already Exists");
+			Log::SetError("Element Already Exists", HYD_UI_INVALID_ELEMENT, __FILE__, __LINE__);
 			return HYD_UI_INVALID_ELEMENT;
 		}
 

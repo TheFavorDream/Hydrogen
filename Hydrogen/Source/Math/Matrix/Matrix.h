@@ -4,51 +4,68 @@
 
 #pragma once
 
-#include "../../Common.h"
+#include "Common.h"
 #include <vector>
 #include "../Vector/VectorDef.h"
+
+
+
 
 namespace Hydrogen
 {
 
-	//Matrix Operations:
 
-
-	Matrix Scale(const Matrix& pMatrix, const Vec3& pScale);
-	Matrix Translation(const Matrix& pMatrix, const Vec3& pTranslation);
-	Matrix RotateQuaternion(const Matrix& pMatrix, const Vec4& pRotation);
 
 	//Matrix Class
 	class Matrix
 	{
 	public:
 
-		Matrix(float pDefaultValue=1.0f);
-		Matrix(const Matrix& pOther);
-		Matrix(Matrix&& pOther);
-		Matrix(uint32 pWidth, uint32 pHeight);
-	   ~Matrix();
+
+		HYD Matrix(float pDefaultValue=1.0f);
+		HYD Matrix(const Matrix& pOther);
+		HYD Matrix(Matrix&& pOther);
+		HYD Matrix(uint32 pWidth, uint32 pHeight);
+	    HYD ~Matrix();
 
 
-	   void operator=(Matrix&& pOther);
-	   Matrix operator+(const Matrix& pOther);
-	   Matrix operator-(const Matrix& pOther);
-	   Matrix operator*(const Matrix& pOther);
+	    HYD void operator=(const Matrix& pOther);
+	    HYD Matrix operator+(const Matrix& pOther);
+	    HYD Matrix operator-(const Matrix& pOther);
+	    HYD Matrix operator*(const Matrix& pOther);
 
-	   void CopyDataToMatrix(const std::vector<float>& pData);
+		HYD void CopyDataToMatrix(const std::vector<float>& pData);
 
-		float& At(uint32 pI, uint32 pJ) const;
+		HYD float& At(uint32 pI, uint32 pJ) const;
 
-		bool IsIdentity();
+		HYD bool IsIdentity();
 
 		//Temp
-		void PrintMatrix();
+		HYD void PrintMatrix();
 
-		inline uint32 GetWidth() const { return m_Width; }
-		inline uint32 GetHeight() const { return m_Height; }
-		inline float* GetPtr() const { return m_Ptr; }
+		HYD inline uint32 GetWidth() const { return m_Width; }
+		HYD inline uint32 GetHeight() const { return m_Height; }
+		HYD inline float* GetPtr() const { return m_Ptr; }
+
+		inline const Vec3& GetScale() { return m_Scale; }
+		inline const Vec3& GetTranslate() { return m_Translate; }
+		inline const Vec4& GetRotate() { return m_Rotate; }
+
+	
 	private:
 		float* m_Ptr = nullptr;
 		uint32 m_Width = 0, m_Height = 0;
+
+		Vec3 m_Scale;
+		Vec3 m_Translate;
+		Vec4 m_Rotate;
 	};
+
+
+	//Matrix Operations:
+
+
+	HYD Matrix Scale(const Matrix& pMatrix, const Vec3& pScale);
+	HYD Matrix Translation(const Matrix& pMatrix, const Vec3& pTranslation);
+	HYD Matrix RotateQuaternion(const Matrix& pMatrix, const Vec4& pRotation);
 };

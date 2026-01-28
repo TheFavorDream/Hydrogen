@@ -12,7 +12,7 @@ void UILayer::Setup()
 	m_ControlWindow		= m_UI->GetWindow("Control");
 	m_EditorWindow		= m_UI->GetWindow("Editor");
 
-	m_EditorWindow->CreateComboBox("Options", {"OP1", "OP2", "OP3"}, Hydrogen::Vec2(50.0f, 50.0f), "Options");
+	m_EditorWindow->CreateComboBox("Options", {"Shaders", "OP2", "OP3"}, Hydrogen::Vec2(10.0f, 20.0f), "Options");
 
 	m_ControlWindow->CreateText("", Hydrogen::Vec2(10.0f, 520.0f), "DeltaMeter");
 	m_ControlWindow->CreateText("", Hydrogen::Vec2(10.0f, 540.0f), "FPSMeter");
@@ -21,7 +21,6 @@ void UILayer::Setup()
 	m_ControlWindow->CreateSliderF("Slider", Hydrogen::Vec2(10.0f, 80.0f));
 	m_ControlWindow->CreateCheckbox("check", Hydrogen::Vec2(10.0f, 110.0f));
 	m_ControlWindow->CreateComboBox("Stuff", { "Op1", "Op2" , "Op3", "Op4"}, Hydrogen::Vec2(10.0f, 140.0f), "Combo");
-
 
 }
 
@@ -34,9 +33,7 @@ void UILayer::Shutdown()
 
 void UILayer::Event(float pDeltaTime)
 {
-	m_ControlWindow->GetElement("DeltaMeter")->GetLabel() = "Delta Time:" + std::to_string(pDeltaTime);
-	m_ControlWindow->GetElement("FPSMeter")->GetLabel() = "Average FPS:" + std::to_string(int(1000.0/pDeltaTime));
-
+   	m_DeltaTimeAvg.AddValue(pDeltaTime);
 
 	if (Hydrogen::Keyboard::GetKeyState(GLFW_KEY_UP) == Hydrogen::KEY_DOWN)
 	{
@@ -75,9 +72,12 @@ void UILayer::Update()
 	m_EditorWindow->SetWindowPos(0.0f, m_WindowSize.Y);
 
 
+	m_ControlWindow->GetElement("DeltaMeter")->GetLabel() = "Average Delta Time:" + std::to_string(m_DeltaTimeAvg.CalcAvg());
+	m_ControlWindow->GetElement("FPSMeter")->GetLabel() = "Average FPS:" + std::to_string(int(1000.0f/(m_DeltaTimeAvg.CalcAvg())));
 }
 
 void UILayer::Render()
 {
 	m_UI->Render();
 }
+
