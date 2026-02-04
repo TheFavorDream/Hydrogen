@@ -70,6 +70,8 @@ namespace Hydrogen
 				return "HYD_UI_INVALID_WINDOW";
 			case HYD_SHADER_FAILED:
 				return "HYD_SHADER_FAILED";
+			case HYD_IMAGE_FAILED:
+				return "HYD_IMAGE_FAILED";
 
 			//OpenGL:
 			case GL_INVALID_ENUM:
@@ -136,9 +138,9 @@ namespace Hydrogen
 		va_list Args;
 		va_start(Args, pString);
 		std::string Res = "";
-		for (int i = 0; i < pString.size()-1; ++i)
+		for (int i = 0; i < pString.size(); ++i)
 		{
-			if (pString[i] == '%')
+			if (pString[i] == '%' && i < pString.size()-1)
 			{
 				char SpecialChar = pString[i + 1];
 

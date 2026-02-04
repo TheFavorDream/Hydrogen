@@ -3,6 +3,7 @@
 #include "Glew/glew.h"
 #include "3rdParty/stb_image/stb_image.h"
 #include "Log/Log.h"
+#include "Image.h"
 
 namespace Hydrogen
 {
@@ -12,13 +13,16 @@ namespace Hydrogen
 	public:
 
 		HYD Texture() = default;
-		HYD Texture(int32 pWidth, int32 pHeight, int32 pChannels=3, uint8* pData=nullptr);
+		HYD Texture(Image& pImage, Sampler pSampler = Sampler());
 		HYD ~Texture();
 		
-		HYD Texture(const Texture& pOther); // Copy Constructor
+		HYD Texture(const Texture& pOther) = delete;
 		HYD Texture(Texture&& pOther);//Move Constructor
-		
-		HYD int CreateTexture(int32 pWidth, int32 pHeight, int32 pChannels = 3, uint8* pData = nullptr);
+
+		HYD Texture& operator=(const Texture& other) = delete;
+		HYD Texture& operator=(Texture&& pOther) noexcept;
+
+		HYD int CreateTexture(const Image& pImage, Sampler pSampler = Sampler());
 		HYD int CreateTexture(std::string pPath);
 		HYD int DestroyTexture();
 		
@@ -31,7 +35,7 @@ namespace Hydrogen
 
 	private:
 
-		GLenum RetiveChannels(int32 pChannelNumber);
+		HYD GLenum RetriveChannel(int32 pChannel);
 
 	private:
 		uint32 m_TextureID = 0;

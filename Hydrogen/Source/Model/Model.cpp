@@ -4,20 +4,20 @@ namespace Hydrogen
 {
 	Model::Model()
 	{
-		SetupModel("UnamedModel", {});
+		m_Name = "UnamedModel";
 	}
 
 	Model::Model(const std::string & pName)
 	{
-		SetupModel(pName, {});
+		m_Name = pName;
 	}
 
-	Model::Model(const std::string & pName, const std::vector<Mesh>& pMeshes)
+	Model::Model(const std::string & pName, std::vector<Mesh>& pMeshes)
 	{
 		SetupModel(pName, pMeshes);
 	}
 
-	Model::Model(const std::string & pName, const std::vector<Mesh>& pMeshes, const Matrix & pTransform)
+	Model::Model(const std::string & pName, std::vector<Mesh>& pMeshes, Matrix & pTransform)
 	{
 		SetupModel(pName, pMeshes);
 		//SetTransform(pTransform);
@@ -28,25 +28,28 @@ namespace Hydrogen
 		DestroyModel();
 	}
 
-	Model::Model(const Model & pOther)
-	{
-		m_Transform = std::move(pOther.m_Transform);
-		m_Meshes	= std::move(pOther.m_Meshes);
-		m_Name		= pOther.m_Name;
-	}
 
 	Model::Model(Model && pOther)
 	{
 		m_Transform = std::move(pOther.m_Transform);
 		m_Meshes    = std::move(pOther.m_Meshes);
-		m_Name      = pOther.m_Name;
-
-		pOther.m_Name.clear();
-		pOther.m_Meshes.clear();
+		m_Name      = std::move(pOther.m_Name);
 	}
 
+	Model& Model::operator=(Model&& pOther)
+	{
+		if (this != &pOther)
+		{
+			m_Transform = std::move(pOther.m_Transform);
+			m_Meshes = std::move(pOther.m_Meshes);
+			m_Name = std::move(pOther.m_Name);
 
-	uint32 Model::SetupModel(const std::string & pName, const std::vector<Mesh>& pMeshes)
+		}
+
+		return *this;
+	}
+
+	uint32 Model::SetupModel(const std::string & pName,  std::vector<Mesh>& pMeshes)
 	{
 		uint32 ErrorCode = HYD_OK;
 		ErrorCode = SetName(pName);
@@ -73,6 +76,16 @@ namespace Hydrogen
 	}
 
 
+	uint32 Model::BakeTransform(const glm::mat4& pTransform)
+	{
+		for (auto& mesh : m_Meshes)
+		{
+			mesh.m_Transformation = pTransform * mesh.m_Transformation;
+		}
+		return HYD_OK;
+	}
+
+
 	uint32 Model::SetName(std::string pName)
 	{
 		if (pName.size() == 0)
@@ -88,7 +101,7 @@ namespace Hydrogen
 	{
 		for (auto &i : m_Meshes)
 		{
-			i.Render(pShader, &m_Transform, this);
+			i.Render(pShader, nullptr, this);
 		}
 		return HYD_OK;
 	}

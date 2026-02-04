@@ -2,7 +2,7 @@
 
 namespace Hydrogen
 {
-	VertexArray::VertexArray(VertexArray && Other)
+	VertexArray::VertexArray(VertexArray&& Other)
 	{
 		m_VertexID = Other.m_VertexID;
 		m_Offset = Other.m_Offset;
@@ -14,6 +14,21 @@ namespace Hydrogen
 	VertexArray::~VertexArray()
 	{
 		DestroyVertexArray();
+	}
+
+
+	VertexArray& VertexArray::operator=(VertexArray&& pOther)
+	{
+		if (this != &pOther)
+		{
+			this->m_VertexID =			pOther.m_VertexID;
+			this->m_Offset =			pOther.m_Offset;
+			this->m_EnabledAttributes = pOther.m_EnabledAttributes;
+
+			pOther.m_VertexID = 0;
+		}
+
+		return *this;
 	}
 
 	int VertexArray::CreateVertexArray()

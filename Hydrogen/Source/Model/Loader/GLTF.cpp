@@ -6,10 +6,12 @@ namespace Hydrogen
 
 	uint32				GLTFLoader::s_Version;
 	std::string			GLTFLoader::s_RootPath;
+	Load_Flags			GLTFLoader::s_Flags;
 
-	Model* GLTFLoader::Load(const std::string& pPath)
+	Model* GLTFLoader::Load(const std::string& pPath, Load_Flags pFlags)
 	{
 		s_RootPath = pPath.substr(0, pPath.find_last_of("\\")) + "\\";
+		s_Flags = pFlags;
 
 		switch (GetFileFormat(pPath))
 		{
@@ -25,21 +27,33 @@ namespace Hydrogen
 	Model* GLTFLoader::LoadGLTF(const std::string& pPath)
 	{
 
+		PROFILE_START("Parsing")
 		std::ifstream SourceFile(pPath);
+		if (SourceFile.fail())
+		{
+			Log::SetError(Log::FmtStr("Couldn't open model at: %s", pPath.c_str()));
+			SourceFile.close();
+			return nullptr;
+		}
+
 		json GLTF = json::parse(SourceFile);
 		SourceFile.close();
+		PROFILE_STOP
 
 
 		uint32 Err = HYD_OK;
 
+		PROFILE_START("Buffer Loading")
 		std::vector<std::string> Buffers;
 		Err = SetupBuffers(GLTF["buffers"], Buffers);
 		if (Err != HYD_OK)
 		{
 			return nullptr;
 		}
+		PROFILE_STOP
 
 
+		PROFILE_START("Buffer Views")
 		std::vector<BufferView> BufferViews;
 		Err = SetupBufferViews(GLTF["bufferViews"], Buffers, BufferViews);
 		if (Err != HYD_OK)
@@ -48,27 +62,45 @@ namespace Hydrogen
 		}
 		//We don't need Buffers anymore
 		Buffers.clear();
+		PROFILE_STOP
 
 
+
+		//Process Materials:
+		PROFILE_START("Material Loading")
+		std::vector<Material> Materials;
+		if (GLTF.find("materials") != GLTF.end() && s_Flags != NO_MATERIAL)
+		{
+			LoadMaterials(GLTF, Materials, BufferViews);
+		}
+		PROFILE_STOP
+
+		PROFILE_START("Accessor Loading")
 		std::vector<Accessor> Accessors;
 		Err = SetupAccessors(GLTF["accessors"], BufferViews, Accessors);
 		if (Err != HYD_OK)
 		{
 			return nullptr;
 		}
-		BufferViews.clear();
+		PROFILE_STOP
+		//We won't clear bufferViews yet, because it might be needed in Material loading
+		//BufferViews.clear();
 
 
 		Model* model = new Model();
 
-		Err = SetupMeshes(GLTF["meshes"], Accessors, model);
+
+		PROFILE_START("Setup Mesh")
+		Err = SetupMeshes(GLTF["meshes"], Accessors, Materials, model);
 		if (Err != HYD_OK)
 		{
 			delete model;
 			return nullptr;
 		}
+		Materials.clear();
+		PROFILE_STOP
 
-
+		PROFILE_START("Process Nodes")
 		std::vector<Node> nodes;
 		Err = ProcessNodes(GLTF["nodes"], nodes);
 		if (Err != HYD_OK)
@@ -76,17 +108,24 @@ namespace Hydrogen
 			delete model;
 			return nullptr;
 		}
+		PROFILE_STOP
 
-
+		
+		PROFILE_START("Process Scene")
 		Err = ProcessScene(GLTF["scenes"][0], nodes, model);
 		nodes.clear();
-
 		if (Err != HYD_OK)
 		{
 			delete model;
 			return nullptr;
 		}
 
+		PROFILE_STOP
+
+
+		//We've done using bufferview 
+		BufferViews.clear();
+		GLTF.clear();
 		return model;
 	}
 
@@ -126,14 +165,14 @@ namespace Hydrogen
 		{
 			for (auto &i : pBuffers)
 			{
-				pBufferData.push_back(std::string()); //Push an empty string
-				std::string* Data = &pBufferData.at(pBufferData.size()-1);
+				pBufferData.emplace_back(); //Push an empty string
+				std::string* Data = &pBufferData.back();
 
 				std::string Path = s_RootPath + std::string(i["uri"]);
 				std::fstream Source(Path, std::ios::binary || std::ios::in);
 				if (!Source.is_open())
 				{
-					Log::SetError("Failed to load external URI", HYD_INVALID_PATH, __FILE__, __LINE__);
+					Log::SetError("Failed to load external URI", HYD_INVALID_PATH);
 					Source.close();
 					pBufferData.clear();
 					return HYD_INVALID_PATH;
@@ -153,10 +192,10 @@ namespace Hydrogen
 
 		}
 
-		catch (...)
+		catch (const json::exception& eInfo)
 		{
-			//replace with Assertion
-			__debugbreak();
+			Log::SetError(Log::FmtStr("Unable to Parse GLTF file. Currupted json data Error:%s", eInfo.what()), HYD_INVALID_GLTF);
+			return HYD_INVALID_GLTF;
 		}
 
 		return HYD_OK;
@@ -172,8 +211,8 @@ namespace Hydrogen
 
 			for (auto &i : pBufferViews)
 			{
-				pBufferViewData.push_back({});
-				BufferView* bufferView = &pBufferViewData.at(pBufferViewData.size() - 1);
+				pBufferViewData.emplace_back();
+				BufferView* bufferView = &pBufferViewData.back();
 
 				int32 Target = i.value("target", -1);
 				if (Target == -1)
@@ -193,18 +232,19 @@ namespace Hydrogen
 
 				bufferView->Target = Target;
 
-				uint32 ByteOffset = i["byteOffset"];
+				uint32 ByteOffset = i.value("byteOffset", 0);
 				uint32 ByteLength = i["byteLength"];
+				uint32 ByteStride = i.value("byteStride", 0);
 				bufferView->Data = pBufferData[BufferIndex].substr(ByteOffset, ByteLength);
 				
 			}
 
 		}
 
-		catch (...)
+		catch (const json::exception& eInfo)
 		{
-			//replace with Assertion
-			__debugbreak();
+			Log::SetError(Log::FmtStr("Unable to Parse GLTF file. Currupted json data Error:%s", eInfo.what()), HYD_INVALID_GLTF);
+			return HYD_INVALID_GLTF;
 		}
 
 
@@ -221,8 +261,8 @@ namespace Hydrogen
 		{
 			for (auto& i : pAccessors)
 			{
-				pAccessorData.push_back({});
-				Accessor* accessor = &pAccessorData.at(pAccessorData.size()-1);
+				pAccessorData.emplace_back();
+				Accessor* accessor = &pAccessorData.back();
 
 				int32 BufferviewIndex = i.value("bufferView", -1);
 				if (BufferviewIndex == -1 || BufferviewIndex >= pBufferViewData.size())
@@ -244,16 +284,17 @@ namespace Hydrogen
 			}
 		}
 
-		catch(...)
+		catch (const json::exception& eInfo)
 		{
-			__debugbreak();
+			Log::SetError(Log::FmtStr("Unable to Parse GLTF file. Currupted json data Error:%s", eInfo.what()), HYD_INVALID_GLTF);
+			return HYD_INVALID_GLTF;
 		}
 
 
 		return HYD_OK;
 	}
 
-	uint32 GLTFLoader::SetupMeshes(json & pMeshes, const std::vector<Accessor>& pAccessorData, Model* pCurrentModel)
+	uint32 GLTFLoader::SetupMeshes(json & pMeshes, const std::vector<Accessor>& pAccessorData, std::vector<Material>& pMaterials, Model* pCurrentModel)
 	{
 
 		if (pMeshes == nullptr)
@@ -263,26 +304,24 @@ namespace Hydrogen
 		{
 			for (auto& i : pMeshes)
 			{
-				pCurrentModel->m_Meshes.push_back({});
-				Mesh* mesh = &pCurrentModel->m_Meshes.at(pCurrentModel->m_Meshes.size() - 1);
+				Mesh mesh;
 
-				mesh->m_Name = i.value("name", "unamed");
-				if (SetupPrimitives(i["primitives"], pAccessorData, pCurrentModel, mesh) == HYD_INVALID_VALUE)
+				mesh.m_Name = i.value("name", "unamed");
+				if (SetupPrimitives(i["primitives"], pAccessorData, pMaterials, mesh) == HYD_INVALID_VALUE)
 				{
 					//Skip this mesh because it's empty
-					pCurrentModel->m_Meshes.pop_back();
 					continue;
 				}
 
+				pCurrentModel->m_Meshes.push_back(std::move(mesh));
 
 			}
 		}
-
-		catch (...)
+		catch (const json::type_error& eInfo)
 		{
-			__debugbreak();
+			Log::SetError(Log::FmtStr("Unable to Parse GLTF file. Currupted json data Error:%s", eInfo.what()), HYD_INVALID_GLTF);
+			return HYD_INVALID_GLTF;
 		}
-
 		return HYD_OK;
 	}
 
@@ -292,62 +331,64 @@ namespace Hydrogen
 		we construct buffers from accessors here
 	
 	*/
-	uint32 GLTFLoader::SetupPrimitives(json& pPrimitives, const std::vector<Accessor>& pAccessorData, Model* pCurrentModel, Mesh* pCurrentMesh)
+	uint32 GLTFLoader::SetupPrimitives(json& pPrimitives, const std::vector<Accessor>& pAccessorData,  std::vector<Material>& pMaterials, Mesh& pCurrentMesh)
 	{
 		if (pPrimitives == nullptr)
 			return HYD_INVALID_VALUE; //this means this mesh doesn't have any primitive therefore it's an empty mesh.
-
 
 		try 
 		{
 			for (auto& i : pPrimitives)
 			{
-				pCurrentMesh->m_Primitives.push_back({});
-				Primitive* primitive = &pCurrentMesh->m_Primitives.at(pCurrentMesh->m_Primitives.size()-1);
+				Primitive primitive;
+				primitive.m_RenderingMode = i.value("mode", 4);
 
-				primitive->RenderingMode = i.value("mode", 4);
+				int32 MaterialIndex = i.value("material", -1);
+				if (s_Flags != NO_MATERIAL && MaterialIndex != -1)
+					primitive.m_Material = std::move(pMaterials[MaterialIndex]);
 
 				//Creates Vertex Buffer
-				ProcessAttributes(i["attributes"], pAccessorData, primitive, pCurrentModel);
+				ProcessAttributes(i["attributes"], pAccessorData, primitive);
 
 				if (i.find("indices") != i.end())
 				{
 					uint32 indicies = i["indices"];
 
-					pCurrentModel->m_Arrays.at(primitive->VaoID).Bind();
+					primitive.m_VertexArrays.Bind();
 					//Create Element Buffer:
 
-					Buffer EBO;
-					EBO.CreateBuffer(GL_ELEMENT_ARRAY_BUFFER, pAccessorData[indicies].Data.Data.size(), (void*)&pAccessorData[indicies].Data.Data[0], pAccessorData[indicies].Count);
-					
-					
-					pCurrentModel->m_Buffers.push_back(std::move(EBO));
-					primitive->EboID = pCurrentModel->m_Buffers.size() - 1;
+					primitive.m_ElementBuffer.CreateBuffer(GL_ELEMENT_ARRAY_BUFFER,
+						pAccessorData[indicies].Data.Data.size(),
+						(void*)&pAccessorData[indicies].Data.Data[0],
+						pAccessorData[indicies].Count, pAccessorData[indicies].ComponentType);
 				}
+
+				pCurrentMesh.m_Primitives.push_back(std::move(primitive));
 			}
 		}
 
-		catch (...)
+		catch (const json::exception& eInfo)
 		{
-			__debugbreak();
+			Log::SetError(Log::FmtStr("Unable to Parse GLTF file. Currupted json data Error:%s", eInfo.what()), HYD_INVALID_GLTF);
+			return HYD_INVALID_GLTF;
 		}
 
 		return HYD_OK;
 	}
 
-	uint32 GLTFLoader::ProcessAttributes(json & pAttributes, const std::vector<Accessor>& pAccessorData, Primitive *pCurrentPrimitive, Model* pCurrentModel)
+	uint32 GLTFLoader::ProcessAttributes(json & pAttributes, const std::vector<Accessor>& pAccessorData, Primitive& pCurrentPrimitive)
 	{
 		if (pAttributes == nullptr)
 			return HYD_CORRUPTED_GLTF;
 		try
 		{
 			//Attribue = vertex buffer
-			pCurrentPrimitive->Attributes.POSITION    = pAttributes.value("POSITION", -1);
-			pCurrentPrimitive->Attributes.NORMALS     = pAttributes.value("NORMAL", -1);
-			pCurrentPrimitive->Attributes.TANGENT     = pAttributes.value("TANGENT", -1);
-			pCurrentPrimitive->Attributes.TEXCOORDS_0 = pAttributes.value("TEXCOORD_0", -1);
-			pCurrentPrimitive->Attributes.TEXCOORDS_1 = pAttributes.value("TEXCOORD_1", -1);
-			pCurrentPrimitive->Attributes.COLOR_0	  = pAttributes.value("COLOR_0", -1);
+			pCurrentPrimitive.m_Attributes.POSITION    = pAttributes.value("POSITION", -1);
+			pCurrentPrimitive.m_Attributes.NORMALS     = pAttributes.value("NORMAL", -1);
+			pCurrentPrimitive.m_Attributes.TANGENT     = pAttributes.value("TANGENT", -1);
+			pCurrentPrimitive.m_Attributes.TEXCOORDS_0 = pAttributes.value("TEXCOORD_0", -1);
+			pCurrentPrimitive.m_Attributes.TEXCOORDS_1 = pAttributes.value("TEXCOORD_1", -1);
+			pCurrentPrimitive.m_Attributes.COLOR_0	  = pAttributes.value("COLOR_0", -1);
 
 			std::vector<int32> Indecies = {
 				pAttributes.value("POSITION", -1),
@@ -367,42 +408,35 @@ namespace Hydrogen
 				VBOSize += pAccessorData[i].Data.Data.size();
 			}
 
-			VertexArray VAO;
-			VAO.CreateVertexArray();
-			VAO.Bind();
+			
+			pCurrentPrimitive.m_VertexArrays.CreateVertexArray();
+			pCurrentPrimitive.m_VertexArrays.Bind();
 
 			//Vertex Buffer Setup:
-			Buffer VBO;
-			VBO.CreateBuffer(GL_ARRAY_BUFFER, VBOSize);
+			
+			pCurrentPrimitive.m_VertexBuffer.CreateBuffer(GL_ARRAY_BUFFER, VBOSize);
 			uint32 Offset = 0;
 			for (auto &i : Indecies)
 			{
 				if (i == -1)
 					continue;//skip 
-				VBO.CopyDataChunk(Offset, pAccessorData[i].Data.Data.size(), (void*)(&pAccessorData[i].Data.Data[0]));
+				pCurrentPrimitive.m_VertexBuffer.CopyDataChunk(Offset, pAccessorData[i].Data.Data.size(), (void*)(&pAccessorData[i].Data.Data[0]));
 				Offset += pAccessorData[i].Data.Data.size();
 
-				VAO.AddAttribute(pAccessorData[i]);
+				pCurrentPrimitive.m_VertexArrays.AddAttribute(pAccessorData[i]);
 			}
-
-
-			
-
-			pCurrentModel->m_Buffers.push_back(std::move(VBO)); //push an empty buffer
-			pCurrentModel->m_Arrays.push_back(std::move(VAO));
-
-			pCurrentPrimitive->VboID = pCurrentModel->m_Buffers.size() - 1;
-			pCurrentPrimitive->VaoID = pCurrentModel->m_Arrays.size() - 1;
-
 		}
 
-		catch (...)
+		catch (const json::exception& eInfo)
 		{
-			__debugbreak();
+			Log::SetError(Log::FmtStr("Unable to Parse GLTF file. Currupted json data Error:%s", eInfo.what()), HYD_INVALID_GLTF);
+			return HYD_INVALID_GLTF;
 		}
 
 		return  HYD_OK;
 	}
+
+
 
 	uint32 GLTFLoader::ProcessNodes(json& pNodes, std::vector<Node>& nodes)
 	{
@@ -448,9 +482,9 @@ namespace Hydrogen
 				if (i.find("scale") != i.end())
 				{
 					float Scale[3];
-					Scale[0] = (float)i["scale"][0];
-					Scale[1] = (float)i["scale"][1];
-					Scale[2] = (float)i["scale"][2];
+					Scale[0] = (float)i["scale"].at(0);
+					Scale[1] = (float)i["scale"].at(1);
+					Scale[2] = (float)i["scale"].at(2);
 
 					for (uint32 i = 0; i < 3; i++)
 						node.Transformation[i][i] *= Scale[i];
@@ -460,10 +494,10 @@ namespace Hydrogen
 				if (i.find("rotation") != i.end())
 				{
 					Vec4 pRotation;
-					pRotation.X = (float)i["rotation"][0];
-					pRotation.Y = (float)i["rotation"][1];
-					pRotation.Z = (float)i["rotation"][2];
-					pRotation.W = (float)i["rotation"][3];
+					pRotation.X = (float)i["rotation"].at(0);
+					pRotation.Y = (float)i["rotation"].at(1);
+					pRotation.Z = (float)i["rotation"].at(2);
+					pRotation.W = (float)i["rotation"].at(3);
 
 					glm::mat4 Result = glm::mat4(1.0f);
 
@@ -483,9 +517,9 @@ namespace Hydrogen
 				if (i.find("translation") != i.end())
 				{
 					
-					node.Transformation[3][0] = (float)i["translation"][0];
-					node.Transformation[3][1] = (float)i["translation"][1];
-					node.Transformation[3][2] = (float)i["translation"][2];
+					node.Transformation[3][0] = (float)i["translation"].at(0);
+					node.Transformation[3][1] = (float)i["translation"].at(1);
+					node.Transformation[3][2] = (float)i["translation"].at(2);
 
 					//node.Transformation = glm::translate(node.Transformation, Translate);
 				}
@@ -494,10 +528,13 @@ namespace Hydrogen
 			}
 		}
 
-		catch (...)
+		catch (const json::exception& eInfo)
 		{
-			__debugbreak();
+			Log::SetError(Log::FmtStr("Unable to Parse GLTF file. Currupted json data Error:%s", eInfo.what()), HYD_INVALID_GLTF);
+			return HYD_INVALID_GLTF;
 		}
+
+
 
 		return HYD_OK;
 	}
@@ -541,9 +578,215 @@ namespace Hydrogen
 
 		}
 
-		catch (...)
+		catch (const json::exception& eInfo)
 		{
-			__debugbreak();
+			Log::SetError(Log::FmtStr("Unable to Parse GLTF file. Currupted json data Error:%s", eInfo.what()), HYD_INVALID_GLTF);
+			return HYD_INVALID_GLTF;
+		}
+
+		return HYD_OK;
+	}
+
+	uint32 GLTFLoader::LoadMaterials(json & pGLTF, std::vector<Material>& pMaterials, const std::vector<BufferView>& pBufferViews)
+	{
+
+		uint32 Err = HYD_OK;
+		
+		
+		PROFILE_START("Image Loading")
+		//Load Images
+		std::vector<Image> Images;
+		Err = LoadImages(pGLTF["images"], s_RootPath, Images, pBufferViews);
+		
+		if (Err != HYD_OK)
+		{
+			Images.clear();
+			return Err;
+		}
+
+		PROFILE_STOP
+
+		PROFILE_START("Samplers Loading")
+		std::vector<Sampler> Samplers;
+		Err = SetupSamplers(pGLTF["samplers"], Samplers);
+
+		if (Err != HYD_OK)
+		{
+			Images.clear();
+			Samplers.clear();
+			return Err;
+		}
+		PROFILE_STOP
+
+
+		PROFILE_START("Loading Texture")
+		std::vector<Texture> Textures;
+		Err = SetupTextures(pGLTF["textures"], Textures, Samplers, Images);
+
+		if (Err != HYD_OK)
+		{
+			Images.clear();
+			Samplers.clear();
+			Textures.clear();
+			return Err;
+		}
+		PROFILE_STOP
+
+		PROFILE_START("Setup Materials")
+		Err = SetupMaterials(pGLTF["materials"], pMaterials, Textures);
+		PROFILE_STOP
+
+		Images.clear();
+		Samplers.clear();
+
+		return Err;
+	}
+
+	//======================Material Loading================================
+	uint32 GLTFLoader::LoadImages(json & pImages, const std::string & pRootPath, std::vector<Image>& pImageData, const std::vector<BufferView>& pBufferViews)
+	{
+		if (pImages == nullptr)
+			return HYD_CORRUPTED_GLTF; //We don't have any images 
+
+		try
+		{
+			for (auto& image : pImages)
+			{
+				pImageData.emplace_back();
+				Image& CurrentImage = pImageData.back();
+				//If URI was defined:
+				if (image.find("uri") != image.end())
+				{
+					std::string URI = image["uri"];
+
+					//Log::SetInfo(Log::FmtStr("Loading Image from: %s", URI.c_str()));
+					
+					if (CurrentImage.LoadImage((pRootPath + URI).c_str()) == HYD_IMAGE_FAILED)
+						Log::SetError(Log::FmtStr("Failed to Load Image at %s", (s_RootPath+URI).c_str()));
+				}
+				// if bufferView was defined
+				else if (image.find("bufferView") != image.end())
+				{
+					uint32 Index = (uint32)image["bufferView"];
+
+					CurrentImage.LoadImage(&pBufferViews[Index].Data[0]);
+				}
+				//File curreupted
+				else
+				{
+					Log::SetError(Log::FmtStr("Unable to Load Image: %s", image.value("name", "unamed")));
+					continue;
+				}
+			}
+		}
+
+		catch (const json::exception& eInfo)
+		{
+			Log::SetError(Log::FmtStr("Unable to Parse GLTF file. Currupted json data Error:%s", eInfo.what()), HYD_INVALID_GLTF);
+			return HYD_CORRUPTED_GLTF;
+		}
+
+		return HYD_OK;
+	}
+
+	uint32 GLTFLoader::SetupSamplers(json & pSamplers, std::vector<Sampler>& pSamplerData)
+	{
+		if (pSamplers == nullptr)
+			return HYD_CORRUPTED_GLTF;
+
+		try
+		{
+			for (auto& sampler : pSamplers)
+			{
+				pSamplerData.emplace_back();
+				Sampler& CurrentSampler = pSamplerData.at(pSamplerData.size() - 1);
+
+				CurrentSampler.Mag   = (Filter)sampler.value("magFilter", (uint32)LINEAR);
+				CurrentSampler.Min   = (Filter)sampler.value("minFilter", (uint32)LINEAR);
+				CurrentSampler.WrapS = (Wrap)sampler.value("wrapS", (uint32)REPEAT);
+				CurrentSampler.WrapT = (Wrap)sampler.value("wrapT", (uint32)REPEAT);
+			}
+		}
+		catch (const json::exception& eInfo)
+		{
+			Log::SetError(Log::FmtStr("Unable to Parse GLTF file. Currupted json data Error:%s", eInfo.what()), HYD_INVALID_GLTF);
+			return HYD_INVALID_GLTF;
+		}
+
+		return HYD_OK;
+	}
+
+	uint32 GLTFLoader::SetupTextures(json & pTextures, std::vector<Texture>& pTextureData, const std::vector<Sampler>& pSamplerData, const std::vector<Image>& pImageData)
+	{
+
+		if (pTextures == nullptr)
+			return HYD_CORRUPTED_GLTF;
+
+		try
+		{
+			for (auto& texture : pTextures)
+			{
+				pTextureData.emplace_back();
+				Texture& CurrentTexture = pTextureData.back();
+
+				uint32 ImageIndex = texture["source"];
+				Sampler sampler;
+				
+				if (texture.find("sampler") != texture.end())
+					sampler = pSamplerData.at(texture["sampler"]);
+
+				if (CurrentTexture.CreateTexture(pImageData[ImageIndex], sampler) != HYD_OK)
+				{
+					Log::SetError("Unable to Create Texture");
+					continue;
+				}
+			}
+		}
+
+		catch (const json::exception& eInfo)
+		{
+			Log::SetError(Log::FmtStr("Unable to Parse GLTF file. Currupted json data Error:%s", eInfo.what()), HYD_INVALID_GLTF);
+			return HYD_INVALID_GLTF;
+		}
+
+		return HYD_OK;
+	}
+
+	uint32 GLTFLoader::SetupMaterials(json & pMaterials, std::vector<Material>& pMaterial, std::vector<Texture>& pTextureData)
+	{
+		if (pMaterials == nullptr)
+			return HYD_CORRUPTED_GLTF;
+		try
+		{
+			for (auto& material : pMaterials)
+			{
+				pMaterial.emplace_back();
+				Material& Current = pMaterial.back();
+
+				Current.m_Name = material.value("name", "unamed");
+
+				json& pbrMetal = material["pbrMetallicRoughness"];
+
+				Current.m_MetalicnessFactor = pbrMetal.value("metallicFactor", 1.0f);
+				Current.m_RoughnessFactor   = pbrMetal.value("roughnessFactor", 1.0f);
+
+				//Textures:
+				if (pbrMetal.find("baseColorTexture") != pbrMetal.end())
+				{
+					json& BaseColor = pbrMetal["baseColorTexture"];
+
+					uint32 Index = BaseColor["index"];
+					Current.m_BaseColor = std::move(pTextureData[Index]);
+				}
+
+				
+			}
+		}
+
+		catch (const json::exception& eInfo)
+		{
+			Log::SetError(Log::FmtStr("Unable to Parse GLTF file. Currupted json data Error:%s", eInfo.what()), HYD_INVALID_GLTF);
+			return HYD_INVALID_GLTF;
 		}
 
 		return HYD_OK;

@@ -15,14 +15,32 @@ namespace Hydrogen
 
 		pMove.m_BufferID = 0;
 		pMove.m_BufferSize = 0;
+		pMove.m_BufferTarget = 0;
 	}
 
-	int Buffer::CreateBuffer(GLenum pBufferTarget, uint32 pSize, void* pData, uint32 pCount)
+	Buffer& Buffer::operator=(Buffer && pOther)
+	{
+		if (&pOther != this)
+		{
+			m_BufferID = pOther.m_BufferID;
+			m_BufferSize = pOther.m_BufferSize;
+			m_BufferTarget = pOther.m_BufferTarget;
+
+			pOther.m_BufferID = 0;
+			pOther.m_BufferSize = 0;
+			pOther.m_BufferTarget = 0;
+
+		}
+
+		return *this;
+	}
+
+	int Buffer::CreateBuffer(GLenum pBufferTarget, uint32 pSize, void* pData, uint32 pCount, uint32 pComponentType)
 	{
 		GL_CALL(glGenBuffers(1, &m_BufferID));
 		if (m_BufferID == 0)
 		{
-			Log::SetError("Couldn't Create Buffer", HYD_OPENGL_VERTEX_BUFFER_FAILED, __FILE__, __LINE__);
+			Log::SetError("Couldn't Create Buffer", HYD_OPENGL_VERTEX_BUFFER_FAILED);
 			return HYD_OPENGL_VERTEX_BUFFER_FAILED;
 		}
 		GL_CALL(glBindBuffer(pBufferTarget, m_BufferID));
@@ -30,14 +48,16 @@ namespace Hydrogen
 
 		m_BufferTarget = pBufferTarget;
 		m_BufferSize = pCount;
+		m_EBO_ComponentType = pComponentType;
 		return HYD_OK;
 	}
 
 	int Buffer::CopyDataChunk(uint32 pOffset, uint32 pSize, void* pData)
 	{
+
 		if (m_BufferID == 0)
 		{
-			Log::SetError("Trying to copy into an empty buffer",HYD_OPENGL_VERTEX_BUFFER_FAILED, __FILE__, __LINE__);
+			Log::SetError("Trying to copy into an empty buffer",HYD_OPENGL_VERTEX_BUFFER_FAILED);
 			return HYD_OPENGL_VERTEX_BUFFER_FAILED;
 		}
 		Bind();
@@ -48,6 +68,8 @@ namespace Hydrogen
 
 	int Buffer::DestroyBuffer()
 	{
+		if (m_BufferID == 0)
+			return HYD_OK;
 		GL_CALL(glBindBuffer(m_BufferTarget, 0));
 		GL_CALL(glDeleteBuffers(1, &m_BufferID));
 		m_BufferID = 0;

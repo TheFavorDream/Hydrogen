@@ -13,28 +13,46 @@ namespace Hydrogen
 	{
 	}
 
+	Mesh::Mesh(Mesh && pOther)
+	{
+		m_Primitives = std::move(pOther.m_Primitives);
+		m_Name = std::move(pOther.m_Name);
+	}
+
+	Mesh& Mesh::operator=(Mesh&& pOther)
+	{
+		if (this != &pOther)
+		{
+			m_Primitives = std::move(pOther.m_Primitives);
+			m_Name = std::move(pOther.m_Name);
+		}
+		return *this;
+	}
 
 	void Mesh::Render(const Shader & pShader, glm::mat4 * pTransform, Model* pCaller)
 	{
-		glm::mat4 Transformation = m_Transformation;
-		if (pTransform != nullptr)
-			Transformation *= (*pTransform);
 
 		pShader.Bind();
-		pShader.SetUniformMat4("Model", glm::value_ptr(Transformation));
+		pShader.SetUniformMat4("Model", glm::value_ptr(m_Transformation));
+		pShader.SetUniformInt1("BaseColor", 0);
 		for (auto& i : m_Primitives)
 		{
 			//Rendering Process:
 
-			pCaller->m_Arrays[i.VaoID].Bind();
-			pCaller->m_Buffers[i.VboID].Bind();
-			pCaller->m_Buffers[i.EboID].Bind();
+			i.m_VertexArrays.Bind();
+			i.m_VertexBuffer.Bind();
+			i.m_Material.BindBaseColor();
 
-			GL_CALL(glDrawElements(i.RenderingMode, pCaller->m_Buffers[i.EboID].GetBufferSize(), GL_UNSIGNED_SHORT, 0));
+			if (i.m_ElementBuffer.GetBufferSize() != 0)
+			{
+				i.m_ElementBuffer.Bind();
+				GL_CALL(glDrawElements(i.m_RenderingMode, i.m_ElementBuffer.GetCount(), i.m_ElementBuffer.GetComponentType(), 0));
+				i.m_ElementBuffer.Unbind();
+			}
 
-			pCaller->m_Arrays[i.VaoID].Unbind();
-			pCaller->m_Buffers[i.VboID].Unbind();
-			pCaller->m_Buffers[i.EboID].Unbind();
+			i.m_Material.UnbindBaseColor();
+			i.m_VertexBuffer.Unbind();
+			i.m_VertexArrays.Unbind();
 
 		}
 		pShader.Unbind();

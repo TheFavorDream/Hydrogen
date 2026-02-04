@@ -24,6 +24,7 @@
 #include "Platform/OpenGL/VertexArray.h"
 #include "3rdParty/glm/glm.hpp"
 #include "Log/Log.h"
+#include "Material/Material.h"
 
 namespace Hydrogen
 {
@@ -35,17 +36,19 @@ namespace Hydrogen
 
 		HYD Model();																					 //Create an Empty Model
 		HYD Model(const std::string& pName);														     //Create an Empty Model with Specified name
-		HYD Model(const std::string& pName, const std::vector<Mesh>& pMeshes);							 //Create Model with a set of input meshes
-		HYD Model(const std::string& pName, const std::vector<Mesh>& pMeshes, const Matrix& pTransform); //Create a Model with Meshes and Transformation;
+		HYD Model(const std::string& pName, std::vector<Mesh>& pMeshes);							 //Create Model with a set of input meshes
+		HYD Model(const std::string& pName, std::vector<Mesh>& pMeshes, Matrix& pTransform); //Create a Model with Meshes and Transformation;
 
 		HYD ~Model(); //Destroy the Model
 
-		HYD Model(const Model& pOther); //Copy 
+		HYD Model(const Model& pOther) = delete; //Copy 
 		HYD Model(Model&& pOther);	    //Move
 
+		HYD Model& operator=(const Model& pOther) = delete;
+		HYD Model& operator=(Model&& pOther);
 
 		//Setup Model
-		HYD uint32 SetupModel(const std::string& pName, const std::vector<Mesh>& pMeshes);
+		HYD uint32 SetupModel( const std::string& pName,  std::vector<Mesh>& pMeshes);
 		
 		//Destroy Model:
 		HYD uint32 DestroyModel();
@@ -54,6 +57,13 @@ namespace Hydrogen
 		HYD uint32 SetTransform(const glm::mat4& pTransform);
 		//Transform the Model with TRS properties
 		HYD uint32 SetTransform(Vec3 pScale=Vec3(1.0f), Vec3 pTranslate=Vec3(0.0f), Vec4 pRotate=Vec4(0.0f));
+		
+		//bakes the input transform into each mesh
+		//recommended for models that are static.
+		HYD uint32 BakeTransform(const glm::mat4& pTransform);
+		HYD uint32 BakeTransform(Vec3 pScale = Vec3(1.0f), Vec3 pTranslate = Vec3(0.0f), Vec4 pRotate = Vec4(0.0f));
+
+
 		//Get Transformer
 		HYD inline const glm::mat4& GetTransform() { return m_Transform; }
 
@@ -80,15 +90,12 @@ namespace Hydrogen
 	private:
 		//Meshes that make up the model
 		std::vector<Mesh> m_Meshes;
+
 		//Name of the Model (not guaranteed to be unique)
 		std::string m_Name;
 		//Global Transformation of model which applies to all the meshes
 		//Matrix m_Transform;
 		glm::mat4 m_Transform=glm::mat4(1.0f);
-
-		//Buffer Storage:
-		std::vector<Buffer>		 m_Buffers;
-		std::vector<VertexArray> m_Arrays;
 
 		friend class Mesh;
 		friend class GLTFLoader;

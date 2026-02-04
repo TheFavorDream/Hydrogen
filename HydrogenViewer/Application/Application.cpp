@@ -3,7 +3,7 @@
 
 
 Application::Application()
-	: Core(1200, 600, "Hydrogen")
+	: Core(1400, 700, "Hydrogen")
 {
 	m_AppLayer = new AppLayer();
 	m_UILayer = new UILayer();

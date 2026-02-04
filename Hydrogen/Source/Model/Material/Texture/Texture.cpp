@@ -6,9 +6,9 @@ namespace Hydrogen
 
 
 
-	Texture::Texture(int32 pWidth, int32 pHeight, int32 pChannels, uint8* pData)
+	Texture::Texture(Image& pImage, Sampler pSampler)
 	{
-		CreateTexture(pWidth, pHeight, pChannels, pData);
+		CreateTexture(pImage, pSampler);
 	}
 
 	Texture::~Texture()
@@ -17,13 +17,6 @@ namespace Hydrogen
 	}
 
 
-	Texture::Texture(const Texture & pOther)
-	{
-		m_Width = pOther.m_Width;
-		m_Height = pOther.m_Height;
-		m_Channels = pOther.m_Channels;
-		m_TextureID = pOther.m_TextureID;
-	}
 
 	Texture::Texture(Texture && pOther)
 	{
@@ -33,14 +26,36 @@ namespace Hydrogen
 		m_TextureID = pOther.m_TextureID;
 
 		pOther.m_TextureID = 0;
+		pOther.m_Width = 0;
+		pOther.m_Height = 0;
+		pOther.m_Channels = 0;
+	}
+
+	Texture& Texture::operator=(Texture && pOther) noexcept
+	{
+		if (&pOther != this)
+		{
+			m_TextureID = pOther.m_TextureID;
+			m_Width = pOther.m_Width;
+			m_Height = pOther.m_Height;
+			m_Channels = pOther.m_Channels;
+
+			pOther.m_TextureID  = 0;
+			pOther.m_Width		= 0;
+			pOther.m_Height		= 0;
+			pOther.m_Channels	= 0;
+		}
+
+		return *this;
 	}
 
 
-	int Texture::CreateTexture(int32 pWidth, int32 pHeight, int32 pChannels, uint8 * pData)
+	int Texture::CreateTexture(const Image& pImage, Sampler pSampler)
 	{
-		m_Width = pWidth;
-		m_Height = pHeight;
-		m_Channels = pChannels;
+		m_Width    = pImage.Width;
+		m_Height   = pImage.Height;
+		m_Channels = (int32)pImage.ImageChannel;
+
 		GL_CALL(glGenTextures(1, &m_TextureID));
 
 		if (m_TextureID == 0)
@@ -51,34 +66,45 @@ namespace Hydrogen
 
 		GL_CALL(glBindTexture(GL_TEXTURE_2D, m_TextureID));
 
-		GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-		GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-		GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER));
-		GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER));
+		//pSampler = Sampler();
+
+		GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE));
+		GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, pSampler.Min));
+		GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, pSampler.Mag));
+		GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, pSampler.WrapS));
+		GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, pSampler.WrapT));
 		
-		GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, m_Channels, m_Width, m_Height, 0, m_Channels, GL_UNSIGNED_BYTE, pData));
+		GLenum Channel = RetriveChannel(pImage.ImageChannel);
+		GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, Channel, m_Width, m_Height, 0, Channel, GL_UNSIGNED_BYTE, (void*)pImage.Data));
+		GL_CALL(glGenerateMipmap(GL_TEXTURE_2D));
+		
+
 		Unbind();
 		return HYD_OK;
 	}
 
 	int Texture::CreateTexture(std::string pPath)
 	{
-		int32 Channel = 0;
-		uint8* Data = stbi_load(pPath.c_str(), &m_Width, &m_Height, &Channel, NULL);
-
-		if (!Data)
+		Image image;
+		
+		uint32 ReturnCode;
+		if ((ReturnCode = image.LoadImage(pPath.c_str())) != HYD_OK)
 		{
-			Log::SetError("Failed Reading Texture", HYD_FAILED_TEXTURE_CREATION, __FILE__, __LINE__);
-			return HYD_FAILED_TEXTURE_CREATION;
+			Log::SetError(Log::FmtStr("Unable to Load image at %s", pPath.c_str()), ReturnCode);
+			return ReturnCode;
 		}
 
-		return CreateTexture(m_Width, m_Height, RetiveChannels(Channel), Data);
+		
+		ReturnCode = CreateTexture(image);
+		image.FreeImage();
+		return ReturnCode;
 	}
 
 	int Texture::DestroyTexture()
 	{
-		//Unbind();
-		//GL_CALL(glDeleteTextures(1, &m_TextureID));
+
+		Unbind();
+		GL_CALL(glDeleteTextures(1, &m_TextureID));
 		return HYD_OK;
 	}
 
@@ -92,10 +118,9 @@ namespace Hydrogen
 	{
 		GL_CALL(glBindTexture(GL_TEXTURE_2D, 0));
 	}
-
-	GLenum Texture::RetiveChannels(int32 pChannelNumber)
+	HYD GLenum Texture::RetriveChannel(int32 pChannel)
 	{
-		switch (pChannelNumber)
+		switch (pChannel)
 		{
 		case 1:
 			return GL_RED;
@@ -103,11 +128,9 @@ namespace Hydrogen
 			return GL_RG;
 		case 3:
 			return GL_RGB;
-		case 4: 
+		case 4:
 			return GL_RGBA;
 		}
-		Log::SetError("Invalid or unsupported Color Channel", GL_INVALID_ENUM, __FILE__, __LINE__);
 		return GL_INVALID_ENUM;
 	}
-
 };

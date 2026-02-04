@@ -28,8 +28,10 @@ in vec3 Normal;
 in vec2 TexCoords;
 out vec4 FragColor;
 
+uniform sampler2D BaseColor;
 
 void main ()
 {
-		FragColor = vec4(Normal, 1.0f);
+	//FragColor = vec4(Normal, 1.0f);
+	FragColor = texture(BaseColor, TexCoords);
 }

@@ -31,7 +31,8 @@
 #define HYD_UI_INVALID_WINDOW 0x17
 #define HYD_UI_INVALID_ELEMENT 0x18
 #define HYD_SHADER_FAILED 0x19
-
+#define HYD_IMAGE_FAILED 0x20
+#define HYD_NO_CONTENT 0x21
 
 #define GLB_MAGIC     0x46546C67
 #define GLB_JSON_TYPE 0x4E4F534A
@@ -48,7 +49,9 @@ typedef char				   int8;
 
 #include <iostream>
 #include <fstream>
-
+#include <utility>
+#include <memory>
+#include <stack>
 
 //Decleartions
 namespace Hydrogen

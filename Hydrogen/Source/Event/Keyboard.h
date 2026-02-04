@@ -10,7 +10,7 @@ namespace Hydrogen
 {
 
 	enum State {KEY_DOWN, KEY_UP};
-	enum Action {KEY_RELEASED=-1, KEY_NOACTION=0 ,KEY_PRESSED=1};
+	enum Action  {KEY_RELEASED=-1, KEY_NOACTION=0 ,KEY_PRESSED=1};
 	enum KeyMode {PRESS_ONLY, RELEASE_ONLY, PRESS_RELEASE};
 
 	struct Event

@@ -30,8 +30,14 @@ namespace Hydrogen
 	public:
 
 		HYD VertexArray() = default;
-		HYD VertexArray(VertexArray&& Other);
 		HYD ~VertexArray();
+
+		HYD VertexArray(const VertexArray& pOther) = delete;
+		HYD VertexArray(VertexArray&& pOther);
+
+		HYD VertexArray& operator=(const VertexArray& pOther) = delete;
+		HYD VertexArray& operator=(VertexArray&& pOther);
+
 
 		HYD int CreateVertexArray();
 		HYD int DestroyVertexArray();

@@ -26,8 +26,7 @@ private:
 	Hydrogen::Shader m_MaterialShader;
 
 	//Models
-	Hydrogen::Model* m_Room = nullptr;
-	Hydrogen::Model* m_Char = nullptr;
+	std::unique_ptr<Hydrogen::Model> m_Interior;
 
 
 };

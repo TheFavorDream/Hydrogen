@@ -14,5 +14,7 @@
 #include "Source/Camera/Camera.h"
 #include "Source/Model/Model.h"
 #include "Source/Model/Loader/GLTF.h"
+#include "Source/Model/Material/Texture/Texture.h"
+#include "Source/Timer/Timer.h"
 
 #include "Source/3rdParty/glm/gtc/type_ptr.hpp"
