@@ -108,13 +108,13 @@ namespace Hydrogen
 		return HYD_OK;
 	}
 
-	void Texture::Bind(uint32 pSlot)
+	void Texture::Bind(uint32 pSlot) const
 	{
 		GL_CALL(glActiveTexture(GL_TEXTURE0+pSlot));
 		GL_CALL(glBindTexture(GL_TEXTURE_2D, m_TextureID));
 	}
 
-	void Texture::Unbind()
+	void Texture::Unbind() const
 	{
 		GL_CALL(glBindTexture(GL_TEXTURE_2D, 0));
 	}

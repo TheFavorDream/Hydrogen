@@ -7,6 +7,7 @@
 #include <fstream>
 #include <vector>
 #include <stack>
+#include "ResourceHandler/BufferHandler.h"
 #include "Model/Material/Texture/Image.h"
 #include "Model/Material/Texture/Texture.h"
 #include "Model/Material/Material.h"
@@ -53,8 +54,8 @@ namespace Hydrogen
 		HYD static uint32 SetupAccessors(json& pAccessors, const std::vector<BufferView>& pBufferViewData, std::vector<Accessor>& pAccessorData);
 	
 		//loads the meshes into the model file
-		HYD static uint32 SetupMeshes(json& pMeshes, const std::vector<Accessor>& pAccessorData, std::vector<Material>& pMaterials, Model* pCurrentModel);
-		HYD static uint32 SetupPrimitives(json& pPrimitives, const std::vector<Accessor>& pAccessorData, std::vector<Material>& pMaterials,  Mesh& pCurrentMesh);
+		HYD static uint32 SetupMeshes(json& pMeshes, const std::vector<Accessor>& pAccessorData, std::vector<Id>& pMaterials, Model* pCurrentModel);
+		HYD static uint32 SetupPrimitives(json& pPrimitives, const std::vector<Accessor>& pAccessorData, std::vector<Id>& pMaterials,  Mesh& pCurrentMesh);
 		HYD static uint32 ProcessAttributes(json& pAttributes, const std::vector<Accessor>& pAccessorData, Primitive& pCurrentPrimitive);
 	
 		HYD static uint32 ProcessNodes(json& pNodes, std::vector<Node>& nodes);
@@ -62,11 +63,11 @@ namespace Hydrogen
 
 
 		//Material Loading:
-		HYD static uint32 LoadMaterials(json& pGLTF, std::vector<Material>& pMaterials, const std::vector<BufferView>& pBufferViews);
+		HYD static uint32 LoadMaterials(json& pGLTF, std::vector<Id>& pMaterials, const std::vector<BufferView>& pBufferViews);
 		HYD static uint32 LoadImages(json& pImages, const std::string& pRootPath ,std::vector<Image>& pImageData, const std::vector<BufferView>& pBufferViews);
 		HYD static uint32 SetupSamplers(json& pSamplers, std::vector<Sampler>& pSamplerData);
-		HYD static uint32 SetupTextures(json& pTextures, std::vector<Texture>& pTextureData, const std::vector<Sampler>& pSamplerData, const std::vector<Image>& pImageData);
-		HYD static uint32 SetupMaterials(json& pMaterials, std::vector<Material>& pMaterial, std::vector<Texture>& pTextureData);
+		HYD static uint32 SetupTextures(json& pTextures, std::vector<Id>& pTextureIds, const std::vector<Sampler>& pSamplerData, const std::vector<Image>& pImageData);
+		HYD static uint32 SetupMaterials(json& pMaterials, std::vector<Id>& pMaterial, std::vector<Id>& pTextureIds);
 
 	private:
 		static std::string s_RootPath; // the path where .gltf or .glb lives. needed to load external resources

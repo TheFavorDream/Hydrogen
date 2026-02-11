@@ -11,12 +11,13 @@ namespace Hydrogen
 
 	Mesh::~Mesh()
 	{
+		m_Primitives.clear();
 	}
 
 	Mesh::Mesh(Mesh && pOther)
 	{
 		m_Primitives = std::move(pOther.m_Primitives);
-		m_Name = std::move(pOther.m_Name);
+		m_Name       = std::move(pOther.m_Name);
 	}
 
 	Mesh& Mesh::operator=(Mesh&& pOther)
@@ -39,20 +40,21 @@ namespace Hydrogen
 		{
 			//Rendering Process:
 
-			i.m_VertexArrays.Bind();
-			i.m_VertexBuffer.Bind();
-			i.m_Material.BindBaseColor();
+			BufferHandler::BindArray(i.m_VertexArrays);
+			BufferHandler::BindBuffer(i.m_VertexBuffer);
+			MaterialHandler::GetMaterial(i.m_Material).BindBaseColor();
 
-			if (i.m_ElementBuffer.GetBufferSize() != 0)
+			if (BufferHandler::GetBuffer(i.m_ElementBuffer).GetBufferSize() != 0)
 			{
-				i.m_ElementBuffer.Bind();
-				GL_CALL(glDrawElements(i.m_RenderingMode, i.m_ElementBuffer.GetCount(), i.m_ElementBuffer.GetComponentType(), 0));
-				i.m_ElementBuffer.Unbind();
+				BufferHandler::BindBuffer(i.m_ElementBuffer);
+				GL_CALL(glDrawElements(i.m_RenderingMode, BufferHandler::GetBuffer(i.m_ElementBuffer).GetCount(), BufferHandler::GetBuffer(i.m_ElementBuffer).GetComponentType(), 0));
+				BufferHandler::UnbindBuffer(i.m_ElementBuffer);
 			}
 
-			i.m_Material.UnbindBaseColor();
-			i.m_VertexBuffer.Unbind();
-			i.m_VertexArrays.Unbind();
+			MaterialHandler::GetMaterial(i.m_Material).UnbindBaseColor();
+			BufferHandler::UnbindBuffer(i.m_VertexBuffer);
+			BufferHandler::UnbindArray(i.m_VertexArrays);
+
 
 		}
 		pShader.Unbind();

@@ -70,6 +70,7 @@ namespace Hydrogen
 	{
 		if (m_BufferID == 0)
 			return HYD_OK;
+
 		GL_CALL(glBindBuffer(m_BufferTarget, 0));
 		GL_CALL(glDeleteBuffers(1, &m_BufferID));
 		m_BufferID = 0;

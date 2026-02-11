@@ -26,8 +26,8 @@ namespace Hydrogen
 		HYD int CreateTexture(std::string pPath);
 		HYD int DestroyTexture();
 		
-		HYD void Bind(uint32 pSlot=0);
-		HYD void Unbind();
+		HYD void Bind(uint32 pSlot=0) const;
+		HYD void Unbind() const;
 		 
 		HYD inline int32 GetTextureID() { return m_TextureID; }
 		HYD inline int32 GetWidth() { return m_Width; }

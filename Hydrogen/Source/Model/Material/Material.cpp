@@ -4,14 +4,13 @@ namespace Hydrogen
 {
 	Material::~Material()
 	{
-		m_BaseColor.DestroyTexture();
-		m_MetalicRoughness.DestroyTexture();
+
 	}
 
 	Material::Material(Material && pOther)
 	{
-		m_BaseColor        = std::move(pOther.m_BaseColor);
-		m_MetalicRoughness = std::move(pOther.m_MetalicRoughness);
+		m_BaseColorTexture        = pOther.m_BaseColorTexture;
+		m_MetalicRoughnessTexture = pOther.m_MetalicRoughnessTexture;
 		
 		m_Name				= pOther.m_Name;
 		m_MetalicnessFactor = pOther.m_MetalicnessFactor;
@@ -24,8 +23,8 @@ namespace Hydrogen
 	{
 		if (this != &pOther)
 		{
-			m_BaseColor        = std::move(pOther.m_BaseColor);
-			m_MetalicRoughness = std::move(pOther.m_MetalicRoughness);
+			m_BaseColorTexture        = pOther.m_BaseColorTexture;
+			m_MetalicRoughnessTexture = pOther.m_MetalicRoughnessTexture;
 
 			m_Name				= pOther.m_Name;
 			m_MetalicnessFactor = pOther.m_MetalicnessFactor;
@@ -34,24 +33,27 @@ namespace Hydrogen
 		}
 		return *this;
 	}
-	void Material::BindBaseColor(uint32 Slot)
+	void Material::BindBaseColor(uint32 Slot) const
 	{
-		m_BaseColor.Bind(Slot);
+		TextureHandler::BindTexture(m_BaseColorTexture, Slot);
 	}
 	
-	void Material::BindMetalicColor(uint32 Slot)
+	void Material::BindMetalicColor(uint32 Slot) const
 	{
-		m_MetalicRoughness.Bind(Slot);
+		TextureHandler::BindTexture(m_MetalicRoughnessTexture, Slot);
+
 	}
 	
-	void Material::UnbindBaseColor()
+	void Material::UnbindBaseColor() const
 	{
-		m_BaseColor.Unbind();
+		TextureHandler::UnbindTexture(m_BaseColorTexture);
+
 	}
 
-	void Material::UnbindMetalicColor()
+	void Material::UnbindMetalicColor() const
 	{
-		m_MetalicRoughness.Unbind();
+		TextureHandler::UnbindTexture(m_MetalicRoughnessTexture);
+
 	}
 
 };

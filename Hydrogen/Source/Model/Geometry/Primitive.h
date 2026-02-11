@@ -1,9 +1,8 @@
 #pragma once
 
 #include "Common.h"
-#include "Platform/OpenGL/Buffer.h"
-#include "Platform/OpenGL/VertexArray.h"
-#include "Model/Material/Material.h"
+#include "ResourceHandler/BufferHandler.h"
+#include "ResourceHandler/MaterialHandler.h"
 
 
 namespace Hydrogen
@@ -23,12 +22,12 @@ namespace Hydrogen
 		HYD Primitive& operator=(Primitive&& pOther);
 
 	private:
-		VertexArray m_VertexArrays;
-		Buffer	    m_VertexBuffer;
-		Buffer      m_ElementBuffer;
-		Material    m_Material;
+		Id		m_VertexArrays  =0;
+		Id	    m_VertexBuffer  =0;
+		Id      m_ElementBuffer =0;
+		Id      m_Material      =0;
 
-		uint32 m_RenderingMode = 4;
+		uint32    m_RenderingMode = 4;
 		Attribute m_Attributes;
 
 		friend class Mesh;

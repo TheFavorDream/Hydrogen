@@ -28,16 +28,32 @@ namespace Hydrogen
 
 		m_Window.SetViewportRatio(100.0f, 100.0f);
 
+
+		TextureHandler::InitHandler();
+		MaterialHandler::InitHandler();
+		BufferHandler::InitHandler();
+
+
 		m_Running = true;
 	}
 
 	Core::~Core()
 	{
+
 		for (int i = 0; i < m_Layers.size(); i++)
 		{
 			m_Layers[i]->Shutdown();
 			delete m_Layers[i];
 		}
+
+		//Free Buffers:
+		
+		TextureHandler::ShutdownHandler();
+		MaterialHandler::ShutdownHandler();
+		BufferHandler::ShutdownHandler();
+
+		m_Window.DestroyWindow();
+		glfwTerminate();
 		m_Running = false;
 	}
 

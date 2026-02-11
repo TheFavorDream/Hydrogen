@@ -12,27 +12,27 @@ void AppLayer::Setup()
 	m_BasicShader.CreateShader("C:\\Users\\TheVoltage\\Desktop\\Dev\\Hydrogen\\HydrogenViewer\\Resources\\Shaders\\base.glsl");
 //	m_MaterialShader.CreateShader("C:\\Users\\TheVoltage\\Desktop\\Dev\\Hydrogen\\HydrogenViewer\\Resources\\Shaders\\material.glsl");
 
-	m_Interior.reset(Hydrogen::GLTFLoader::Load("C:\\Users\\TheVoltage\\Desktop\\Dev\\Hydrogen\\HydrogenViewer\\Resources\\Models\\Wednesday-2\\Wednesday.gltf"));
-
-
+	//m_Interior.reset(Hydrogen::GLTFLoader::Load("C:\\Users\\TheVoltage\\Desktop\\Dev\\Hydrogen\\HydrogenViewer\\Resources\\Models\\Hall\\scene.gltf"));
+	m_Character.reset(Hydrogen::GLTFLoader::Load("C:\\Users\\TheVoltage\\Desktop\\Dev\\Hydrogen\\HydrogenViewer\\Resources\\Models\\Wednesday-2\\Wednesday.gltf"));
+	
 	glm::mat4 Transform = glm::mat4(1.0f);
 	
 	Transform = glm::scale(Transform, glm::vec3(20.0f));
 	Transform = glm::translate(Transform, glm::vec3(0.0f));
-	m_Interior->BakeTransform(Transform);
+	//m_Interior->BakeTransform(Transform);
+
 
 	Transform = glm::mat4(1.0f);
-	Transform = glm::scale(Transform, glm::vec3(6.0f));
-	Transform = glm::translate(Transform, glm::vec3(90.0f/6.0f, 0.0f, -140.0f/6.0f));
-	//m_Char->BakeTransform(Transform);
 
+	Transform = glm::scale(Transform, glm::vec3(5.0f));
+	Transform = glm::translate(Transform, glm::vec3(0.0f));
+	m_Character->BakeTransform(Transform);
 
-
+	m_Character.reset(nullptr);
 }
 
 void AppLayer::Shutdown()
 {
-	//Hydrogen::GLTFLoader::Free(&m_Char);
 
 }
 
@@ -51,17 +51,10 @@ void AppLayer::Update()
 {
 	m_BasicShader.SetUniformMat4("View", glm::value_ptr(m_Camera.GetView()));
 	m_BasicShader.SetUniformMat4("Projection", glm::value_ptr(m_Camera.GetProjection()));
-
-	//m_MaterialShader.SetUniformMat4("View", glm::value_ptr(m_Camera.GetView()));
-	//m_MaterialShader.SetUniformMat4("Projection", glm::value_ptr(m_Camera.GetProjection()));
-
-	//m_MaterialShader.SetUniformInt1("BaseColor", 0);
 }
 
 void AppLayer::Render()
 {
-	m_Interior->RenderModel(m_BasicShader);
-	//m_Char->RenderModel(m_MaterialShader);
-
-
+	//m_Interior->RenderModel(m_BasicShader);
+//	m_Character->RenderModel(m_BasicShader);
 }

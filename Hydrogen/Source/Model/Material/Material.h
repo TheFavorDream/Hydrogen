@@ -6,7 +6,7 @@
 #pragma once
 
 #include "Common.h"
-#include "Texture/Texture.h"
+#include "ResourceHandler/TextureHandler.h"
 
 namespace Hydrogen
 {
@@ -24,11 +24,11 @@ namespace Hydrogen
 		HYD Material& operator=(const Material& pOther) = delete;
 		HYD Material& operator=(Material&& pOther);
 
-		HYD void BindBaseColor(uint32 Slot=0);
-		HYD void BindMetalicColor(uint32 Slot = 1);
+		HYD void BindBaseColor(uint32 Slot=0)      const;
+		HYD void BindMetalicColor(uint32 Slot = 1) const;
 		
-		HYD void UnbindBaseColor();
-		HYD void UnbindMetalicColor();
+		HYD void UnbindBaseColor()    const;
+		HYD void UnbindMetalicColor() const;
 
 
 	private:
@@ -38,8 +38,9 @@ namespace Hydrogen
 		float m_MetalicnessFactor = 1.0f;
 		float m_RoughnessFactor   = 1.0f;
 		Vec4 m_BaseColorFactor = Vec4(1.0f);
-		Texture m_BaseColor;
-		Texture m_MetalicRoughness;
+
+		Id m_BaseColorTexture;
+		Id m_MetalicRoughnessTexture;
 	
 		friend class Model;
 		friend class GLTFLoader;
