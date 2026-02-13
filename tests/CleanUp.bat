@@ -1,0 +1,2 @@
+python CleanUp.py
+pause
