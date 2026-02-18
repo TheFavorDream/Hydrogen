@@ -11,7 +11,7 @@
 
 #include "Common.h"
 #include "Log/Log.h"
-#include "Misc/LinkedList.h"
+#include "ResourceHandler.h"
 #include "Platform/OpenGL/Buffer.h"
 #include "Platform/OpenGL/VertexArray.h"
 
@@ -26,13 +26,13 @@ namespace Hydrogen
 
 
 
-		HYD static Id     PushVertexArray(VertexArray&& pVAO);
+		HYD static Id     PushVertexArray(VertexArray* pVAO);
 		HYD static uint32 DestroyVertexArray(Id* pVao);
 		HYD static Id     CreateVertexArray();
 		HYD static uint32 AddVertexAttribute(Id pVao, const Accessor& pAccessor);
 
 		//Buffer Operations:
-		HYD static Id	   PushBuffer(Buffer&& pBuffer);
+		HYD static Id	   PushBuffer(Buffer* pBuffer);
 		HYD static uint32  DestroyBuffer(Id* pBufferID);
 		HYD static Id      CreateBuffer(GLenum pBufferTarget, uint32 pSize, void* pData = 0, uint32 pCount = 0, uint32 pComponentType = GL_UNSIGNED_SHORT);
 		HYD static uint32  CopyDataChunk(Id pBufferID, uint32 pOffset, uint32 pSize, void* pData);
@@ -50,14 +50,15 @@ namespace Hydrogen
 
 		HYD static Buffer&		GetBuffer(Id pBufferID);
 		HYD static VertexArray& GetArray(Id pArrayID);
-		HYD inline uint32 GetTotalBufferNumber() { return s_Buffers.GetSize(); }
+		HYD inline uint32 GetTotalBufferNumber() { return s_Buffers; }
 
 	private:
 		static Id s_CurrentBindedVertexBuffer;
 		static Id s_CurrentBindedElementBuffer;
 		static Id s_CurrentBindedVertexArray;
+		static uint32 s_Buffers;
 
-		static LinkedList<Buffer>      s_Buffers;
-		static LinkedList<VertexArray> s_Arrays;
+		HYD static std::vector<Id> s_BufferID;
+		HYD static std::vector<Id> s_ArrayID;
 	};
 };

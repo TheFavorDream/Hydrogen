@@ -6,12 +6,13 @@
 #pragma once
 
 #include "Common.h"
-#include "ResourceHandler/TextureHandler.h"
+#include "ResourceHandler/ResourceHandler.h"
+#include "ResourceHandler/MaterialHandler.h"
 
 namespace Hydrogen
 {
 	
-	class Material
+	class Material : public Resource
 	{
 	public:
 

@@ -5,6 +5,7 @@
 #include "Buffer.h"
 #include <vector>
 #include "Log/Log.h"
+#include "ResourceHandler/ResourceHandler.h"
 #include "Model/Loader/Definitions.h"
 
 namespace Hydrogen
@@ -25,7 +26,7 @@ namespace Hydrogen
 		int32 COLOR_0 = -1;
 	};
 
-	class VertexArray
+	class VertexArray : public Resource
 	{
 	public:
 

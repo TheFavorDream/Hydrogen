@@ -7,18 +7,15 @@
 */
 #pragma once
 
-#include <unordered_map>
-#include <vector>
-#include <string>
-#include <fstream>
-#include "../Common.h"
+#include "Common.h"
 #include "../Glew/glew.h"
 #include "Log/Log.h"
+#include "ResourceHandler/ResourceHandler.h"
 	
 
 namespace Hydrogen
 {
-	class Shader
+	class Shader : public Resource
 	{
 	public:
 

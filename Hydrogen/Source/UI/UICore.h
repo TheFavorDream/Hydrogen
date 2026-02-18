@@ -37,6 +37,8 @@ namespace Hydrogen
 		HYD int CreateUIWindow(std::string pTitle, Vec2 pSize, Vec2 pPos=Vec2(0.0f), RefernceOrigin pOrigin = UP_LEFT,std::string pID="");
 		HYD void Render();
 		 
+		HYD inline uint32 GetFPS() { return ImGui::GetIO().Framerate; }
+
 		HYD inline bool WantToCapture() { return (ImGui::GetIO().WantCaptureKeyboard || ImGui::GetIO().WantCaptureMouse); }
 
 		HYD GuiWindow* GetWindow(std::string pID);

@@ -5,7 +5,7 @@ namespace Hydrogen
 
 	Mesh::Mesh(std::string pName, std::vector<Primitive>& pPrimitives)
 	{
-		m_Name = pName;
+		m_Name		 = pName;
 		m_Primitives = std::move(pPrimitives);
 	}
 
@@ -25,7 +25,7 @@ namespace Hydrogen
 		if (this != &pOther)
 		{
 			m_Primitives = std::move(pOther.m_Primitives);
-			m_Name = std::move(pOther.m_Name);
+			m_Name		 = std::move(pOther.m_Name);
 		}
 		return *this;
 	}
@@ -42,7 +42,9 @@ namespace Hydrogen
 
 			BufferHandler::BindArray(i.m_VertexArrays);
 			BufferHandler::BindBuffer(i.m_VertexBuffer);
-			MaterialHandler::GetMaterial(i.m_Material).BindBaseColor();
+
+			if (i.m_Material != 0)
+				MaterialHandler::GetMaterial(i.m_Material).BindBaseColor();
 
 			if (BufferHandler::GetBuffer(i.m_ElementBuffer).GetBufferSize() != 0)
 			{
@@ -51,7 +53,8 @@ namespace Hydrogen
 				BufferHandler::UnbindBuffer(i.m_ElementBuffer);
 			}
 
-			MaterialHandler::GetMaterial(i.m_Material).UnbindBaseColor();
+			if (i.m_Material != 0)
+				MaterialHandler::GetMaterial(i.m_Material).UnbindBaseColor();
 			BufferHandler::UnbindBuffer(i.m_VertexBuffer);
 			BufferHandler::UnbindArray(i.m_VertexArrays);
 

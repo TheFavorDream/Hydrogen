@@ -4,11 +4,12 @@
 #include "3rdParty/stb_image/stb_image.h"
 #include "Log/Log.h"
 #include "Image.h"
+#include "ResourceHandler/ResourceHandler.h"
 
 namespace Hydrogen
 {
 
-	class Texture
+	class Texture : public Resource
 	{
 	public:
 

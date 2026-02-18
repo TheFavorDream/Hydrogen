@@ -12,13 +12,7 @@ namespace Hydrogen
 
 	Primitive::~Primitive()
 	{
-		if (m_VertexArrays != 0)
-		{
-			BufferHandler::DestroyBuffer(&m_VertexBuffer);
-			BufferHandler::DestroyBuffer(&m_ElementBuffer);
-			BufferHandler::DestroyVertexArray(&m_VertexArrays);
 
-		}
 	}
 	Primitive::Primitive(Primitive && pOther)
 	{

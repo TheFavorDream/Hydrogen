@@ -33,6 +33,7 @@ namespace Hydrogen
 
 	int VertexArray::CreateVertexArray()
 	{
+
 		GL_CALL(glGenVertexArrays(1, &m_VertexID));
 		return HYD_OK;
 	}

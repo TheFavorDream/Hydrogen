@@ -73,7 +73,7 @@ void UILayer::Update()
 
 
 	m_ControlWindow->GetElement("DeltaMeter")->GetLabel() = "Average Delta Time:" + std::to_string(m_DeltaTimeAvg.CalcAvg());
-	m_ControlWindow->GetElement("FPSMeter")->GetLabel() = "Average FPS:" + std::to_string(int(1000.0f/(m_DeltaTimeAvg.CalcAvg())));
+	m_ControlWindow->GetElement("FPSMeter")->GetLabel() = "Average FPS:" + std::to_string(m_UI->GetFPS());
 }
 
 void UILayer::Render()

@@ -21,7 +21,8 @@ public:
 private:
 
 	Hydrogen::Camera m_Camera;
-	Hydrogen::Shader m_BasicShader;
+
+	Hydrogen::Id m_BasicShader;
 
 	//Models
 	std::unique_ptr<Hydrogen::Model> m_Interior;

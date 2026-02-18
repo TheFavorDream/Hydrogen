@@ -8,11 +8,12 @@
 #include "Glew/glew.h"
 #include "Common.h"
 #include "Log/Log.h"
+#include "ResourceHandler/ResourceHandler.h"
 
 namespace Hydrogen
 {
 
-	class Buffer
+	class Buffer : public Resource
 	{
 	public:
 

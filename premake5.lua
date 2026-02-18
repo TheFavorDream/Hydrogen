@@ -1,5 +1,5 @@
 workspace "HydrogenViewer"
-    configurations { "Debug", "Release" }
+    configurations { "Debug", "Release",  "Distrib" }
     platforms {"x64"}
 
 	OutputDir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
@@ -14,6 +14,10 @@ workspace "HydrogenViewer"
 
     filter {"configurations:Release"}
         defines {"RELEASE"}
+        optimize "on"
+
+    filter {"configurations:Distrib"}
+        defines {"DIST"}
         optimize "on"
 
         startproject "HydrogenViewer"
@@ -120,6 +124,9 @@ workspace "HydrogenViewer"
 			symbols "On"
 			defines {"_GLFW_BUILD_DLL"}
 		filter("configurations:Release")
+			optimize "On"
+			defines {"_GLFW_BUILD_DLL"}
+		filter("configurations:Distrib")
 			optimize "On"
 			defines {"_GLFW_BUILD_DLL"}
 

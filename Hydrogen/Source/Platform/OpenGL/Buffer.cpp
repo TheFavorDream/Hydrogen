@@ -4,6 +4,7 @@ namespace Hydrogen
 {
 	Buffer::~Buffer()
 	{
+
 		DestroyBuffer();
 	}
 
@@ -43,6 +44,7 @@ namespace Hydrogen
 			Log::SetError("Couldn't Create Buffer", HYD_OPENGL_VERTEX_BUFFER_FAILED);
 			return HYD_OPENGL_VERTEX_BUFFER_FAILED;
 		}
+
 		GL_CALL(glBindBuffer(pBufferTarget, m_BufferID));
 		GL_CALL(glBufferData(pBufferTarget, pSize, pData, GL_STATIC_DRAW));
 

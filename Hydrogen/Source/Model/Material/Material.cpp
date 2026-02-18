@@ -35,24 +35,24 @@ namespace Hydrogen
 	}
 	void Material::BindBaseColor(uint32 Slot) const
 	{
-		TextureHandler::BindTexture(m_BaseColorTexture, Slot);
+		MaterialHandler::BindTexture(m_BaseColorTexture, Slot);
 	}
 	
 	void Material::BindMetalicColor(uint32 Slot) const
 	{
-		TextureHandler::BindTexture(m_MetalicRoughnessTexture, Slot);
+		MaterialHandler::BindTexture(m_MetalicRoughnessTexture, Slot);
 
 	}
 	
 	void Material::UnbindBaseColor() const
 	{
-		TextureHandler::UnbindTexture(m_BaseColorTexture);
+		MaterialHandler::UnbindTexture(m_BaseColorTexture);
 
 	}
 
 	void Material::UnbindMetalicColor() const
 	{
-		TextureHandler::UnbindTexture(m_MetalicRoughnessTexture);
+		MaterialHandler::UnbindTexture(m_MetalicRoughnessTexture);
 
 	}
 

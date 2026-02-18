@@ -2,36 +2,43 @@
 #include <iostream>
 #include <vector>
 
-int main(int argc, char** arvg)
+struct Node
 {
-	Hydrogen::LinkedList<uint32> List1;
-	Hydrogen::LinkedList<uint32> List2;
-	
+	Node(uint32 pData) : Data(pData) {}
 
 
-	for (int i = 1; i <= 5; ++i)
-	{
-		
-		List1.AddTail(i);
+	~Node() {
+		std::cout << "Destroyed: " << this << '\t' << Data << '\n';
 	}
 
+	int Data = 0;
 
-	List2 = std::move(List1);
-
-	std::cout << "List1:";
- 	List1.PrintList();
-	
-	
-	std::cout << "\nList2:";
-	List2.PrintList();
-
-	std::cout << "\nElement:";
+	Node* Prev = nullptr;
+	Node* Next = nullptr;
+};
 
 
-	std::cout << List2[20]->Data << '\n';
+int main(int argc, char** arvg)
+{
+	Hydrogen::LinkedList<Node> List1;
+	std::vector<Node*> Ids;
 
-	//std::cout << "\nAppended\n";
-	//List2.PrintList();
+	for (int i = 0; i < 10; i++)
+	{
+		Ids.push_back(List1.AddTail(new Node(i)));
+		//List1.AddTail(new Node(i));
+	}
+
+	std::cout << "Before Deletation";
+	List1.PrintList();
+
+	for (int i = 0; i < 5; i++)
+	{
+		List1.Remove(&Ids[i]);
+	}
+
+	std::cout << "\nAfter Deletation";
+	List1.PrintList();
 	std::cin.get();
 
 	return 0;

@@ -29,9 +29,10 @@ namespace Hydrogen
 		m_Window.SetViewportRatio(100.0f, 100.0f);
 
 
-		TextureHandler::InitHandler();
+		ResourceHandler::InitHandler();
 		MaterialHandler::InitHandler();
 		BufferHandler::InitHandler();
+		ShaderHandler::InitHandler();
 
 
 		m_Running = true;
@@ -48,9 +49,10 @@ namespace Hydrogen
 
 		//Free Buffers:
 		
-		TextureHandler::ShutdownHandler();
+		ShaderHandler::ShutdownHandler();
 		MaterialHandler::ShutdownHandler();
 		BufferHandler::ShutdownHandler();
+		ResourceHandler::ShutdownHandler();
 
 		m_Window.DestroyWindow();
 		glfwTerminate();

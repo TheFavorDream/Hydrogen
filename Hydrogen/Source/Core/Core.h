@@ -13,9 +13,10 @@
 #include "Event/Mouse.h"
 #include "Event/Keyboard.h"
 #include "Glew/glew.h"
+#include "ResourceHandler/ResourceHandler.h"
 #include "ResourceHandler/BufferHandler.h"
 #include "ResourceHandler/MaterialHandler.h"
-#include "ResourceHandler/TextureHandler.h"
+#include "ResourceHandler/ShaderHandler.h"
 #include "Layer.h"
 
 #include <vector>

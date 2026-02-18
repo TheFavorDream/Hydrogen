@@ -53,6 +53,7 @@ typedef char				   int8;
 #include <memory>
 #include <stack>
 #include <cstdint>
+#include <unordered_map>
 
 //Decleartions
 namespace Hydrogen

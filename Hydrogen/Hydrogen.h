@@ -17,4 +17,7 @@
 #include "Source/Model/Material/Texture/Texture.h"
 #include "Source/Timer/Timer.h"
 
+#include "Source/ResourceHandler/ShaderHandler.h"
+
+
 #include "Source/3rdParty/glm/gtc/type_ptr.hpp"

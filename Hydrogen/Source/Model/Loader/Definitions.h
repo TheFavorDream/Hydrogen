@@ -42,7 +42,7 @@ namespace Hydrogen
 		}
 	};
 
-	struct Node //structure for GLTF nodes
+	struct GeoNode //structure for GLTF nodes
 	{
 		int32 Mesh = -1;
 		glm::mat4 Transformation = glm::mat4(1.0f);

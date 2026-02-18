@@ -101,7 +101,7 @@ namespace Hydrogen
 		PROFILE_STOP
 
 		PROFILE_START("Process Nodes")
-		std::vector<Node> nodes;
+		std::vector<GeoNode> nodes;
 		Err = ProcessNodes(GLTF["nodes"], nodes);
 		if (Err != HYD_OK)
 		{
@@ -441,7 +441,7 @@ namespace Hydrogen
 
 
 
-	uint32 GLTFLoader::ProcessNodes(json& pNodes, std::vector<Node>& nodes)
+	uint32 GLTFLoader::ProcessNodes(json& pNodes, std::vector<GeoNode>& nodes)
 	{
 
 		if (pNodes == nullptr)
@@ -451,7 +451,7 @@ namespace Hydrogen
 		{
 			for (auto &i : pNodes)
 			{
-				Node node;
+				GeoNode node;
 				node.Mesh = i.value("mesh", -1);
 				
 				for (auto &j : i["children"])
@@ -542,7 +542,7 @@ namespace Hydrogen
 		return HYD_OK;
 	}
 
-	uint32 GLTFLoader::ProcessScene(json & pScene, const std::vector<Node>& nodes, Model* pCurrentModel)
+	uint32 GLTFLoader::ProcessScene(json & pScene, const std::vector<GeoNode>& nodes, Model* pCurrentModel)
 	{
 		if (pScene == nullptr)
 			return HYD_CORRUPTED_GLTF;
@@ -554,7 +554,7 @@ namespace Hydrogen
 
 			//Traversing the Tree in Preorder
 
-			std::stack<Node> Stack;
+			std::stack<GeoNode> Stack;
 			
 			for (auto& i : pScene["nodes"])
 			{
@@ -563,7 +563,7 @@ namespace Hydrogen
 
 			while (!Stack.empty())
 			{
-				Node Current = Stack.top();
+				GeoNode Current = Stack.top();
 				Stack.pop();
 
 				if (Current.Mesh != -1)
@@ -573,7 +573,7 @@ namespace Hydrogen
 
 				for (auto &i : Current.Children)
 				{
-					Node Child = nodes[i];
+					GeoNode Child = nodes[i];
 					Child.Transformation =  Current.Transformation * Child.Transformation;
 					Stack.push(Child);
 				}
@@ -661,8 +661,6 @@ namespace Hydrogen
 				if (image.find("uri") != image.end())
 				{
 					std::string URI = image["uri"];
-
-					//Log::SetInfo(Log::FmtStr("Loading Image from: %s", URI.c_str()));
 					
 					if (CurrentImage.LoadImage((pRootPath + URI).c_str()) == HYD_IMAGE_FAILED)
 						Log::SetError(Log::FmtStr("Failed to Load Image at %s", (s_RootPath+URI).c_str()));
@@ -736,7 +734,7 @@ namespace Hydrogen
 				if (texture.find("sampler") != texture.end())
 					sampler = pSamplerData.at(texture["sampler"]);
 
-				pTextureIds.push_back(TextureHandler::Create2DTexture(pImageData[ImageIndex], sampler));
+				pTextureIds.push_back(MaterialHandler::Create2DTexture(pImageData[ImageIndex], sampler));
 
 			}
 		}
@@ -759,14 +757,14 @@ namespace Hydrogen
 		{
 			for (auto& material : pMaterials)
 			{
-				Material Current;
+				Material* Current = new Material();
 
-				Current.m_Name = material.value("name", "unamed");
+				Current->m_Name = material.value("name", "unamed");
 
 				json& pbrMetal = material["pbrMetallicRoughness"];
 
-				Current.m_MetalicnessFactor = pbrMetal.value("metallicFactor", 1.0f);
-				Current.m_RoughnessFactor   = pbrMetal.value("roughnessFactor", 1.0f);
+				Current->m_MetalicnessFactor = pbrMetal.value("metallicFactor", 1.0f);
+				Current->m_RoughnessFactor   = pbrMetal.value("roughnessFactor", 1.0f);
 
 				//Textures:
 				if (pbrMetal.find("baseColorTexture") != pbrMetal.end())
@@ -774,10 +772,10 @@ namespace Hydrogen
 					json& BaseColor = pbrMetal["baseColorTexture"];
 
 					uint32 Index = BaseColor["index"];
-					Current.m_BaseColorTexture = pTextureIds[Index];
+					Current->m_BaseColorTexture = pTextureIds[Index];
 				}
 
-				pMaterial.push_back(MaterialHandler::PushMaterial(std::move(Current)));
+				pMaterial.push_back(MaterialHandler::PushMaterial(Current));
 			}
 		}
 

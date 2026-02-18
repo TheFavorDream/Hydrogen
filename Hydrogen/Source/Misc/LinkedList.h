@@ -9,28 +9,21 @@
 #include <exception>
 namespace Hydrogen
 {
-	template <typename Type>
+	
+
+	template <class Type>
 	struct Node
 	{
-		Node() = default;
-		~Node() {
-#ifndef DIST 
-			std::cout << "Deleted Node:" << this << "\t Value:" << Data << '\n';
-#endif
-		
-		}
-
 		Type Data;
 		Node* Prev = nullptr;
 		Node* Next = nullptr;
 	};
 
-
-	template <class Type, uint32 Size = 0>
+	template <class NodeType>
 	class LinkedList
 	{
 	private:
-		typedef Node<Type>* node;
+		typedef NodeType* node;
 		uint32 m_NodeNumbers = 0;
 		node   m_Head = nullptr;
 		node   m_Tail = nullptr;
@@ -42,31 +35,26 @@ namespace Hydrogen
 		 ~LinkedList();
 
 
-		 LinkedList(const LinkedList& pOther);
+		 LinkedList(const LinkedList& pOther) = delete;
 		 LinkedList(LinkedList&& pOther);
 
-		 LinkedList& operator=(const LinkedList& pOther);
+		 LinkedList& operator=(const LinkedList& pOther) = delete;
 		 LinkedList& operator=(LinkedList&& pOther);
 
 		//Adds the new node between two existing node
-		 node InsertAfter(const Type& pData,  node* pNode) noexcept;
-		 node InsertAfter(Type&& pData, node* pNode) noexcept;
+		 node InsertAfter(node pNewNode,  node* pPrevNode) noexcept;
+		 node InsertBefore(node pNewNode, node* pNextNode) noexcept;
 
-		 node InsertBefore(const Type& pData, node* pNode) noexcept;
-		 node InsertBefore(Type&& pData, node* pNode) noexcept;
 
 
 		//Adds the new node to the begining
-		 node AddHead(const Type& pData) noexcept;
-		 node AddHead(Type&& pData) noexcept; //Move
-
+		 node AddHead(node pNewNode) noexcept;
 		//Adds the new node to the end
-		 node AddTail(const Type& pData) noexcept;
-		 node AddTail(Type&& pData) noexcept; //Move
+		 node AddTail(node pNewNode) noexcept;
 
 
 		//Remove node
-		 node Remove(Node<Type>** pNode) noexcept;
+		 node Remove(node* pNode) noexcept;
 		//Remove the head
 		 uint32 RemoveHead() noexcept;
 		//Remove the tail
@@ -116,61 +104,21 @@ namespace Hydrogen
 
 
 
-	template<class Type, uint32 Size>
-	inline LinkedList<Type, Size>::LinkedList()
+	template<class NodeType>
+	inline LinkedList<NodeType>::LinkedList()
 	{
-		node* Header = &m_Head;
-		node Prev = nullptr;
-		for (int i = 0; i < Size; i++)
-		{
 
-			*Header = new Node<Type>();
-			(*Header)->Prev = Prev;
-			Prev = *Header;
-			Header = &(*Header)->Next;
-		}
-		m_Tail = Prev;
-		m_NodeNumbers = Size;
 	}
 
-	template<class Type, uint32 Size>
-	inline LinkedList<Type, Size>::~LinkedList()
+	template<class NodeType>
+	inline LinkedList<NodeType>::~LinkedList()
 	{
 		Clear();
-	}
-
-	//Copy Constructor
-	template <class Type, uint32 Size>
-	inline LinkedList<Type, Size>::LinkedList(const LinkedList& pOther)
-	{
-		//Free Space if it has been allocated
-		Clear();
-
-		node  ReadHeader = pOther.m_Head;
-		node* WriteHeader = &m_Head;
-		node Prev = nullptr;
-
-		//Allocate memory and copy data into new node
-		while (ReadHeader != nullptr)
-		{
-
-			(*WriteHeader) = new Node<Type>();
-			(*WriteHeader)->Data = ReadHeader->Data;
-			(*WriteHeader)->Prev = Prev;
-
-			Prev = (*WriteHeader);
-			(WriteHeader) = &((*WriteHeader)->Next);
-
-			ReadHeader = ReadHeader->Next;
-		}
-
-		m_Tail = Prev;
-		m_NodeNumbers = pOther.m_NodeNumbers;
 	}
 
 	//Move Constructor
-	template <class Type, uint32 Size>
-	inline LinkedList<Type, Size>::LinkedList(LinkedList&& pOther)
+	template <class Type>
+	inline LinkedList<Type>::LinkedList(LinkedList&& pOther)
 	{
 		m_Head = pOther.m_Head;
 		m_Tail = pOther.m_Tail;
@@ -181,37 +129,9 @@ namespace Hydrogen
 		pOther.m_NodeNumbers = 0;
 	}
 
-	template <class Type, uint32 Size>
-	inline LinkedList<Type, Size>& LinkedList<Type, Size>::operator=(const LinkedList& pOther)
-	{
-		//Free Space if it has been allocated
-		Clear();
-
-		node  ReadHeader = pOther.m_Head;
-		node* WriteHeader = &m_Head;
-		node Prev = nullptr;
-
-		//Allocate memory and copy data into new node
-		while (ReadHeader != nullptr)
-		{
-
-			(*WriteHeader) = new Node<Type>();
-			(*WriteHeader)->Data = ReadHeader->Data;
-			(*WriteHeader)->Prev = Prev;
-			 
-			Prev = (*WriteHeader);
-			(WriteHeader) = &((*WriteHeader)->Next);
-
-			ReadHeader = ReadHeader->Next;
-		}
-
-		m_Tail = Prev;
-		m_NodeNumbers = pOther.m_NodeNumbers;
-		return *this;
-	}
-
-	template <class Type, uint32 Size>
-	inline LinkedList<Type, Size>& LinkedList<Type, Size>::operator=(LinkedList&& pOther)
+	
+	template <class Type>
+	inline LinkedList<Type>& LinkedList<Type>::operator=(LinkedList&& pOther)
 	{
 		if (this != &pOther)
 		{
@@ -228,170 +148,77 @@ namespace Hydrogen
 
 //------------------Insert Functionality--------------------------------------------
 
-	template<class Type, uint32 Size>
-	inline Node<Type>* LinkedList<Type, Size>::InsertAfter(const Type& pData, Node<Type>** pNode) noexcept
+	template<class NodeType>
+	inline NodeType* LinkedList<NodeType>::InsertAfter(NodeType* pNewNode, NodeType** pNode) noexcept
 	{
 		if (*pNode == nullptr)
 			return nullptr;
-
-		node NewNode = new Node<Type>();
-		NewNode->Data = pData;
-
-		NewNode->Next = (*pNode)->Next;
-		NewNode->Prev = (*pNode);
-
+		
+		pNewNode->Next = (*pNode)->Next;
+		pNewNode->Prev = (*pNode);
+		
 		if ((*pNode)->Next != nullptr)
-			(*pNode)->Next->Prev = NewNode;
-		(*pNode)->Next = NewNode;
-
+			(*pNode)->Next->Prev = pNewNode;
+		(*pNode)->Next = pNewNode;
+		
 		m_NodeNumbers++;
-		return NewNode;
+		return pNewNode;
 	}
 
-	template<class Type, uint32 Size>
-	inline Node<Type>* LinkedList<Type, Size>::InsertAfter(Type&& pData, Node<Type>** pNode) noexcept
+	template<class NodeType>
+	inline NodeType* LinkedList<NodeType>::InsertBefore(NodeType* pNewNode, NodeType** pNode) noexcept
 	{
 		if (*pNode == nullptr)
 			return nullptr;
-
-		node NewNode = new Node<Type>();
-		NewNode->Data = std::move(pData);
-
-		NewNode->Next = (*pNode)->Next;
-		NewNode->Prev = (*pNode);
-
-		if ((*pNode)->Next != nullptr)
-			(*pNode)->Next->Prev = NewNode;
-		(*pNode)->Next = NewNode;
-
-		m_NodeNumbers++;
-		return NewNode;
-	}
-
-
-	template<class Type, uint32 Size>
-	inline Node<Type>* LinkedList<Type, Size>::InsertBefore(const Type& pData, Node<Type>** pNode) noexcept
-	{
-		if (*pNode == nullptr)
-			return nullptr;
-
-		node NewNode = new Node<Type>();
-		NewNode->Data = pData;
-
-		NewNode->Next = (*pNode);
-		NewNode->Prev = (*pNode)->Prev;
-
+		
+		pNewNode->Next = (*pNode);
+		pNewNode->Prev = (*pNode)->Prev;
+		
 		if ((*pNode)->Prev != nullptr)
-			(*pNode)->Prev->Next = NewNode;
-		(*pNode)->Prev = NewNode;
-
+			(*pNode)->Prev->Next = pNewNode;
+		(*pNode)->Prev = pNewNode;
+		
 		m_NodeNumbers++;
-		return NewNode;
+		return pNewNode;
 	}
-
-	template<class Type, uint32 Size>
-	inline Node<Type>* LinkedList<Type, Size>::InsertBefore(Type&& pData, Node<Type>** pNode) noexcept
-	{
-		if (*pNode == nullptr)
-			return nullptr;
-
-		node NewNode = new Node<Type>();
-		NewNode->Data = std::move(pData);
-
-		NewNode->Next = (*pNode);
-		NewNode->Prev = (*pNode)->Prev;
-
-		if ((*pNode)->Prev != nullptr)
-			(*pNode)->Prev->Next = NewNode;
-		(*pNode)->Prev = NewNode;
-
-		m_NodeNumbers++;
-		return NewNode;
-	}
-
-//--------------------------------------------------------------------------------------
-
-
 
 //-------------------------Add To Head-------------------------------
-	template<class Type, uint32 Size>
-	inline Node<Type>* LinkedList<Type, Size>::AddHead(const Type& pData) noexcept
+	template<class NodeType>
+	inline NodeType* LinkedList<NodeType>::AddHead(NodeType* pNewNode) noexcept
 	{
 		if (IsEmpty())
 		{
-			m_Head = new Node<Type>();
-			m_Head->Data = pData;
+			m_Head = pNewNode;
 
 			m_Tail = m_Head;
 			m_NodeNumbers++;
 			return m_Head;
 		}
 
-		m_Head = InsertBefore(pData, &m_Head);
+		m_Head = InsertBefore(pNewNode, &m_Head);
 		return m_Head;
 	}
-
-	template<class Type, uint32 Size>
-	inline Node<Type>* LinkedList<Type, Size>::AddHead(Type&& pData) noexcept
-	{
-		if (IsEmpty())
-		{
-			m_Head = new Node<Type>();
-			m_Head->Data = pData;
-
-			m_Tail = m_Head;
-			m_NodeNumbers++;
-			return m_Head;
-		}
-
-		m_Head = InsertBefore(std::move(pData), &m_Head);
-		return m_Head;
-	}
-
-//-------------------------------------------------------------------
 
 //--------------------------Add To Tail(End)-------------------------
-	template<class Type, uint32 Size>
-	inline Node<Type>* LinkedList<Type, Size>::AddTail(const Type& pData) noexcept
+	template<class NodeType>
+	inline NodeType* LinkedList<NodeType>::AddTail(NodeType* pNewNode) noexcept
 	{
 		//If List is empty, Create the list and add data to Head:
 		if (IsEmpty())
 		{
-			m_Head = new Node<Type>();
-			m_Head->Data = pData;
-
+			m_Head = pNewNode;
 			m_Tail = m_Head;
 			m_NodeNumbers++;
 			return m_Tail;
 		}
 
-		m_Tail = InsertAfter(pData, &m_Tail);
+		m_Tail = InsertAfter(pNewNode, &m_Tail);
 		return m_Tail;
 	}
 
-	template<class Type, uint32 Size>
-	inline Node<Type>* LinkedList<Type, Size>::AddTail(Type&& pData) noexcept
-	{
-		//If List is empty, Create the list and add data to Head:
-		if (IsEmpty())
-		{
-			m_Head = new Node<Type>();
-			m_Head->Data = pData;
 
-			m_Tail = m_Head;
-			m_NodeNumbers++;
-			return m_Tail;
-		}
-
-		m_Tail = InsertAfter(std::move(pData), &m_Tail);
-		return m_Tail;
-	}
-//-------------------------------------------------------------------
-
-
-
-	template<class Type, uint32 Size>
-	inline  Node<Type>* LinkedList<Type, Size>::Remove(Node<Type>** pNode) noexcept
+	template<class NodeType>
+	inline NodeType* LinkedList<NodeType>::Remove(NodeType** pNode) noexcept
 	{
 		if ((*pNode) == m_Head && (*pNode) != m_Tail)
 		{
@@ -428,10 +255,13 @@ namespace Hydrogen
 			node Prev = (*pNode)->Prev;
 			node Next = (*pNode)->Next;
 
-			Prev->Next = Next;
-			Next->Prev = Prev;
+			if (Prev != nullptr)
+				Prev->Next = Next;
+			if (Next != nullptr)
+				Next->Prev = Prev;
 
-			delete (*pNode);
+			if (Prev != nullptr && Next != nullptr)
+				delete (*pNode);
 			(*pNode) = nullptr;
 		}
 
@@ -439,8 +269,8 @@ namespace Hydrogen
 		return m_Tail;
 	}
 
-	template<class Type, uint32 Size>
-	inline uint32 LinkedList<Type, Size>::RemoveHead() noexcept
+	template<class NodeType>
+	inline uint32 LinkedList<NodeType>::RemoveHead() noexcept
 	{
 		if (IsEmpty())
 			return 1;
@@ -448,8 +278,8 @@ namespace Hydrogen
 		return HYD_OK;
 	}
 
-	template<class Type, uint32 Size>
-	inline uint32 LinkedList<Type, Size>::RemoveTail() noexcept
+	template<class NodeType>
+	inline uint32 LinkedList<NodeType>::RemoveTail() noexcept
 	{
 		if (IsEmpty())
 			return 1;
@@ -457,8 +287,8 @@ namespace Hydrogen
 		return 0;
 	}
 
-	template<class Type, uint32 Size>
-	inline uint32 LinkedList<Type, Size>::Clear() noexcept
+	template<class NodeType>
+	inline uint32 LinkedList<NodeType>::Clear() noexcept
 	{
 		node Header = m_Tail;
 		while (Header != nullptr)

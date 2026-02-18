@@ -58,8 +58,8 @@ namespace Hydrogen
 		HYD static uint32 SetupPrimitives(json& pPrimitives, const std::vector<Accessor>& pAccessorData, std::vector<Id>& pMaterials,  Mesh& pCurrentMesh);
 		HYD static uint32 ProcessAttributes(json& pAttributes, const std::vector<Accessor>& pAccessorData, Primitive& pCurrentPrimitive);
 	
-		HYD static uint32 ProcessNodes(json& pNodes, std::vector<Node>& nodes);
-		HYD static uint32 ProcessScene(json& pScene, const std::vector<Node>& nodes, Model* pCurrentModel);
+		HYD static uint32 ProcessNodes(json& pNodes, std::vector<GeoNode>& nodes);
+		HYD static uint32 ProcessScene(json& pScene, const std::vector<GeoNode>& nodes, Model* pCurrentModel);
 
 
 		//Material Loading:
