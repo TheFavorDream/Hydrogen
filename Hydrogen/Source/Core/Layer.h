@@ -16,7 +16,6 @@ namespace Hydrogen
 		HYD virtual void Shutdown() = 0;
 		HYD virtual void Event(float pDeltaTime) = 0;
 		HYD virtual void Update() = 0;
-		HYD virtual void Render() = 0;
 
 
 	

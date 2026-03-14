@@ -15,19 +15,10 @@ public:
 
 	void Event(float pDeltaTime) override;
 	void Update() override;
-	void Render() override;
 
 
 private:
 
-	Hydrogen::Camera m_Camera;
 
-	Hydrogen::Id m_BasicShader;
-
-	//Models
-	std::unique_ptr<Hydrogen::Model> m_Interior;
-	std::unique_ptr<Hydrogen::Model> m_Character;
-
-
-
+	Hydrogen::Scene* m_Scene = nullptr;
 };

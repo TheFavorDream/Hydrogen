@@ -104,16 +104,16 @@ namespace Hydrogen
 		m_CameraLocked = pDisableCamera;
 	}
 
-	glm::mat4 & Camera::GetView()
+	float* Camera::GetView()
 	{
 		m_View = glm::lookAt(m_Position, m_Position + m_Front, m_Up);
-		return m_View;
+		return glm::value_ptr( m_View);
 	}
 
-	glm::mat4 & Camera::GetProjection()
+	float* Camera::GetProjection()
 	{
 		m_Projection = glm::perspective(glm::radians(m_FOV), m_AspectRatio, m_NearPlane, m_FarPlane);
-		return m_Projection;
+		return glm::value_ptr(m_Projection);
 	}
 
 	void Camera::CalculateCameraAngle()

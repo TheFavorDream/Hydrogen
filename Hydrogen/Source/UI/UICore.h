@@ -9,7 +9,7 @@
 
 #include "Glew/glew.h"
 #include "Window/Window.h"
-#include "Math/Vector/VectorDef.h"
+#include "VecMath/Vector/VectorDef.h"
 
 #include <unordered_map>
 #include <string>
@@ -37,7 +37,7 @@ namespace Hydrogen
 		HYD int CreateUIWindow(std::string pTitle, Vec2 pSize, Vec2 pPos=Vec2(0.0f), RefernceOrigin pOrigin = UP_LEFT,std::string pID="");
 		HYD void Render();
 		 
-		HYD inline uint32 GetFPS() { return ImGui::GetIO().Framerate; }
+		HYD inline uint32 GetFPS() { return (uint32)ImGui::GetIO().Framerate; }
 
 		HYD inline bool WantToCapture() { return (ImGui::GetIO().WantCaptureKeyboard || ImGui::GetIO().WantCaptureMouse); }
 

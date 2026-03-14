@@ -1,10 +1,11 @@
 #pragma once
 
-#include "../Common.h"
-#include "../3rdParty/glm/matrix.hpp"
-#include "../3rdParty/glm/gtc/matrix_transform.hpp"
-#include "../Event/Keyboard.h"
-#include "../Event/Mouse.h"
+#include "Common.h"
+#include "3rdParty/glm/matrix.hpp"
+#include "3rdParty/glm/gtc/matrix_transform.hpp"
+#include "Event/Keyboard.h"
+#include "Event/Mouse.h"
+#include "3rdParty/glm/gtc/type_ptr.hpp"
 
 namespace Hydrogen
 {
@@ -19,8 +20,8 @@ namespace Hydrogen
 		 
 		HYD void DisableCameraMovement(bool pDisableCamera);
 		 
-		HYD glm::mat4& GetView();
-		HYD glm::mat4& GetProjection();
+		HYD float* GetView();
+		HYD float* GetProjection();
 
 		HYD inline glm::vec3& GetCameraPos() { return m_Position; }
 	private:

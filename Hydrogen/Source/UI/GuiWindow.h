@@ -4,7 +4,7 @@
 #include "3rdParty/imgui/imgui.h"
 #include "3rdParty/imgui/imgui_impl_opengl3.h"
 #include "3rdParty/imgui/imgui_impl_glfw.h"
-#include "Math/Vector/VectorDef.h"
+#include "VecMath/Vector/VectorDef.h"
 #include "Elements/Element.h"
 #include "Elements/Button.h"
 #include "Elements/Text.h"

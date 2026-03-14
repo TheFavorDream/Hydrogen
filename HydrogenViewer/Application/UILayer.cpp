@@ -52,8 +52,8 @@ void UILayer::Update()
 	//Update the Wedgets size every frame
 	m_ViewPortSize = Hydrogen::Window::GetCurrentWindow()->GetViewportSize();
 	
-	m_WindowSize.X = Hydrogen::Window::GetCurrentWindow()->GetWidth();
-	m_WindowSize.Y = Hydrogen::Window::GetCurrentWindow()->GetHeight();
+	m_WindowSize.X = (float)Hydrogen::Window::GetCurrentWindow()->GetWidth();
+	m_WindowSize.Y = (float)Hydrogen::Window::GetCurrentWindow()->GetHeight();
 
 	float VPSpaceX = m_WindowSize.X - m_ViewPortSize.X;
 	float VPSpaceY = m_WindowSize.Y - m_ViewPortSize.Y;
@@ -76,8 +76,4 @@ void UILayer::Update()
 	m_ControlWindow->GetElement("FPSMeter")->GetLabel() = "Average FPS:" + std::to_string(m_UI->GetFPS());
 }
 
-void UILayer::Render()
-{
-	m_UI->Render();
-}
 

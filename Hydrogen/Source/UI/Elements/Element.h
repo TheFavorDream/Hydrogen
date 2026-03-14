@@ -2,7 +2,7 @@
 
 #include "Common.h"
 #include "3rdParty/imgui/imgui.h"
-#include "Math/Vector/VectorDef.h"
+#include "VecMath/Vector/VectorDef.h"
 
 namespace Hydrogen
 {

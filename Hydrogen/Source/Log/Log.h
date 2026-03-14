@@ -12,7 +12,7 @@
 #include "Common.h"
 #include "Glew/glew.h"
 
-#include "Math/Vector/VectorDef.h"
+#include "VecMath/Vector/VectorDef.h"
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -93,3 +93,4 @@ namespace Hydrogen
 };
 
 #define GL_CALL(x) x;Hydrogen::Log::CheckOpenGLErrors(__FILE__, __LINE__);
+#define ASSERT(s)  Hydrogen::Log::SetError(s);__debugbreak();

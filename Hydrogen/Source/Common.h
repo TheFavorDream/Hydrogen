@@ -53,23 +53,35 @@ typedef char				   int8;
 #include <memory>
 #include <stack>
 #include <cstdint>
+#include <cmath>
 #include <unordered_map>
+#include <queue>
 
 //Decleartions
 namespace Hydrogen
 {
 
-	enum APIs {OPENGL, VULKAN};
+	struct Primitive;
+
+	template<typename ResourceType>
+	class ResourcePool;
 
 
-	class Model;
-	class Mesh;
-	class Scene;
-	class Shader;
-	class Material;
-	class Texture;
-	class Matrix;
-	class GLTFLoader;
+	class ModelPool;
+	class MaterialPool;
+	class ShaderPool;
+
+	class  MeshGenerator;
+	class  Scene;
+	class  Renderer;
+	class  Mesh;
+	class  Model;
+	class  Shader;
+	class  Material;
+	class  Texture;
+	class  Transformation;
+	class  GLTFLoader;
+
 
 	class Mouse;
 	class Keyboard;

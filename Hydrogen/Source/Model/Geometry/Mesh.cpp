@@ -1,23 +1,60 @@
 #include "Mesh.h"
 
-namespace Hydrogen
-{
+#include "Render/Renderer.h"
 
-	Mesh::Mesh(std::string pName, std::vector<Primitive>& pPrimitives)
+namespace Hydrogen 
+{
+	Mesh::Mesh()
 	{
-		m_Name		 = pName;
-		m_Primitives = std::move(pPrimitives);
 	}
 
-	Mesh::~Mesh()
+	Mesh::Mesh(const std::string& pName, std::vector<Primitive>&& pPrimitives, Transform pTransform)
 	{
-		m_Primitives.clear();
+		m_Name			 = pName;
+		m_Primitives	 = std::move(pPrimitives);
+		m_ModelMatrix = CalculateMatrix(pTransform);
 	}
 
 	Mesh::Mesh(Mesh && pOther)
 	{
 		m_Primitives = std::move(pOther.m_Primitives);
-		m_Name       = std::move(pOther.m_Name);
+		m_Name = std::move(pOther.m_Name);
+	}
+
+	uint32 Mesh::SetMesh(const std::string& pName, std::vector<Primitive>&& pPrimitives, Transform pTransform)
+	{
+		m_Name = pName;
+		m_Primitives = std::move(pPrimitives);
+		m_ModelMatrix = CalculateMatrix(pTransform);
+
+		return HYD_OK;
+	}
+
+	uint32 Mesh::SetTransform(const Transform& pTransform) 
+	{
+		m_ModelMatrix = m_ModelMatrix * CalculateMatrix(pTransform);
+		return HYD_OK;
+	}
+
+	HYD uint32 Mesh::SetTransform(const Mat4& pTransform)
+	{
+		m_ModelMatrix = m_ModelMatrix * pTransform;
+		return HYD_OK;
+	}
+
+	uint32 Mesh::PushPremitive(const Primitive& pPrimitive)
+	{
+		m_Primitives.emplace_back(pPrimitive);
+		return HYD_OK;
+	}
+
+	Primitive& Mesh::GetPrimitve(uint32 pIndex)
+	{
+		if (pIndex >= m_Primitives.size())
+		{
+			ASSERT("Index Out of Range");
+		}
+		return m_Primitives[pIndex];
 	}
 
 	Mesh& Mesh::operator=(Mesh&& pOther)
@@ -25,43 +62,27 @@ namespace Hydrogen
 		if (this != &pOther)
 		{
 			m_Primitives = std::move(pOther.m_Primitives);
-			m_Name		 = std::move(pOther.m_Name);
+			m_Name = std::move(pOther.m_Name);
 		}
 		return *this;
 	}
 
-	void Mesh::Render(const Shader & pShader, glm::mat4 * pTransform, Model* pCaller)
+	uint32 Mesh::Render(const Mat4& pTransform)
 	{
-
-		pShader.Bind();
-		pShader.SetUniformMat4("Model", glm::value_ptr(m_Transformation));
-		pShader.SetUniformInt1("BaseColor", 0);
-		for (auto& i : m_Primitives)
+		for (auto& pri : m_Primitives)
 		{
-			//Rendering Process:
 
-			BufferHandler::BindArray(i.m_VertexArrays);
-			BufferHandler::BindBuffer(i.m_VertexBuffer);
-
-			if (i.m_Material != 0)
-				MaterialHandler::GetMaterial(i.m_Material).BindBaseColor();
-
-			if (BufferHandler::GetBuffer(i.m_ElementBuffer).GetBufferSize() != 0)
-			{
-				BufferHandler::BindBuffer(i.m_ElementBuffer);
-				GL_CALL(glDrawElements(i.m_RenderingMode, BufferHandler::GetBuffer(i.m_ElementBuffer).GetCount(), BufferHandler::GetBuffer(i.m_ElementBuffer).GetComponentType(), 0));
-				BufferHandler::UnbindBuffer(i.m_ElementBuffer);
-			}
-
-			if (i.m_Material != 0)
-				MaterialHandler::GetMaterial(i.m_Material).UnbindBaseColor();
-			BufferHandler::UnbindBuffer(i.m_VertexBuffer);
-			BufferHandler::UnbindArray(i.m_VertexArrays);
-
-
+			pri.m_ModelMatrix = (pTransform*m_ModelMatrix).Transpose();
+			Renderer::PushPrimitive(&pri);
 		}
-		pShader.Unbind();
+		return HYD_OK;
 	}
 
+
+	Primitive::Primitive()
+	{
+		//Asign the Shader to primitves:
+		m_Shader = Renderer::GetDefaultShader();
+	}
 
 };

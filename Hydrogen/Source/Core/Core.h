@@ -13,14 +13,10 @@
 #include "Event/Mouse.h"
 #include "Event/Keyboard.h"
 #include "Glew/glew.h"
-#include "ResourceHandler/ResourceHandler.h"
-#include "ResourceHandler/BufferHandler.h"
-#include "ResourceHandler/MaterialHandler.h"
-#include "ResourceHandler/ShaderHandler.h"
+#include "Scene.h"
+#include "Render/Renderer.h"
+
 #include "Layer.h"
-
-#include <vector>
-
 
 namespace Hydrogen
 {
@@ -31,31 +27,33 @@ namespace Hydrogen
 	public:
 		
 		HYD  Core(); //Default Constructor
-		HYD  Core(int32 pWidth, int32 pHeight, const char* pTitle, APIs pAPI=OPENGL); //Constructor with a window
+		HYD  Core(int32 pWidth, int32 pHeight, const char* pTitle); //Constructor with a window
 		HYD ~Core();
 
 
-		HYD int PushLayer(Layer* pLayer);
+		HYD uint32 PushLayer(Layer* pLayer);
 
+
+	public:
+		HYD static uint32 PushScene(Scene* pScene);
+		HYD inline static Scene* GetCurrentScene() { return s_CurrentScene; }
 	protected:
 
 		HYD void Loop();
 	
 	private:
-
-		HYD uint32 InitAPI();
-
 		HYD void Event();
 		HYD void Update();
-		HYD void Render();
 
 	private:
 
-		float m_deltaTime =  0.0f;
 		std::vector<Layer*> m_Layers;
-		bool m_Running;
 
-		APIs m_GraphicAPI;
+		float m_deltaTime	= 0.0f;
+		bool  m_Running		= false;
+
+	private:
+		static Scene* s_CurrentScene;
 
 	protected:
 		Window m_Window;

@@ -1,0 +1,37 @@
+﻿  Math.cpp
+c:\users\thevoltage\desktop\dev\hydrogen\hydrogen\source\vecmath\vector\vectordef.h(6): warning C4005: 'HYD': macro redefinition
+  c:\users\thevoltage\desktop\dev\hydrogen\hydrogen\source\common.h(9): note: see previous definition of 'HYD'
+  Matrix.cpp
+c:\users\thevoltage\desktop\dev\hydrogen\hydrogen\source\vecmath\vector\vectordef.h(6): warning C4005: 'HYD': macro redefinition
+  c:\users\thevoltage\desktop\dev\hydrogen\hydrogen\source\common.h(9): note: see previous definition of 'HYD'
+c:\users\thevoltage\desktop\dev\hydrogen\hydrogen\source\vecmath\matrix\matrix.cpp(12): warning C4018: '<': signed/unsigned mismatch
+c:\users\thevoltage\desktop\dev\hydrogen\hydrogen\source\vecmath\matrix\matrix.cpp(14): warning C4018: '<': signed/unsigned mismatch
+c:\users\thevoltage\desktop\dev\hydrogen\hydrogen\source\vecmath\matrix\matrix.cpp(44): warning C4018: '<': signed/unsigned mismatch
+c:\users\thevoltage\desktop\dev\hydrogen\hydrogen\source\vecmath\matrix\matrix.cpp(46): warning C4018: '<': signed/unsigned mismatch
+c:\users\thevoltage\desktop\dev\hydrogen\hydrogen\source\vecmath\matrix\matrix.cpp(75): warning C4018: '<': signed/unsigned mismatch
+c:\users\thevoltage\desktop\dev\hydrogen\hydrogen\source\vecmath\matrix\matrix.cpp(77): warning C4018: '<': signed/unsigned mismatch
+c:\users\thevoltage\desktop\dev\hydrogen\hydrogen\source\vecmath\matrix\matrix.cpp(92): warning C4018: '<': signed/unsigned mismatch
+c:\users\thevoltage\desktop\dev\hydrogen\hydrogen\source\vecmath\matrix\matrix.cpp(94): warning C4018: '<': signed/unsigned mismatch
+c:\users\thevoltage\desktop\dev\hydrogen\hydrogen\source\vecmath\matrix\matrix.cpp(112): warning C4018: '<': signed/unsigned mismatch
+c:\users\thevoltage\desktop\dev\hydrogen\hydrogen\source\vecmath\matrix\matrix.cpp(114): warning C4018: '<': signed/unsigned mismatch
+c:\users\thevoltage\desktop\dev\hydrogen\hydrogen\source\vecmath\matrix\matrix.cpp(117): warning C4018: '<': signed/unsigned mismatch
+c:\users\thevoltage\desktop\dev\hydrogen\hydrogen\source\vecmath\matrix\matrix.cpp(143): warning C4018: '<': signed/unsigned mismatch
+c:\users\thevoltage\desktop\dev\hydrogen\hydrogen\source\vecmath\matrix\matrix.cpp(153): warning C4018: '<': signed/unsigned mismatch
+c:\users\thevoltage\desktop\dev\hydrogen\hydrogen\source\vecmath\matrix\matrix.cpp(155): warning C4018: '<': signed/unsigned mismatch
+  Mat2.cpp
+c:\users\thevoltage\desktop\dev\hydrogen\hydrogen\source\vecmath\vector\vectordef.h(6): warning C4005: 'HYD': macro redefinition
+  c:\users\thevoltage\desktop\dev\hydrogen\hydrogen\source\common.h(9): note: see previous definition of 'HYD'
+  Mat3.cpp
+c:\users\thevoltage\desktop\dev\hydrogen\hydrogen\source\vecmath\vector\vectordef.h(6): warning C4005: 'HYD': macro redefinition
+  c:\users\thevoltage\desktop\dev\hydrogen\hydrogen\source\common.h(9): note: see previous definition of 'HYD'
+  Mat4.cpp
+c:\users\thevoltage\desktop\dev\hydrogen\hydrogen\source\vecmath\vector\vectordef.h(6): warning C4005: 'HYD': macro redefinition
+  c:\users\thevoltage\desktop\dev\hydrogen\hydrogen\source\common.h(9): note: see previous definition of 'HYD'
+  Transformation.cpp
+c:\users\thevoltage\desktop\dev\hydrogen\hydrogen\source\vecmath\vector\vectordef.h(6): warning C4005: 'HYD': macro redefinition
+  c:\users\thevoltage\desktop\dev\hydrogen\hydrogen\source\common.h(9): note: see previous definition of 'HYD'
+  VecMath.cpp
+c:\users\thevoltage\desktop\dev\hydrogen\hydrogen\source\vecmath\math.h(6): warning C4005: 'HYD': macro redefinition
+  c:\users\thevoltage\desktop\dev\hydrogen\hydrogen\source\common.h(9): note: see previous definition of 'HYD'
+  Generating Code...
+  VecMath_test.vcxproj -> C:\Users\TheVoltage\Desktop\Dev\Hydrogen\tests\VecMath_tests\bin\x64\Debug\VecMath_test.exe

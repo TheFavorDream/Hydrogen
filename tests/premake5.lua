@@ -9,7 +9,8 @@ workspace "tests"
         defines {"RELEASE"}
         optimize "on"
 
-        project "LinkedList_test"
+
+    project "LinkedList_test"
             location "./Misc_tests/"
             kind "ConsoleApp"
             language "C++"
@@ -23,10 +24,37 @@ workspace "tests"
                 "../Hydrogen/Source/"
             }
 
-        filter {"configurations:Debug"}
-            defines {"DEBUG"}
-            optimize "off"
+    project "VecMath_test"
+            location "./VecMath_tests/"
+            kind "ConsoleApp"
+            language "C++"
 
-        filter {"configurations:Release"}
-            defines {"RELEASE"}
-            optimize "on"
+            defines{"TEST"}
+
+            files {
+                "./VecMath_tests/**.cpp",
+                "./VecMath_tests/**.h",
+                "../Hydrogen/Source/VecMath/**.cpp",
+                "../Hydrogen/Source/VecMath/**.h"
+            }
+
+            includedirs {
+                "../Hydrogen/Source/"
+            }
+
+
+
+    project "ResourcePool"
+            location "./ResourcePool_tests"
+            kind "ConsoleApp"
+            language "C++"
+            defines {"TEST"}
+
+            files{
+                "./ResourcePool_tests/**.cpp",
+                "./ResourcePool_tests/**.h",
+                "../Hydrogen/Source/Core/ResourcePool.h"
+            }
+            includedirs {
+                "../Hydrogen/Source/"
+            }

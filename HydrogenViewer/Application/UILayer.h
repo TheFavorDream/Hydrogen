@@ -11,7 +11,6 @@ public:
 	void Shutdown() override;
 	void Event(float pDeltaTime) override;
 	void Update() override;
-	void Render() override;
 
 
 

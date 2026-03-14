@@ -3,7 +3,7 @@
 #include "Common.h"
 #include "Log/Log.h"
 #include "3rdParty/glfw/include/GLFW/glfw3.h"
-#include "Math/Vector/VectorDef.h"
+#include "VecMath/Vector/VectorDef.h"
 #include "Event/Mouse.h"
 
 namespace Hydrogen
@@ -16,7 +16,7 @@ namespace Hydrogen
 		HYD Window(int32 pWidth, int32 pHeight, const char* pTitle);
 		HYD ~Window();
 
-		HYD bool MakeWindow(int32 pWidth, int32 pHeight, const char* pTitle);
+		HYD uint32 MakeWindow(int32 pWidth, int32 pHeight, const char* pTitle);
 		HYD bool DestroyWindow();
 
 		HYD int SetViewportSize(int32 pWidth, int32 pHeight, int32 pStartX =0, int32 pStartY=0);

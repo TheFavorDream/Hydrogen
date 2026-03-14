@@ -105,7 +105,7 @@
 
 // operator MyVec2() const { return MyVec2(x,y); }
 
-#include "../../Math/Vector/VectorDef.h"
+#include "../../VecMath/Vector/VectorDef.h"
 #define IM_VEC4_CLASS_EXTRA    constexpr ImVec4(const Hydrogen::Vec4& f) : x(f.X), y(f.Y), z(f.Z), w(f.W) {}   
         //operator MyVec4() const { return MyVec4(x,y,z,w); }
 

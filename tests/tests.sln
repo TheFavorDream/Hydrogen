@@ -3,6 +3,10 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LinkedList_test", "Misc_tests\LinkedList_test.vcxproj", "{37BCDD47-A347-4B0C-AC58-CE001863A70C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ResourcePool", "ResourcePool_tests\ResourcePool.vcxproj", "{A7E0A326-9343-33CB-3CC9-6B81280BFF4D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VecMath_test", "VecMath_tests\VecMath_test.vcxproj", "{ACE56161-9848-F105-41CE-29BC2D10BD88}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -13,6 +17,14 @@ Global
 		{37BCDD47-A347-4B0C-AC58-CE001863A70C}.Debug|x64.Build.0 = Debug|x64
 		{37BCDD47-A347-4B0C-AC58-CE001863A70C}.Release|x64.ActiveCfg = Release|x64
 		{37BCDD47-A347-4B0C-AC58-CE001863A70C}.Release|x64.Build.0 = Release|x64
+		{A7E0A326-9343-33CB-3CC9-6B81280BFF4D}.Debug|x64.ActiveCfg = Debug|x64
+		{A7E0A326-9343-33CB-3CC9-6B81280BFF4D}.Debug|x64.Build.0 = Debug|x64
+		{A7E0A326-9343-33CB-3CC9-6B81280BFF4D}.Release|x64.ActiveCfg = Release|x64
+		{A7E0A326-9343-33CB-3CC9-6B81280BFF4D}.Release|x64.Build.0 = Release|x64
+		{ACE56161-9848-F105-41CE-29BC2D10BD88}.Debug|x64.ActiveCfg = Debug|x64
+		{ACE56161-9848-F105-41CE-29BC2D10BD88}.Debug|x64.Build.0 = Debug|x64
+		{ACE56161-9848-F105-41CE-29BC2D10BD88}.Release|x64.ActiveCfg = Release|x64
+		{ACE56161-9848-F105-41CE-29BC2D10BD88}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
