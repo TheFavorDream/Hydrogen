@@ -6,7 +6,7 @@
 #pragma once
 
 #include "Common.h"
-#include "3rdParty/stb_image/stb_image.h"
+#include "stb_image/stb_image.h"
 #include "Timer/Timer.h"
 
 namespace Hydrogen

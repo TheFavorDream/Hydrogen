@@ -21,7 +21,6 @@ namespace Hydrogen
 
 	struct Primitive
 	{
-		Attribute  m_Attributes;
 		Mat4       m_ModelMatrix;
 
 		Id		   m_VertexArrays  = 0;

@@ -1,4 +1,6 @@
 #include "GLTF.h"
+#include "HydPch.h"
+
 
 namespace Hydrogen
 {
@@ -283,8 +285,8 @@ namespace Hydrogen
 				uint32 byteOffset = i.value("byteOffset", 0);
 
 				accessor->Count			= i["count"];
-				accessor->ComponentType = i["componentType"];
-				accessor->DataType		= Accessor::RetriveType(std::string(i["type"]));
+				accessor->ComponentType = VertexArray::GetHydType(i["componentType"]);
+				accessor->VectorType    = Accessor::RetriveType(std::string(i["type"]));
 
 				accessor->Data.Target = pBufferViewData[BufferviewIndex].Target;
 				accessor->Data.Data  = pBufferViewData[BufferviewIndex].Data.substr(byteOffset);
@@ -361,21 +363,20 @@ namespace Hydrogen
 
 				if (i.find("indices") != i.end())
 				{
-					uint32 indicies = i["indices"];
 
-					s_CurrentScene->m_Buffers.BindArray(primitive.m_VertexArrays);
+					uint32 indicies = i["indices"];
 
 					//Create Element Buffer:
 					primitive.Count = pAccessorData[indicies].Count;
-					primitive.Type  = pAccessorData[indicies].ComponentType;
+					primitive.Type  = VertexArray::GetGLType(pAccessorData[indicies].ComponentType);
 					
 					primitive.m_ElementBuffer = s_CurrentScene->m_Buffers.CreateElementBuffer(
 						pAccessorData[indicies].Data.Data.size(),
 						(void*)&pAccessorData[indicies].Data.Data[0],
-						pAccessorData[indicies].Count, pAccessorData[indicies].ComponentType);
+						pAccessorData[indicies].Count, VertexArray::GetGLType(pAccessorData[indicies].ComponentType));
+				
 				}
 
-				s_CurrentScene->m_Buffers.UnbindArray(primitive.m_VertexArrays);
 				pCurrentMesh->m_Primitives.push_back(std::move(primitive));
 			}
 		}
@@ -395,13 +396,6 @@ namespace Hydrogen
 			return HYD_CORRUPTED_GLTF;
 		try
 		{
-			//Attribue = vertex buffer
-			pCurrentPrimitive.m_Attributes.POSITION    = pAttributes.value("POSITION", -1);
-			pCurrentPrimitive.m_Attributes.NORMALS     = pAttributes.value("NORMAL", -1);
-			pCurrentPrimitive.m_Attributes.TANGENT     = pAttributes.value("TANGENT", -1);
-			pCurrentPrimitive.m_Attributes.TEXCOORDS_0 = pAttributes.value("TEXCOORD_0", -1);
-			pCurrentPrimitive.m_Attributes.TEXCOORDS_1 = pAttributes.value("TEXCOORD_1", -1);
-			pCurrentPrimitive.m_Attributes.COLOR_0	  = pAttributes.value("COLOR_0", -1);
 
 			std::vector<int32> Indecies = {
 				pAttributes.value("POSITION", -1),
@@ -430,14 +424,26 @@ namespace Hydrogen
 			
 			pCurrentPrimitive.m_VertexBuffer = s_CurrentScene->m_Buffers.CreateVertexBuffer(VBOSize);
 			uint32 Offset = 0;
+			uint32 AttribCount = 0;
+			uint32 Stride = 0;
+
 			for (auto &i : Indecies)
 			{
 				if (i == -1)
-					continue;//skip 
-				s_CurrentScene->m_Buffers.CopyVertexDataChunk(pCurrentPrimitive.m_VertexBuffer, Offset, pAccessorData[i].Data.Data.size(), (void*)(&pAccessorData[i].Data.Data[0]));
-				Offset += (uint32)pAccessorData[i].Data.Data.size();
+					continue;//skip
+				const Accessor& accessor = pAccessorData[i];
 
-				s_CurrentScene->m_Buffers.AddVertexAttribute(pCurrentPrimitive.m_VertexArrays, pAccessorData[i]);
+				s_CurrentScene->m_Buffers.CopyVertexDataChunk(pCurrentPrimitive.m_VertexBuffer,
+					Offset, accessor.Data.Data.size(), (void*)(&accessor.Data.Data[0]));
+
+				Stride =  (uint32)accessor.VectorType * VertexArray::GetTypeSize(accessor.ComponentType);
+
+
+				const Layout layout(accessor.ComponentType, (uint32)accessor.VectorType, AttribCount, false, Offset, Stride);
+				s_CurrentScene->m_Buffers.AddVertexAttribute(pCurrentPrimitive.m_VertexArrays, layout);
+
+				Offset += (uint32)pAccessorData[i].Data.Data.size();
+				AttribCount++;
 			}
 		}
 

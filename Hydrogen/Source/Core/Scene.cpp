@@ -1,4 +1,5 @@
 #include "Scene.h"
+#include "HydPch.h"
 
 namespace Hydrogen
 {
@@ -46,11 +47,6 @@ namespace Hydrogen
 	{
 		Primitive primitive;
 
-		Layouts Attribs;
-		Attribs.PushAttribute<float>(3, false);
-		Attribs.PushAttribute<float>(3, false);
-		Attribs.PushAttribute<float>(2, false);
-
 		primitive.Count = pIndices.size();
 		primitive.Type = GL_UNSIGNED_SHORT;
 
@@ -64,7 +60,13 @@ namespace Hydrogen
 		m_Buffers.BindVertexBuffer(primitive.m_VertexBuffer);
 		m_Buffers.BindElementBuffer(primitive.m_ElementBuffer);
 
-		m_Buffers.AddVertexAttributes(primitive.m_VertexArrays, Attribs);
+
+		m_Buffers.AddVertexAttributes(primitive.m_VertexArrays, 
+			{ 
+				Layout(TYPE_FLOAT, 3, POSITION),
+				Layout(TYPE_FLOAT, 3, NORMALS),
+				Layout(TYPE_FLOAT, 2, TEXCOORDS_0)
+			});
 
 		Mesh* NewMesh = ResourcePool<Mesh>::New();
 		NewMesh->PushPremitive(primitive);

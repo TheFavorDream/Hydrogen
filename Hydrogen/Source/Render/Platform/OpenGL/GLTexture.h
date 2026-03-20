@@ -1,9 +1,9 @@
 #pragma once
 #include "Common.h"
 #include "Glew/glew.h"
-#include "3rdParty/stb_image/stb_image.h"
+#include "stb_image/stb_image.h"
 #include "Log/Log.h"
-#include "Render\Image.h"
+#include "Render/Image.h"
 
 
 namespace Hydrogen

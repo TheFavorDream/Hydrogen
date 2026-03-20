@@ -1,4 +1,5 @@
 #include "Log.h"
+#include "HydPch.h"
 
 namespace Hydrogen
 {

@@ -2,7 +2,7 @@
 
 #include "Common.h"
 #include "Log/Log.h"
-#include "3rdParty/glfw/include/GLFW/glfw3.h"
+#include "GLFW/glfw3.h"
 #include "VecMath/Vector/VectorDef.h"
 #include "Event/Mouse.h"
 

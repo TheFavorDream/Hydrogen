@@ -1,4 +1,5 @@
 #include "Window.h"
+#include "HydPch.h"
 
 namespace Hydrogen
 {
@@ -24,7 +25,7 @@ namespace Hydrogen
 		DestroyWindow();
 	}
 	
-	uint32 Window::MakeWindow(int32 pWidth, int32 pHeight, const char * pTitle)
+	uint32 Window::MakeWindow(int32 pWidth, int32 pHeight, const char* pTitle)
 	{
 
 		if (glfwInit() == GLFW_FALSE)

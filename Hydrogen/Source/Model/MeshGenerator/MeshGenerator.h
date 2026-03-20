@@ -7,7 +7,6 @@
 #include "Core/Scene.h"
 #include "VecMath/Math.h"
 #include "VecMath/Transformation.h"
-#include "Render/Platform/OpenGL/GLAttributeLayout.h"
 
 namespace Hydrogen
 {

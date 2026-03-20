@@ -1,4 +1,6 @@
 #include "BufferPool.h"
+#include "HydPch.h"
+
 
 namespace Hydrogen
 {
@@ -21,24 +23,23 @@ namespace Hydrogen
 
 //----------------Vertex Array--------------------
 
-	Id BufferPool::CreateVertexArray(const Attribute& pAttribute)
+	Id BufferPool::CreateVertexArray()
 	{
 		VertexArray* VAO = ResourcePool<VertexArray>::New();
 		VAO->CreateVertexArray();
-		//VAO->AddAttribute(pAttribute);
 		Id ID = m_VAOs.Push(VAO);
 		return ID;
 	}
 
-	uint32 BufferPool::AddVertexAttribute(Id pVao, const Accessor & pAccessor)
+	uint32 BufferPool::AddVertexAttribute(Id pVao, const Layout& pLayout)
 	{
-		GetArray(pVao).AddAttribute(pAccessor);
+		GetArray(pVao).AddAttribute(pLayout);
 		return HYD_OK;
 	}
 
-	uint32 BufferPool::AddVertexAttributes(Id pVao, Layouts& pAttributes)
+	uint32 BufferPool::AddVertexAttributes(Id pVao, const std::vector<Layout>& pLayouts)
 	{
-		return GetArray(pVao).AddAttributes(pAttributes);
+		return GetArray(pVao).AddAttributes(pLayouts);
 	}
 
 	uint32 BufferPool::DestroyVertexArray(Id* pVao)

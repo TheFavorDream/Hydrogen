@@ -1,4 +1,6 @@
 #include "Mouse.h"
+#include "HydPch.h"
+
 
 namespace Hydrogen
 {

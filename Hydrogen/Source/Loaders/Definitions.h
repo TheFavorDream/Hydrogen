@@ -3,6 +3,7 @@
 #include "Common.h"
 #include "VecMath/Transformation.h"
 #include "Core/ResourcePool.h"
+#include "Render/Platform/OpenGL/GLVertexArray.h"
 
 namespace Hydrogen
 {
@@ -18,9 +19,9 @@ namespace Hydrogen
 	struct Accessor
 	{
 
-		Type DataType;
-		uint32 Count;
-		uint32 ComponentType;
+		Type       VectorType;
+		uint32     Count;
+		DataType   ComponentType;
 		BufferView Data;
 
 		static Type RetriveType(std::string& pType)

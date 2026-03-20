@@ -1,11 +1,11 @@
 #pragma once
 
 #include "Common.h"
-#include "3rdParty/glm/matrix.hpp"
-#include "3rdParty/glm/gtc/matrix_transform.hpp"
+#include "glm/matrix.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 #include "Event/Keyboard.h"
 #include "Event/Mouse.h"
-#include "3rdParty/glm/gtc/type_ptr.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 namespace Hydrogen
 {

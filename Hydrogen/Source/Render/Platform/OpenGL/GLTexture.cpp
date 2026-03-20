@@ -1,4 +1,5 @@
 #include "GLTexture.h"
+#include "HydPch.h"
 
 
 namespace Hydrogen

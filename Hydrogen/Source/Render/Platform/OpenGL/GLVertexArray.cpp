@@ -1,14 +1,16 @@
 #include "GLVertexArray.h"
+#include "HydPch.h"
+
 
 namespace Hydrogen
 {
 	VertexArray::VertexArray(VertexArray&& Other)
 	{
 		m_VertexID = Other.m_VertexID;
-		m_Offset = Other.m_Offset;
-		m_EnabledAttributes = Other.m_EnabledAttributes;
+		m_Attributes = Other.m_Attributes;
 
-		Other.m_VertexID = 0;
+		Other.m_VertexID   = 0;
+		Other.m_Attributes = 0;
 	}
 
 	VertexArray::~VertexArray()
@@ -22,10 +24,11 @@ namespace Hydrogen
 		if (this != &pOther)
 		{
 			this->m_VertexID =			pOther.m_VertexID;
-			this->m_Offset =			pOther.m_Offset;
-			this->m_EnabledAttributes = pOther.m_EnabledAttributes;
+			this->m_Attributes = pOther.m_Attributes;
 
-			pOther.m_VertexID = 0;
+			pOther.m_VertexID   = 0;
+			pOther.m_Attributes = 0;
+
 		}
 
 		return *this;
@@ -33,7 +36,6 @@ namespace Hydrogen
 
 	uint32 VertexArray::CreateVertexArray()
 	{
-
 		GL_CALL(glGenVertexArrays(1, &m_VertexID));
 		return HYD_OK;
 	}
@@ -46,35 +48,38 @@ namespace Hydrogen
 		return 0;
 	}
 
-	uint32 VertexArray::AddAttribute(const Accessor& pAccessor)
-	{		
-		uint32 CountPerAttrib = (uint32)pAccessor.DataType;
-		uint32 Stride = CountPerAttrib *GetTypeSize(pAccessor.ComponentType);
-
-		GL_CALL(glEnableVertexAttribArray(m_EnabledAttributes));
-		GL_CALL(glVertexAttribPointer(m_EnabledAttributes, CountPerAttrib, (GLenum)pAccessor.ComponentType, false,  Stride, (void*)m_Offset));
-		m_Offset += Stride*pAccessor.Count;
-		m_EnabledAttributes++;
+	uint32 VertexArray::AddAttribute(const Layout& pLayout)
+	{	
+		GL_CALL(glEnableVertexAttribArray(pLayout.Attribute));
+		GL_CALL(glVertexAttribPointer(pLayout.Attribute, pLayout.Count, GetGLType(pLayout.Type), false,  pLayout.Stride, (void*)pLayout.Offset));
+		m_Attributes += 1;
 		return HYD_OK;
 	}
 
-	uint32 VertexArray::AddAttributes(Layouts& pAttributes)
+	uint32 VertexArray::AddAttributes(const std::vector<Layout>& pAttributes)
 	{
 		for (auto& attrib : pAttributes)
 		{
-			GL_CALL(glEnableVertexAttribArray(m_EnabledAttributes));
-			GL_CALL(glVertexAttribPointer(m_EnabledAttributes, attrib.Count, GetGLType(attrib.Type), attrib.Normalized, pAttributes.GetStride(), (void*)m_Offset));
-
-			m_Offset += attrib.Count *  Layout::GetTypeSize(attrib.Type);
-			m_EnabledAttributes++;
+			AddAttribute(attrib);
 		}
 		return HYD_OK;
 	}
 
 
-	uint32 VertexArray::DisableAttributes()
+	uint32 VertexArray::EnableAttribute(uint32 pAttribute)
 	{
-		return 0;
+		if (pAttribute >= m_Attributes)
+			return HYD_INVALID_VALUE;
+		GL_CALL(glEnableVertexArrayAttrib(m_VertexID, (uint32)pAttribute));
+		return HYD_OK;
+	}
+
+	uint32 VertexArray::DisableAttributes(uint32 pAttribute)
+	{
+		if (pAttribute >= m_Attributes)
+			return HYD_INVALID_VALUE;
+		GL_CALL(glDisableVertexArrayAttrib(m_VertexID, (uint32)pAttribute));
+		return HYD_OK;
 	}
 
 
@@ -110,15 +115,53 @@ namespace Hydrogen
 		return GL_INVALID_ENUM;
 	}
 
-	uint32 VertexArray::GetTypeSize(uint32 pType)
+	DataType VertexArray::GetHydType(GLenum pType)
+	{
+		switch (pType)
+		{
+		case GL_FLOAT:
+			return TYPE_FLOAT;
+
+		case GL_UNSIGNED_SHORT:
+			return  TYPE_UNSIGNED_SHORT;
+
+		case GL_SHORT:
+			return TYPE_SIGNED_SHORT;
+		
+		case GL_UNSIGNED_BYTE:
+			return TYPE_UNSIGNED_BYTE;
+		
+		case GL_BYTE:
+			return TYPE_SIGNED_BYTE;
+
+		case GL_UNSIGNED_INT:
+			return TYPE_UNSIGNED_INT;
+		case GL_INT:
+			return TYPE_SIGNED_INT;
+		}
+		return DataType(0);
+	}
+
+
+	uint32 VertexArray::GetTypeSize(DataType pType)
 	{
 
 		switch (pType)
 		{
-		case GL_FLOAT:
-			return sizeof(float);
-		case GL_UNSIGNED_BYTE:
-			return sizeof(uint8);
+		case TYPE_FLOAT:
+			return 4;
+		case TYPE_UNSIGNED_SHORT:
+			return 2;
+		case TYPE_SIGNED_SHORT:
+			return 2;
+		case TYPE_UNSIGNED_BYTE:
+			return 1;
+		case TYPE_SIGNED_BYTE:
+			return 1;
+		case TYPE_UNSIGNED_INT:
+			return 4;
+		case TYPE_SIGNED_INT:
+			return 4;
 		}
 		return 0;
 	}

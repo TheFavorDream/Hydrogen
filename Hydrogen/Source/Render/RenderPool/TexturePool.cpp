@@ -1,4 +1,6 @@
 #include "TexturePool.h"
+#include "HydPch.h"
+
 
 namespace Hydrogen
 {

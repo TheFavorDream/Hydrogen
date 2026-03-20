@@ -1,4 +1,6 @@
 #include "ShaderPool.h"
+#include "HydPch.h"
+
 
 namespace Hydrogen
 {

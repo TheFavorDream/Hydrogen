@@ -3,7 +3,7 @@
 #include "Common.h"
 #include "Model/Geometry/Model.h"
 #include "Definitions.h"
-#include "3rdParty/Parser/Json.h"
+#include "Parser/Json.h"
 #include "Core/ResourcePool.h"
 #include "Render/RenderPool/BufferPool.h"
 #include "Render/image.h"

@@ -1,4 +1,6 @@
 #include "MaterialPool.h"
+#include "HydPch.h"
+
 
 namespace Hydrogen
 {

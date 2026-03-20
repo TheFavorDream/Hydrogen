@@ -3,9 +3,9 @@
 #include "Common.h"
 #include "GuiWindow.h"
 
-#include "3rdParty/imgui/imgui.h"
-#include "3rdParty/imgui/imgui_impl_opengl3.h"
-#include "3rdParty/imgui/imgui_impl_glfw.h"
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_opengl3.h"
+#include "imgui/imgui_impl_glfw.h"
 
 #include "Glew/glew.h"
 #include "Window/Window.h"

@@ -1,4 +1,6 @@
 #include "Model.h"
+#include "HydPch.h"
+
 
 namespace Hydrogen
 {

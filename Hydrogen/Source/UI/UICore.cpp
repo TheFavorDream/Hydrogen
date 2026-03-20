@@ -1,4 +1,6 @@
 #include "UICore.h"
+#include "HydPch.h"
+
 
 namespace Hydrogen
 {

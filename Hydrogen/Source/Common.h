@@ -47,15 +47,7 @@ typedef int					   int32;
 typedef short				   int16;
 typedef char				   int8;
 
-#include <iostream>
-#include <fstream>
-#include <utility>
-#include <memory>
-#include <stack>
-#include <cstdint>
-#include <cmath>
-#include <unordered_map>
-#include <queue>
+#include "HydPch.h"
 
 //Decleartions
 namespace Hydrogen

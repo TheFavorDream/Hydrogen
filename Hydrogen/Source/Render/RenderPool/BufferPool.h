@@ -14,7 +14,6 @@
 #include "Core/ResourcePool.h"
 #include "Render/Platform/OpenGL/GLBuffer.h"
 #include "Render/Platform/OpenGL/GLVertexArray.h"
-#include "Render/Platform/OpenGL/GLAttributeLayout.h"
 
 namespace Hydrogen
 {
@@ -27,9 +26,9 @@ namespace Hydrogen
 
 
 
-		HYD  Id     CreateVertexArray(const Attribute& pAttribute = Attribute());
-		HYD  uint32 AddVertexAttribute(Id pVao, const Accessor& pAccessor);
-		HYD  uint32 AddVertexAttributes(Id pVao, Layouts& pAttributes);
+		HYD  Id     CreateVertexArray();
+		HYD  uint32 AddVertexAttribute(Id pVao,  const Layout& pLayout);
+		HYD  uint32 AddVertexAttributes(Id pVao, const std::vector<Layout>& pLayout);
 		HYD  uint32 DestroyVertexArray(Id* pVao);
 
 		//Buffer Operations:

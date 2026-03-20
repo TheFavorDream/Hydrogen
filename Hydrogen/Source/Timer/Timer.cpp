@@ -1,4 +1,6 @@
 #include "Timer.h"
+#include "HydPch.h"
+
 
 namespace Hydrogen
 {

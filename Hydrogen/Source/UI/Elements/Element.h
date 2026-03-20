@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Common.h"
-#include "3rdParty/imgui/imgui.h"
+#include "imgui/imgui.h"
 #include "VecMath/Vector/VectorDef.h"
 
 namespace Hydrogen

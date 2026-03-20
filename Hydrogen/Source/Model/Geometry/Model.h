@@ -18,7 +18,7 @@
 #include "Mesh.h"
 #include "VecMath/Transformation.h"
 #include "Model/MeshPool.h"
-#include "3rdParty/glm/glm.hpp"
+#include "glm/glm.hpp"
 #include "Log/Log.h"
 
 namespace Hydrogen

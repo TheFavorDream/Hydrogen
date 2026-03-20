@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Common.h"
-#include "3rdParty/imgui/imgui.h"
-#include "3rdParty/imgui/imgui_impl_opengl3.h"
-#include "3rdParty/imgui/imgui_impl_glfw.h"
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_opengl3.h"
+#include "imgui/imgui_impl_glfw.h"
 #include "VecMath/Vector/VectorDef.h"
 #include "Elements/Element.h"
 #include "Elements/Button.h"

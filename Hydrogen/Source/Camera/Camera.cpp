@@ -1,4 +1,5 @@
 #include "Camera.h"
+#include "HydPch.h"
 
 namespace Hydrogen
 {

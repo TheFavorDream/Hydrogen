@@ -1,4 +1,6 @@
 #include "GuiWindow.h"
+#include "HydPch.h"
+
 
 namespace Hydrogen
 {

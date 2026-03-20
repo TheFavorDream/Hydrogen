@@ -1,0 +1,68 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{15A0C35D-0158-05AB-6A5F-DE065636A09B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Hydrogen", "Hydrogen\Hydrogen.vcxproj", "{854A0F42-7117-6A4D-9A30-58F5865C9FDB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencies", "{53E47842-3FC8-3998-A828-34EB942B241A}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GLFW", "Hydrogen\3rdParty\glfw\GLFW.vcxproj", "{154B857C-0182-860D-AA6E-6C109684020F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ImGui", "Hydrogen\3rdParty\imgui\ImGui.vcxproj", "{C0FF640D-2C14-8DBE-F595-301E616989EF}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Stb_image", "Hydrogen\3rdParty\stb_image\Stb_image.vcxproj", "{10765821-7CE0-0C98-C51E-BE3D31C8EAEC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Misc", "Misc", "{7802C95D-64BA-0AAB-CDC1-E306B998A59B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SandBox", "SandBox\SandBox.vcxproj", "{D43924E3-4019-A37E-4931-2E55B58F09E0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Distrib|x64 = Distrib|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{854A0F42-7117-6A4D-9A30-58F5865C9FDB}.Debug|x64.ActiveCfg = Debug|x64
+		{854A0F42-7117-6A4D-9A30-58F5865C9FDB}.Debug|x64.Build.0 = Debug|x64
+		{854A0F42-7117-6A4D-9A30-58F5865C9FDB}.Distrib|x64.ActiveCfg = Distrib|x64
+		{854A0F42-7117-6A4D-9A30-58F5865C9FDB}.Distrib|x64.Build.0 = Distrib|x64
+		{854A0F42-7117-6A4D-9A30-58F5865C9FDB}.Release|x64.ActiveCfg = Release|x64
+		{854A0F42-7117-6A4D-9A30-58F5865C9FDB}.Release|x64.Build.0 = Release|x64
+		{154B857C-0182-860D-AA6E-6C109684020F}.Debug|x64.ActiveCfg = Debug|x64
+		{154B857C-0182-860D-AA6E-6C109684020F}.Debug|x64.Build.0 = Debug|x64
+		{154B857C-0182-860D-AA6E-6C109684020F}.Distrib|x64.ActiveCfg = Distrib|x64
+		{154B857C-0182-860D-AA6E-6C109684020F}.Distrib|x64.Build.0 = Distrib|x64
+		{154B857C-0182-860D-AA6E-6C109684020F}.Release|x64.ActiveCfg = Release|x64
+		{154B857C-0182-860D-AA6E-6C109684020F}.Release|x64.Build.0 = Release|x64
+		{C0FF640D-2C14-8DBE-F595-301E616989EF}.Debug|x64.ActiveCfg = Debug|x64
+		{C0FF640D-2C14-8DBE-F595-301E616989EF}.Debug|x64.Build.0 = Debug|x64
+		{C0FF640D-2C14-8DBE-F595-301E616989EF}.Distrib|x64.ActiveCfg = Distrib|x64
+		{C0FF640D-2C14-8DBE-F595-301E616989EF}.Distrib|x64.Build.0 = Distrib|x64
+		{C0FF640D-2C14-8DBE-F595-301E616989EF}.Release|x64.ActiveCfg = Release|x64
+		{C0FF640D-2C14-8DBE-F595-301E616989EF}.Release|x64.Build.0 = Release|x64
+		{10765821-7CE0-0C98-C51E-BE3D31C8EAEC}.Debug|x64.ActiveCfg = Debug|x64
+		{10765821-7CE0-0C98-C51E-BE3D31C8EAEC}.Debug|x64.Build.0 = Debug|x64
+		{10765821-7CE0-0C98-C51E-BE3D31C8EAEC}.Distrib|x64.ActiveCfg = Distrib|x64
+		{10765821-7CE0-0C98-C51E-BE3D31C8EAEC}.Distrib|x64.Build.0 = Distrib|x64
+		{10765821-7CE0-0C98-C51E-BE3D31C8EAEC}.Release|x64.ActiveCfg = Release|x64
+		{10765821-7CE0-0C98-C51E-BE3D31C8EAEC}.Release|x64.Build.0 = Release|x64
+		{D43924E3-4019-A37E-4931-2E55B58F09E0}.Debug|x64.ActiveCfg = Debug|x64
+		{D43924E3-4019-A37E-4931-2E55B58F09E0}.Debug|x64.Build.0 = Debug|x64
+		{D43924E3-4019-A37E-4931-2E55B58F09E0}.Distrib|x64.ActiveCfg = Distrib|x64
+		{D43924E3-4019-A37E-4931-2E55B58F09E0}.Distrib|x64.Build.0 = Distrib|x64
+		{D43924E3-4019-A37E-4931-2E55B58F09E0}.Release|x64.ActiveCfg = Release|x64
+		{D43924E3-4019-A37E-4931-2E55B58F09E0}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{854A0F42-7117-6A4D-9A30-58F5865C9FDB} = {15A0C35D-0158-05AB-6A5F-DE065636A09B}
+		{154B857C-0182-860D-AA6E-6C109684020F} = {53E47842-3FC8-3998-A828-34EB942B241A}
+		{C0FF640D-2C14-8DBE-F595-301E616989EF} = {53E47842-3FC8-3998-A828-34EB942B241A}
+		{10765821-7CE0-0C98-C51E-BE3D31C8EAEC} = {53E47842-3FC8-3998-A828-34EB942B241A}
+		{D43924E3-4019-A37E-4931-2E55B58F09E0} = {7802C95D-64BA-0AAB-CDC1-E306B998A59B}
+	EndGlobalSection
+EndGlobal

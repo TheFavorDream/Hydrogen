@@ -1,5 +1,7 @@
 #include "Vector/VectorDef.h"
 #include "Math.h"
+#include "HydPch.h"
+
 
 #define LIT_PI 3.14159f
 
