@@ -2,7 +2,7 @@
 
 #include "Common.h"
 #include "Glew/glew.h"
-#include "GLBuffer.h"
+#include "GLBuffers/GLBuffer.h"
 #include <vector>
 #include "Log/Log.h"
 

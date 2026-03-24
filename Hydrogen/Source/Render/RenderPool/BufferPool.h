@@ -12,7 +12,11 @@
 #include "Common.h"
 #include "Log/Log.h"
 #include "Core/ResourcePool.h"
-#include "Render/Platform/OpenGL/GLBuffer.h"
+#include "Render/Platform/OpenGL/GLBuffers/GLBuffer.h"
+#include "Render/Platform/OpenGL/GLBuffers/GLVertexBuffer.h"
+#include "Render/Platform/OpenGL/GLBuffers/GLElementBuffer.h"
+
+
 #include "Render/Platform/OpenGL/GLVertexArray.h"
 
 namespace Hydrogen
@@ -36,7 +40,7 @@ namespace Hydrogen
 		HYD  uint32  CopyVertexDataChunk(Id pBufferID, uint32 pOffset, uint32 pSize, void* pData);
 		HYD  uint32  DestroyVertexBuffer(Id* pBufferID);
 
-		HYD  Id      CreateElementBuffer(uint32 pSize, void* pData = 0, uint32 pCount = 0, uint32 pComponentType = GL_UNSIGNED_SHORT);
+		HYD  Id      CreateElementBuffer(uint32 pCount , uint32 pComponentType, void* pData);
 		HYD  uint32  CopyElementDataChunk(Id pBufferID, uint32 pOffset, uint32 pSize, void* pData);
 		HYD  uint32  DestroyElementBuffer(Id* pBufferID);
 
@@ -54,8 +58,8 @@ namespace Hydrogen
 		HYD  uint32 BindCollection(Id pVAO, Id pVBO, Id pEBO);
 		HYD  uint32 UnbindCollection(Id pVAO, Id pVBO, Id pEBO);
 			 
-		HYD        Buffer&		GetVertexBuffer(Id pBufferID);
-		HYD        Buffer&		GetElementBuffer(Id pBufferID);
+		HYD        Buffer*		GetVertexBuffer(Id pBufferID);
+		HYD        Buffer*		GetElementBuffer(Id pBufferID);
 		HYD		   VertexArray& GetArray(Id pArrayID);
 		
 		

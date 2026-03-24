@@ -7,6 +7,7 @@ namespace Hydrogen
 
 
 	Scene* Core::s_CurrentScene = nullptr;
+	float Core::s_DeltaTime = 0.0f;
 
 	Core::Core()
 	{
@@ -69,23 +70,29 @@ namespace Hydrogen
 		return HYD_OK;
 	}
 
+	void Core::SetDeltaTime(float pDelta)
+	{
+		s_DeltaTime = pDelta;
+	}
+
 	void Core::Loop()
 	{
-		static double LastTime = 0;
-
+		Timer timer;
 		//Main Loop
 		while (m_Running)
 		{
+			timer.StartTimer();
 			Event();
 			Update();
 			Renderer::Render();
 
 			m_Window.ProcessWindow(m_Running);
 
+			timer.StopTimer();
 			//Calculate delta Time:
-			double Current = glfwGetTime();
-			m_deltaTime = float(Current - LastTime) * 1000.0f;
-			LastTime = Current;
+
+			SetDeltaTime((float)timer.GetElapsedInMillis());
+			timer.ResetTimer();
 		}
 	}
 
@@ -97,7 +104,7 @@ namespace Hydrogen
 		glfwPollEvents();
 		for (auto& i : m_Layers)
 		{
-			i->Event(m_deltaTime);
+			i->Event();
 		}
 	}
 

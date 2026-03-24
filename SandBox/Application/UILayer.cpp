@@ -1,5 +1,6 @@
 #include "UILayer.h"
 
+
 void UILayer::Setup()
 {
 	m_UI = Hydrogen::UICore::Self();
@@ -31,9 +32,9 @@ void UILayer::Shutdown()
 }
 
 
-void UILayer::Event(float pDeltaTime)
+void UILayer::Event()
 {
-   	m_DeltaTimeAvg.AddValue(pDeltaTime);
+   	m_DeltaTimeAvg.AddValue(Hydrogen::Core::GetDeltaTime());
 
 	if (Hydrogen::Keyboard::GetKeyState(GLFW_KEY_UP) == Hydrogen::KEY_DOWN)
 	{

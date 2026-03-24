@@ -9,7 +9,7 @@ public:
 
 	void Setup() override;
 	void Shutdown() override;
-	void Event(float pDeltaTime) override;
+	void Event() override;
 	void Update() override;
 
 

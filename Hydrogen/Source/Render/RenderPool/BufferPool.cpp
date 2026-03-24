@@ -1,7 +1,7 @@
 #include "BufferPool.h"
 #include "HydPch.h"
 
-
+#include "Render/Renderer.h"
 namespace Hydrogen
 {
 
@@ -51,20 +51,31 @@ namespace Hydrogen
 
 //------------------------ Array Buffer ----------------------------------
 
-	Id BufferPool::CreateVertexBuffer(uint32 pSize, void * pData, uint32 pCount, uint32 pComponentType)
+	Id BufferPool::CreateVertexBuffer(uint32 pSize, void* pData, uint32 pCount, uint32 pComponentType)
 	{
-		Buffer* NewBuffer = ResourcePool<Buffer>::New();
-		NewBuffer->CreateBuffer(GL_ARRAY_BUFFER, pSize, pData, pCount, pComponentType);
-		Id ID = m_VBOs.Push(NewBuffer);
+		GLBuffer* NewBuffer = nullptr;
+		switch (Renderer::GetRenderingAPI())
+		{
+		case API_OPENGL:
+			NewBuffer = ResourcePool<GLVertexBuffer>::New();
+			NewBuffer->CreateBuffer(pSize, pData);
+			break;
+		}
+		Id ID = m_VBOs.Push(dynamic_cast<Buffer*>(NewBuffer));
 		return ID;
 	}
 
 	uint32 BufferPool::CopyVertexDataChunk(Id pBufferID, uint32 pOffset, uint32 pSize, void * pData)
 	{
-		return GetVertexBuffer(pBufferID).CopyDataChunk(pOffset, pSize, pData);
+		switch (Renderer::GetRenderingAPI())
+		{
+		case API_OPENGL:
+			return dynamic_cast<GLVertexBuffer*>(GetVertexBuffer(pBufferID))->WriteChunk(pOffset, pSize, pData);
+		}
+		return HYD_FAILED;
 	}
 
-	uint32 BufferPool::DestroyVertexBuffer(Id * pBufferID)
+	uint32 BufferPool::DestroyVertexBuffer(Id* pBufferID)
 	{
 		m_VBOs.Pop(pBufferID);
 		return HYD_OK;
@@ -72,18 +83,31 @@ namespace Hydrogen
 
 
 
-	Id BufferPool::CreateElementBuffer(uint32 pSize, void* pData, uint32 pCount, uint32 pComponentType)
+	Id BufferPool::CreateElementBuffer(uint32 pCount, uint32 pComponentType, void* pData)
 	{
-		Buffer* NewBuffer = ResourcePool<Buffer>::New();
-		NewBuffer->CreateBuffer(GL_ELEMENT_ARRAY_BUFFER, pSize, pData, pCount, pComponentType);
-		Id ID = m_EBOs.Push(NewBuffer);
+		Buffer* NewBuffer = nullptr;
+		switch (Renderer::GetRenderingAPI())
+		{
+		case API_OPENGL:
+			{
+			GLElementBuffer* ElementBuffer = ResourcePool<GLElementBuffer>::New();
+			ElementBuffer->CreateElementBuffer(pCount, pComponentType, pData);
+			NewBuffer = dynamic_cast<GLBuffer*>(ElementBuffer);
+			break;
+			}
+		}
+		Id ID = m_EBOs.Push(dynamic_cast<Buffer*>(NewBuffer));
 		return ID;
 	}
 
 	uint32 BufferPool::CopyElementDataChunk(Id pBufferID, uint32 pOffset, uint32 pSize, void * pData)
 	{
-		return GetElementBuffer(pBufferID).CopyDataChunk(pOffset, pSize, pData);
-
+		switch (Renderer::GetRenderingAPI())
+		{
+		case API_OPENGL:
+			return dynamic_cast<GLElementBuffer*>(GetElementBuffer(pBufferID))->WriteChunk(pOffset, pSize, pData);
+		}
+		return HYD_FAILED;
 	}
 
 	HYD uint32 BufferPool::DestroyElementBuffer(Id * pBufferID)
@@ -94,19 +118,19 @@ namespace Hydrogen
 
 
 
-	Buffer& BufferPool::GetVertexBuffer(Id pBufferID)
+	Buffer* BufferPool::GetVertexBuffer(Id pBufferID)
 	{
 		if (pBufferID == 0)
 			__debugbreak();
-		return m_VBOs.GetResource(pBufferID);
+		return &m_VBOs.GetResource(pBufferID);
 	}
 
-	Buffer& BufferPool::GetElementBuffer(Id pBufferID)
+	Buffer* BufferPool::GetElementBuffer(Id pBufferID)
 	{
 
 		if (pBufferID == 0)
 			__debugbreak();
-		return m_EBOs.GetResource(pBufferID);
+		return &m_EBOs.GetResource(pBufferID);
 	}
 
 	VertexArray& BufferPool::GetArray(Id pArrayID)
@@ -122,21 +146,36 @@ namespace Hydrogen
 
 	uint32 BufferPool::BindVertexBuffer(Id pBufferID)
 	{
-		GetVertexBuffer(pBufferID).Bind();
+		switch (Renderer::GetRenderingAPI())
+		{
+		case API_OPENGL:
+			dynamic_cast<GLVertexBuffer*>(GetVertexBuffer(pBufferID))->Bind();
+			break;
+		}
 		s_CurrentBindedVertexBuffer = pBufferID;
 		return HYD_OK;
 	}
 
 	uint32 BufferPool::UnbindVertexBuffer(Id pBufferID)
 	{
-		GetVertexBuffer(pBufferID).Unbind();
+		switch (Renderer::GetRenderingAPI())
+		{
+		case API_OPENGL:
+			dynamic_cast<GLVertexBuffer*>(GetVertexBuffer(pBufferID))->Unbind();
+			break;
+		}
 		s_CurrentBindedVertexBuffer = 0;
 		return HYD_OK;
 	}
 
 	uint32 BufferPool::BindElementBuffer(Id pBufferID)
 	{
-		GetElementBuffer(pBufferID).Bind();
+		switch (Renderer::GetRenderingAPI())
+		{
+		case API_OPENGL:
+			dynamic_cast<GLElementBuffer*>(GetElementBuffer(pBufferID))->Bind();
+			break;
+		}
 		s_CurrentBindedElementBuffer  = pBufferID;
 		return HYD_OK;
 	}
@@ -144,7 +183,12 @@ namespace Hydrogen
 	uint32 BufferPool::UnbindElementBuffer(Id pBufferID)
 	{
 
-		GetElementBuffer(pBufferID).Unbind();
+		switch (Renderer::GetRenderingAPI())
+		{
+		case API_OPENGL:
+			dynamic_cast<GLElementBuffer*>(GetElementBuffer(pBufferID))->Unbind();
+			break;
+		}
 		s_CurrentBindedElementBuffer = 0;
 		return HYD_OK;
 	}

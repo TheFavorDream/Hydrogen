@@ -17,7 +17,7 @@ out vec2 TexCoords;
 
 void main()
 {
-	Normal =    Normals;
+	Normal =    Position;
 	TexCoords = TEX_COORDS_0;
 	gl_Position = Projection * View * Model *  vec4(Position, 1.0f);
 }

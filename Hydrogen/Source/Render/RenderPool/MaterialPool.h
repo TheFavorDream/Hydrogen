@@ -2,7 +2,7 @@
 
 #include "Common.h"
 #include "Render/Platform/OpenGL/GLTexture.h"
-#include "Render/Material.h"
+#include "Render/Material/Material.h"
 #include "Core/ResourcePool.h"
 
 namespace Hydrogen

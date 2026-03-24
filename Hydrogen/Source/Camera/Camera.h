@@ -3,9 +3,10 @@
 #include "Common.h"
 #include "glm/matrix.hpp"
 #include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
 #include "Event/Keyboard.h"
 #include "Event/Mouse.h"
-#include "glm/gtc/type_ptr.hpp"
+
 
 namespace Hydrogen
 {
@@ -15,7 +16,7 @@ namespace Hydrogen
 
 
 		HYD void SetupCamera(float pFOV, glm::vec3 pPosition, float pAspectRatio = 2.0f, float pNearPlane = 0.1, float pFarPlane = 1000.0f);
-		HYD void HandleCameraMovement(float pDeltaTime);
+		HYD void HandleCameraMovement();
 		HYD void HandleCameraLooking();
 		 
 		HYD void DisableCameraMovement(bool pDisableCamera);

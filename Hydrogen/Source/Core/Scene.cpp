@@ -47,14 +47,14 @@ namespace Hydrogen
 	{
 		Primitive primitive;
 
-		primitive.Count = pIndices.size();
+		primitive.Count = (uint32)pIndices.size();
 		primitive.Type = GL_UNSIGNED_SHORT;
 
 		primitive.m_VertexArrays = m_Buffers.CreateVertexArray();
 		m_Buffers.BindArray(primitive.m_VertexArrays);
 
-		primitive.m_VertexBuffer =  m_Buffers.CreateVertexBuffer( pVertices.size() * sizeof(Vertex), (void*)&pVertices[0]);
-		primitive.m_ElementBuffer = m_Buffers.CreateElementBuffer(pIndices.size() * sizeof(uint16),  (void*)&pIndices[0]);
+		primitive.m_VertexBuffer =  m_Buffers.CreateVertexBuffer((uint32)pVertices.size() * sizeof(Vertex), (void*)&pVertices[0]);
+		primitive.m_ElementBuffer = m_Buffers.CreateElementBuffer((uint32)pIndices.size(), GL_UNSIGNED_SHORT, (void*)&pIndices[0]);
 
 
 		m_Buffers.BindVertexBuffer(primitive.m_VertexBuffer);
@@ -63,9 +63,9 @@ namespace Hydrogen
 
 		m_Buffers.AddVertexAttributes(primitive.m_VertexArrays, 
 			{ 
-				Layout(TYPE_FLOAT, 3, POSITION),
-				Layout(TYPE_FLOAT, 3, NORMALS),
-				Layout(TYPE_FLOAT, 2, TEXCOORDS_0)
+				Layout(TYPE_FLOAT, 3, POSITION, false, 0, sizeof(Vertex)),
+				Layout(TYPE_FLOAT, 3, NORMALS,  false, 12,  sizeof(Vertex)),
+				Layout(TYPE_FLOAT, 2, TEXCOORDS_0, false, 24, sizeof(Vertex))
 			});
 
 		Mesh* NewMesh = ResourcePool<Mesh>::New();

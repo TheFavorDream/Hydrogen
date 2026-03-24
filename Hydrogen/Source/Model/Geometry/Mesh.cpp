@@ -74,7 +74,7 @@ namespace Hydrogen
 		for (auto& pri : m_Primitives)
 		{
 
-			pri.m_ModelMatrix = (pTransform*m_ModelMatrix).Transpose();
+			pri.m_ModelMatrix = (pTransform*m_ModelMatrix);
 			Renderer::PushPrimitive(&pri);
 		}
 		return HYD_OK;

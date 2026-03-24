@@ -14,7 +14,7 @@ namespace Hydrogen
 	void Timer::StopTimer()
 	{
 		std::chrono::time_point<std::chrono::steady_clock> Current = std::chrono::steady_clock::now();
-		m_Elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(Current - m_StartTime).count();
+		m_Elapsed = (uint32)std::chrono::duration_cast<std::chrono::milliseconds>(Current - m_StartTime).count();
 	}
 
 	void Timer::ResetTimer()

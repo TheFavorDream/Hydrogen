@@ -22,6 +22,7 @@
 namespace Hydrogen
 {
 
+	//Vulkan not suported
 	enum APIs { API_NONE, API_OPENGL, API_VULKAN };
 
 	class Renderer
@@ -39,8 +40,8 @@ namespace Hydrogen
 		//Main Rendering 
 		HYD static uint32 Render();
 
-		HYD static inline Id GetDefaultShader() noexcept { return s_DefaultShader; };
-
+		HYD static inline Id   GetDefaultShader() noexcept { return s_DefaultShader; };
+		HYD static inline APIs GetRenderingAPI() noexcept { return s_RenderingAPI; }
 	private:
 		HYD static uint32 InitAPI();
 	private:

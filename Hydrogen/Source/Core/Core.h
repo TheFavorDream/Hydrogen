@@ -8,12 +8,9 @@
 #pragma once
 #include "Common.h"
 #include "Log/Log.h"
-#include "Window/Window.h"
-#include "Event/Mouse.h"
-#include "Event/Keyboard.h"
-#include "Glew/glew.h"
-#include "Scene.h"
 #include "Render/Renderer.h"
+#include "Window/Window.h"
+#include "Scene.h"
 
 #include "Layer.h"
 
@@ -33,25 +30,29 @@ namespace Hydrogen
 		HYD uint32 PushLayer(Layer* pLayer);
 
 
-	public:
-		HYD static uint32 PushScene(Scene* pScene);
-		HYD inline static Scene* GetCurrentScene() { return s_CurrentScene; }
-	protected:
 
+	protected:
 		HYD void Loop();
 	
 	private:
 		HYD void Event();
 		HYD void Update();
 
+	public:
+		HYD static uint32 PushScene(Scene* pScene);
+		HYD inline static Scene* GetCurrentScene() { return s_CurrentScene; }
+		HYD inline static float GetDeltaTime() { return s_DeltaTime; }
+	private:
+		HYD static void SetDeltaTime(float pDelta);
+
 	private:
 
 		std::vector<Layer*> m_Layers;
 
-		float m_deltaTime	= 0.0f;
 		bool  m_Running		= false;
 
 	private:
+		static float s_DeltaTime;
 		static Scene* s_CurrentScene;
 
 	protected:

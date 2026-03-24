@@ -10,9 +10,10 @@ namespace Hydrogen
 
 		Mat4 ModelMat;
 
-		ModelMat = Translate(ModelMat, pTransform.Translation);
+		ModelMat.Scale(pTransform.Scale);
 		ModelMat = Rotate(ModelMat,    pTransform.Rotation);
-		ModelMat = Scale(ModelMat,     pTransform.Scale);
+		ModelMat.Translate(pTransform.Translation);
+
 
 		return ModelMat;
 	}
@@ -28,11 +29,7 @@ namespace Hydrogen
 
 	Mat4 Translate(Mat4& pMat4, const Vec3& pTranslate)
 	{
-		Mat4 TranslateMat;
-		TranslateMat.At(0, 3) = pTranslate.X;
-		TranslateMat.At(1, 3) = pTranslate.Y;
-		TranslateMat.At(2, 3) = pTranslate.Z;
-		return (pMat4 * TranslateMat);
+		return Mat4();
 	}
 
 	Mat4 Rotate(Mat4& pMat4, const Quat& pRotate)

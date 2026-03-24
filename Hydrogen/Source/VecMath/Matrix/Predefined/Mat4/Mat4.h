@@ -2,6 +2,9 @@
 
 #include "Common.h"
 #include "../Mat3/Mat3.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
+
 
 #ifdef TEST
 #define HYD
@@ -36,33 +39,19 @@ namespace Hydrogen
 		HYD Mat4  Transpose();
 		HYD float Determinant();
 
+		HYD void Scale(Vec3 pScale);
+		HYD void Translate(Vec3 pTranslate);
+		HYD void Rotate(Vec4 pRotate);
+
+
 		HYD void Reset();
 
 		HYD float& At(uint8 pRow, uint8 pColumn) const;
 
-		HYD inline float* GetPtr() noexcept { return m_Ptr; }
-
-
-		HYD void Print()
-		{
-			for (int i = 0; i < 4; i++)
-			{
-				for (int j = 0; j < 4; j++)
-				{
-					std::cout << At(i, j) << ',';
-				}
-				std::cout << '\n';
-			}
-		}
+		HYD inline float* GetPtr() noexcept { return glm::value_ptr(m_Mat); }
 
 	private:
-		//Matrix Data
-		mutable float m_Ptr[16] = {
-			1.0f, 0.0f, 0.0f, 0.0f,
-			0.0f, 1.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f
-		};
+		mutable glm::mat4 m_Mat = glm::mat4(1.0f);
 	};
 
 };

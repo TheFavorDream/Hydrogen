@@ -57,10 +57,10 @@ namespace Hydrogen
 		std::vector<uint16> Indices;
 
 		
-		uint16 SecNum   = 30;
-		uint16 StackNum = 30;
-		uint16 SecSize = 360 / SecNum;
-		uint16 StackSize = 180 / StackNum;
+		uint32 SecNum   = 30;
+		uint32 StackNum = 30;
+		float SecSize = 360.0f / SecNum;
+		float StackSize = 180.0f / StackNum;
 
 		uint16 Index = 0;
 
@@ -96,6 +96,17 @@ namespace Hydrogen
 	}
 	uint32 MeshGenerator::GeneratePlane(Scene* pTargetScene, Id pTargetModel, const Transform& pTransform)
 	{
+
+		std::vector<Vertex> Vertices = {
+			{Vec3(0.5f,   0.0f,  0.5f), Vec3(0.0f),  Vec2(0.0f, 0.0f)},
+			{Vec3(0.5f,  0.0f,  -0.5f), Vec3(0.0f),  Vec2(0.0f, 0.0f)},
+			{Vec3(-0.5f,  0.0f,  0.5f), Vec3(0.0f),  Vec2(0.0f, 0.0f)},
+			{Vec3(-0.5f,   0.0f,  -0.5f), Vec3(0.0f),  Vec2(0.0f, 0.0f)}
+		};
+
+
+		Id mesh = pTargetScene->CreateMesh(pTargetModel, Vertices, {0, 1, 2, 3, 2, 1});
+		pTargetScene->GetModel(pTargetModel).GetMesh(mesh).SetTransform(pTransform);
 		return HYD_OK;
 	}
 };

@@ -1,3 +1,4 @@
+#include "Core/Core.h"
 #include "Camera.h"
 #include "HydPch.h"
 
@@ -19,36 +20,38 @@ namespace Hydrogen
 
 	}
 
-	void Camera::HandleCameraMovement(float pDeltaTime)
+	void Camera::HandleCameraMovement()
 	{
 
 		if (m_CameraLocked)
 			return;
 
+		float DeltaTime = Core::GetDeltaTime();
+
 		if (Hydrogen::Keyboard::GetKeyState(GLFW_KEY_W) == Hydrogen::KEY_DOWN)
 		{
-			m_Position += m_Front * m_Speed*pDeltaTime;
+			m_Position += m_Front * m_Speed * DeltaTime;
 		}
 		if (Hydrogen::Keyboard::GetKeyState(GLFW_KEY_S) == Hydrogen::KEY_DOWN)
 		{
-			m_Position += -m_Front * m_Speed*pDeltaTime;
+			m_Position += -m_Front * m_Speed*DeltaTime;
 		}
 		if (Hydrogen::Keyboard::GetKeyState(GLFW_KEY_D) == Hydrogen::KEY_DOWN)
 		{
-			m_Position += glm::normalize(glm::cross(m_Front, m_Up))* m_Speed*pDeltaTime;
+			m_Position += glm::normalize(glm::cross(m_Front, m_Up))* m_Speed*DeltaTime;
 		}
 		if (Hydrogen::Keyboard::GetKeyState(GLFW_KEY_A) == Hydrogen::KEY_DOWN)
 		{
-			m_Position += -glm::normalize(glm::cross(m_Front, m_Up))* m_Speed*pDeltaTime;
+			m_Position += -glm::normalize(glm::cross(m_Front, m_Up))* m_Speed*DeltaTime;
 		}
 
 		if (Hydrogen::Keyboard::GetKeyState(GLFW_KEY_SPACE) == Hydrogen::KEY_DOWN)
 		{
-			m_Position += m_Up * m_Speed*pDeltaTime;
+			m_Position += m_Up * m_Speed*DeltaTime;
 		}
 		if (Hydrogen::Keyboard::GetKeyState(GLFW_KEY_LEFT_SHIFT) == Hydrogen::KEY_DOWN)
 		{
-			m_Position += -m_Up * m_Speed*pDeltaTime;
+			m_Position += -m_Up * m_Speed*DeltaTime;
 		}
 	}
 
@@ -69,6 +72,7 @@ namespace Hydrogen
 
 			float OffsetX = Hydrogen::Mouse::GetOffsetX();
 			float OffsetY = Hydrogen::Mouse::GetOffsetY();
+
 
 			if (!FirstTime)
 			{

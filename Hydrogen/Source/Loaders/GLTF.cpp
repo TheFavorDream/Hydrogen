@@ -371,9 +371,9 @@ namespace Hydrogen
 					primitive.Type  = VertexArray::GetGLType(pAccessorData[indicies].ComponentType);
 					
 					primitive.m_ElementBuffer = s_CurrentScene->m_Buffers.CreateElementBuffer(
-						pAccessorData[indicies].Data.Data.size(),
-						(void*)&pAccessorData[indicies].Data.Data[0],
-						pAccessorData[indicies].Count, VertexArray::GetGLType(pAccessorData[indicies].ComponentType));
+						pAccessorData[indicies].Count,
+						VertexArray::GetGLType(pAccessorData[indicies].ComponentType),
+						(void*)&pAccessorData[indicies].Data.Data[0]);
 				
 				}
 
@@ -423,6 +423,8 @@ namespace Hydrogen
 			//Vertex Buffer Setup:
 			
 			pCurrentPrimitive.m_VertexBuffer = s_CurrentScene->m_Buffers.CreateVertexBuffer(VBOSize);
+			s_CurrentScene->m_Buffers.BindVertexBuffer(pCurrentPrimitive.m_VertexBuffer);
+
 			uint32 Offset = 0;
 			uint32 AttribCount = 0;
 			uint32 Stride = 0;
@@ -434,7 +436,7 @@ namespace Hydrogen
 				const Accessor& accessor = pAccessorData[i];
 
 				s_CurrentScene->m_Buffers.CopyVertexDataChunk(pCurrentPrimitive.m_VertexBuffer,
-					Offset, accessor.Data.Data.size(), (void*)(&accessor.Data.Data[0]));
+					Offset, (uint32)accessor.Data.Data.size(), (void*)(&accessor.Data.Data[0]));
 
 				Stride =  (uint32)accessor.VectorType * VertexArray::GetTypeSize(accessor.ComponentType);
 

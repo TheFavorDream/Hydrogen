@@ -58,7 +58,7 @@ namespace Hydrogen
 
 			glEnable(GL_DEPTH_TEST);
 			//glCullFace(GL_CCW);
-			//glEnable(GL_CULL_FACE);
+			glEnable(GL_CULL_FACE);
 
 			break;
 		}
