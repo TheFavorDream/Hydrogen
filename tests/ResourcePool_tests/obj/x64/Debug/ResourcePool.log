@@ -1,5 +1,0 @@
-﻿  pool_test.cpp
-c:\users\thevoltage\desktop\hydrogen\hydrogen\source\core\resourcepool.h(7): warning C4005: 'HYD': macro redefinition
-  c:\users\thevoltage\desktop\hydrogen\hydrogen\source\common.h(9): note: see previous definition of 'HYD'
-c:\users\thevoltage\desktop\hydrogen\hydrogen\source\core\resourcepool.h(90): warning C4715: 'Hydrogen::ResourcePool<Object>::GetResource': not all control paths return a value
-  ResourcePool.vcxproj -> C:\Users\TheVoltage\Desktop\Hydrogen\tests\ResourcePool_tests\bin\x64\Debug\ResourcePool.exe

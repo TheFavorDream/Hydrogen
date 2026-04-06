@@ -39,10 +39,15 @@ workspace "tests"
             }
 
             includedirs {
-                "../Hydrogen/Source/"
+                "../Hydrogen/Source/",
+                "../Tools/Hydrofiler/Source/"
             }
 
+            libdirs{
+                "../Tools/Hydrofiler/bin/Release/"
+            }
 
+            links{"Hydrofiler"}
 
     project "ResourcePool"
             location "./ResourcePool_tests"

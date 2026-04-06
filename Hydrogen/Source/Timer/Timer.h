@@ -40,7 +40,7 @@ namespace Hydrogen
 		HYD inline std::string& GetName() { return m_BlockName; }
 	private:
 		std::string m_BlockName;
-	private: 
+	private:
 		static std::stack<Profiler> s_Profiles;
 	};
 #endif

@@ -93,4 +93,9 @@ namespace Hydrogen
 };
 
 #define GL_CALL(x) x;Hydrogen::Log::CheckOpenGLErrors(__FILE__, __LINE__);
-#define ASSERT(s)  Hydrogen::Log::SetError(s);__debugbreak();
+
+#ifndef TEST
+	#define ASSERT(a,s)  if (a==true) {Hydrogen::Log::SetError(s);__debugbreak();}
+#else
+	#define ASSERT(a, s) if (a==true) {std::cout << "[Test:Error]" << s << '\n';}
+#endif

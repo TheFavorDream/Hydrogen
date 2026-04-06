@@ -72,7 +72,6 @@ namespace Hydrogen
 	class  Shader;
 	class  Material;
 	class  Texture;
-	class  Transformation;
 	class  GLTFLoader;
 
 
