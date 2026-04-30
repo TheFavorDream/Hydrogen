@@ -27,7 +27,7 @@ namespace Hydrogen
 		HYD ~Core();
 
 
-		HYD uint32 PushLayer(Layer* pLayer);
+		HYD uint32 PushLayer(Ptr<Layer> pLayer);
 
 
 
@@ -39,21 +39,21 @@ namespace Hydrogen
 		HYD void Update();
 
 	public:
-		HYD static uint32 PushScene(Scene* pScene);
-		HYD inline static Scene* GetCurrentScene() { return s_CurrentScene; }
+		HYD static uint32 PushScene(Ptr<Scene> pScene);
+		HYD static Ptr<Scene> GetCurrentScene();
 		HYD inline static float GetDeltaTime() { return s_DeltaTime; }
 	private:
 		HYD static void SetDeltaTime(float pDelta);
 
 	private:
 
-		std::vector<Layer*> m_Layers;
+		std::vector<Ptr<Layer>> m_Layers;
 
 		bool  m_Running		= false;
 
 	private:
 		static float s_DeltaTime;
-		static Scene* s_CurrentScene;
+		static Ptr<Scene> s_CurrentScene;
 
 	protected:
 		Window m_Window;

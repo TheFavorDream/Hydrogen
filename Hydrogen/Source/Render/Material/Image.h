@@ -54,12 +54,14 @@ namespace Hydrogen
 
 
 		Image() {};
+		Image(void* pData, int32 pWidth, int32 pHeight);
 		~Image();
-		Image(Image&& pOther);
-		Image(const Image& pOther) = delete;
 
-		uint32 LoadImage(const char* pSource);
-		uint32 LoadImage(uint8* pBuffer, const uint32 pLength);
+		Image(Image&& pOther);
+		Image(const Image& pOther);
+
+		uint32 LoadImageFromDisk(const char* pSource);
+		uint32 LoadImageFromMemory(uint8* pBuffer, const uint32 pLength);
 		uint32 FreeImage();
 
 	};

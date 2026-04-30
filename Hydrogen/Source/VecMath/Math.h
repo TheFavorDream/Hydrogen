@@ -36,6 +36,9 @@ namespace Hydrogen
 	HYD float SinA(float pDegrees);
 	HYD float CosA(float pDegrees);
 	HYD float TanA(float pDegrees);
+	
+	HYD inline float Sq(float pBase) { return (pBase*pBase); };
+
 
 };
 

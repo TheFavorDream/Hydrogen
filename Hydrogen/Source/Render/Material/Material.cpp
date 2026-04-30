@@ -65,36 +65,55 @@ namespace Hydrogen
 
 
 
-	uint32 Material::SetBaseColorTexture(Texture** pBaseColor)
+	uint32 Material::SetBaseColorTexture(Wraper<TextureBase>&   pBaseColor)
 	{
-		if (pBaseColor == nullptr)
-			return HYD_INVALID_VALUE;
-		if (*pBaseColor == nullptr)
+		if (pBaseColor.Ptr == nullptr)
 			return HYD_INVALID_VALUE;
 
-		m_BaseColor = m_TexturePool.PushTexture(pBaseColor);
+		m_BaseColor = m_TexturePool.PushTexture(std::move(pBaseColor));
 		return HYD_OK;
 	}
 
-	uint32 Material::SetNormalMapTexture(Texture** pNormalMap)
+	uint32 Material::SetNormalMapTexture(Wraper<TextureBase>&   pNormalMap)
 	{
-		if (pNormalMap == nullptr)
-			return HYD_INVALID_VALUE;
-		if (*pNormalMap == nullptr)
+		if (pNormalMap.Ptr == nullptr)
 			return HYD_INVALID_VALUE;
 
-		m_NormalMap = m_TexturePool.PushTexture(pNormalMap);
+		m_NormalMap = m_TexturePool.PushTexture(std::move(pNormalMap));
+		return HYD_OK;
+
 	}
 
-	uint32 Material::SetMetallicTexture(Texture** pMetallic)
+	uint32 Material::SetMetallicTexture(Wraper<TextureBase>&   pMetallic)
 	{
-		if (pMetallic == nullptr)
-			return HYD_INVALID_VALUE;
-		if (*pMetallic == nullptr)
+		if (pMetallic.Ptr == nullptr)
 			return HYD_INVALID_VALUE;
 
-		m_MetallicMap = m_TexturePool.PushTexture(pMetallic);
+
+		m_MetallicMap = m_TexturePool.PushTexture(std::move(pMetallic));
+		return HYD_OK;
+
 	}
+
+	uint32 Material::SetEmissiveTexture(Wraper<TextureBase>&   pEmissive)
+	{
+		if (pEmissive.Ptr == nullptr)
+			return HYD_INVALID_VALUE;
+
+		m_EmissiveMap = m_TexturePool.PushTexture(std::move(pEmissive));
+		return HYD_OK;
+	}
+
+	uint32 Material::SetOcclusionTexture(Wraper<TextureBase>& pOcclusion)
+	{
+		if (pOcclusion.Ptr == nullptr)
+			return HYD_INVALID_VALUE;
+
+		m_OcclusionMap = m_TexturePool.PushTexture(std::move(pOcclusion));
+		return HYD_OK;
+	}
+
+
 
 	uint32 Material::Bind(const Shader& pShader)
 	{
@@ -104,10 +123,11 @@ namespace Hydrogen
 
 		pShader.SetUniformFloat1("material.Metallicness", m_MatallicnessFactor);
 		pShader.SetUniformFloat1("material.Roughness",   m_RoughnessFactor);
+		pShader.SetUniformFloat3("material.BaseColorFactor", m_BaseColorFactor.X, m_BaseColorFactor.Y, m_BaseColorFactor.Z);
 
 		m_TexturePool.BindTexture(m_BaseColor,  0);
-		m_TexturePool.BindTexture(m_NormalMap,  1);
-		m_TexturePool.BindTexture(m_MetallicMap, 2);
+		//m_TexturePool.BindTexture(m_NormalMap,  1);
+		//m_TexturePool.BindTexture(m_MetallicMap, 2);
 
 
 		return HYD_OK;
@@ -116,8 +136,8 @@ namespace Hydrogen
 	uint32 Material::Unbind()
 	{
 		m_TexturePool.UnbindTexture(m_BaseColor,  0);
-		m_TexturePool.UnbindTexture(m_NormalMap,  1);
-		m_TexturePool.UnbindTexture(m_MetallicMap, 2);
+		//m_TexturePool.UnbindTexture(m_NormalMap,  1);
+		//m_TexturePool.UnbindTexture(m_MetallicMap, 2);
 		return HYD_OK;
 	}
 

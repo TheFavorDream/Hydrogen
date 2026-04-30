@@ -3,6 +3,25 @@
 namespace Hydrogen
 {
 
+	Image::Image(void* pData, int32 pWidth, int32 pHeight):
+		Data((uint8*)pData), Width(pWidth), Height(pHeight), ImageChannel(CH_RGB)
+	{
+
+	}
+
+
+	Image::Image(const Image& pOther)
+	{
+
+		Width		 = pOther.Width;
+		Height       = pOther.Height;
+		ImageChannel = pOther.ImageChannel;
+
+		//TODO: Replace this with memory allocator:
+		Data = (uint8*)Memory::AllocateMemory(Width*Height*ImageChannel);
+		memcpy((void*)&Data[0], (void*)&pOther.Data[0], Width*Height*(int)ImageChannel);
+	}
+
 	Image::Image(Image&& pOther)
 	{
 		Data		 = pOther.Data;
@@ -13,7 +32,7 @@ namespace Hydrogen
 		pOther.Data = nullptr;
 	}
 
-	uint32 Image::LoadImage(const char* pSource)
+	uint32 Image::LoadImageFromDisk(const char* pSource)
 	{
 		Data = stbi_load(pSource, &Width, &Height, (int*)&ImageChannel, NULL);
 		if (Data == nullptr)
@@ -21,7 +40,7 @@ namespace Hydrogen
 		return HYD_OK;
 	}
 
-	uint32 Image::LoadImage(uint8* pBuffer, const uint32 pLength)
+	uint32 Image::LoadImageFromMemory(uint8* pBuffer, const uint32 pLength)
 	{
 		//Data = stbi_loadf_from_memory(pBuffer, pLength, &Width, &Height, (int*)&ImageChannel, NULL);
 		if (Data == nullptr)
@@ -31,12 +50,11 @@ namespace Hydrogen
 
 	uint32 Image::FreeImage()
 	{
-		if (Data != nullptr)
-			stbi_image_free(Data);
-
+		Memory::FreeMemory(Data);
 		Data = nullptr;
 		return HYD_OK;
 	}
+
 
 	Image::~Image()
 	{

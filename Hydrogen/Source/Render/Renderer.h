@@ -18,6 +18,8 @@
 #include "Model/ModelPool.h"
 #include "Model/Geometry/Mesh.h"
 #include "Core/Core.h"
+#include "UI/UICore.h"
+
 
 namespace Hydrogen
 {
@@ -40,8 +42,13 @@ namespace Hydrogen
 		//Main Rendering 
 		HYD static uint32 Render();
 
+
+		HYD static void SetDefaultMaterial(Id pMaterialID) noexcept;
+
 		HYD static inline Id   GetDefaultShader() noexcept { return s_DefaultShader; };
+		HYD static inline Id   GetDefaultMaterial() noexcept { return s_DefaultMaterial; }
 		HYD static inline APIs GetRenderingAPI() noexcept { return s_RenderingAPI; }
+
 	private:
 		HYD static uint32 InitAPI();
 	private:
@@ -52,7 +59,10 @@ namespace Hydrogen
 		HYD static Id					  s_StageTwo;
 		HYD static Id					  s_StageThree;
 
+		HYD static Id s_DefaultMaterial;
+
 		HYD static ShaderPool			  s_Shaders;
+		
 		HYD static std::queue<Primitive*> s_PrimitiveQueue;
 	};
 

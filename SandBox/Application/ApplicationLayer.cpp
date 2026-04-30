@@ -1,34 +1,19 @@
 #include "ApplicationLayer.h"
 
+using namespace Hydrogen;
+
 void AppLayer::Setup()
 {
 
-	m_Scene = new Hydrogen::Scene();
+	m_Scene = ResourcePool<Scene>::New();
+	Core::PushScene(m_Scene);
 
-	Hydrogen::Id Model = m_Scene->LoadModel("C:\\Users\\TheVoltage\\Desktop\\Dev\\Hydrogen\\SandBox\\Resources\\Models\\Hall\\scene.gltf");
+	
+	//model = m_Scene->LoadModel("C:\\Users\\TheVoltage\\Desktop\\Dev\\Hydrogen\\SandBox\\Resources\\Models\\JustACube.gltf");
+	model = m_Scene->LoadModel("C:\\Users\\TheVoltage\\Desktop\\Dev\\Hydrogen\\SandBox\\Resources\\Models\\Scene\\scene.gltf");
 
-
-	//Hydrogen::Transform transform;
-	//transform.Scale = Hydrogen::Vec3(5.0f);
-	//
-	//Hydrogen::Id Model = m_Scene->NewModel("DefModel");
-	//m_Scene->GetModel(Model).SetTransform(transform);
-	//
-	//
-	//for (int k = 0; k < 10; k++)
-	//{
-	//	for (int j = 0; j < 10; j++)
-	//	{
-	//		for (int i = 0; i < 10; ++i)
-	//		{
-	//			transform.Translation = Hydrogen::Vec3(float(i * 10), float(k*10), float(j * 10));
-	//			Hydrogen::MeshGenerator::GenerateCube(m_Scene, Model, transform);
-	//		}
-	//	}
-	//}
-
-	Hydrogen::Core::PushScene(m_Scene);
-
+	m_Scene->GetModel(model).BakeTransform(Hydrogen::VecF3(1.5f), Hydrogen::VecF4(0.0f, 0.0f, 0.0f, 1.0f), Hydrogen::Vec3(0.0f, 0.25f, 0.0f));
+	
 }
 
 void AppLayer::Shutdown()
@@ -44,6 +29,8 @@ void AppLayer::Event()
 
 void AppLayer::Update()
 {
+
+
 
 }
 

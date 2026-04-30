@@ -110,9 +110,31 @@ namespace Hydrogen
 		return HYD_FAILED;
 	}
 
-	HYD uint32 BufferPool::DestroyElementBuffer(Id * pBufferID)
+	uint32 BufferPool::DestroyElementBuffer(Id * pBufferID)
 	{
 		return m_EBOs.Pop(pBufferID);
+	}
+
+	uint32 BufferPool::GetElementCount(Id pId)
+	{
+		switch (Renderer::GetRenderingAPI())
+		{
+		case API_OPENGL:
+			return dynamic_cast<GLElementBuffer*>(GetElementBuffer(pId))->GetCount();
+			break;
+		}
+		return 0;
+	}
+
+	uint32 BufferPool::GetElementType(Id pId)
+	{
+		switch (Renderer::GetRenderingAPI())
+		{
+		case API_OPENGL:
+			return dynamic_cast<GLElementBuffer*>(GetElementBuffer(pId))->GetType();
+			break;
+		}
+		return 0;
 	}
 
 
@@ -208,15 +230,15 @@ namespace Hydrogen
 	HYD uint32 BufferPool::BindCollection(Id pVAO, Id pVBO, Id pEBO)
 	{
 		GetArray(pVAO).Bind();
-		GetArray(pVBO).Bind();		
-		GetArray(pEBO).Bind();
+		BindVertexBuffer(pVBO);
+		BindElementBuffer(pEBO);
 		return HYD_OK;
 	}
 	HYD uint32 BufferPool::UnbindCollection(Id pVAO, Id pVBO, Id pEBO)
 	{
 		GetArray(pVAO).Unbind();
-		GetArray(pVBO).Unbind();
-		GetArray(pEBO).Unbind();
+		UnbindVertexBuffer(pVBO);
+		UnbindElementBuffer(pEBO);
 		return HYD_OK;
 	}
 };

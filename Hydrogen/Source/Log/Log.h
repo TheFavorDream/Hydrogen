@@ -12,7 +12,7 @@
 #include "Common.h"
 #include "Glew/glew.h"
 
-#include "VecMath/Vector/VectorDef.h"
+#include "VecMath/Vector/Vectors.h"
 #include <iostream>
 #include <string>
 #include <fstream>

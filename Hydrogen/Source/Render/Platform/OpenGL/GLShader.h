@@ -10,7 +10,6 @@
 #include "Common.h"
 #include "Glew/glew.h"
 #include "Log/Log.h"
-#include "VecMath/Matrix/Predefined/Mat4/Mat4.h"
 	
 
 namespace Hydrogen
@@ -40,8 +39,7 @@ namespace Hydrogen
 		HYD void SetUniformInt2(const char* pName, int32 pValue1, int32 pValue2) const;
 		HYD void SetUniformInt3(const char* pName, int32 pValue1, int32 pValue2, int32 pValue3) const;
 		 
-		HYD void SetUniformMat4(const char* pName, float* pValue) const;
-		HYD void SetUniformMat4(const char* pName, Mat4 pMat) const;
+		HYD void SetUniformMat4(const char* pName, float* pValue, bool pTranspose=false) const;
 		HYD void SetUniformMat4(const char* pName, double* pValue) const;
 		 
 		 

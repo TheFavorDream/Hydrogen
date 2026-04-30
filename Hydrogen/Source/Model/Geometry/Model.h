@@ -16,7 +16,8 @@
 #include "Common.h"
 
 #include "Mesh.h"
-#include "VecMath/Transformation.h"
+#include "VecMath/Transform/Transformation.h"
+
 #include "Model/MeshPool.h"
 #include "glm/glm.hpp"
 #include "Log/Log.h"
@@ -30,7 +31,7 @@ namespace Hydrogen
 	public:
 
 
-		HYD Model(const std::string& pName="Unamed", const Transform& pTransform=Transform());
+		HYD Model(const std::string& pName="Unamed", const Transformation& pTransform= Transformation());
 
 		HYD ~Model(); //Destroy the Model
 
@@ -41,22 +42,22 @@ namespace Hydrogen
 		HYD Model& operator=(Model&& pOther);
 
 		//Setup Model
-		HYD uint32 SetupModel(const std::string& pName, const Transform& pTransform = Transform(), std::vector<Mesh*>& pMeshes=std::vector<Mesh*>());
+		HYD uint32 SetupModel(const std::string& pName, const Transformation& pTransform = Transformation(), std::vector<Mesh*>& pMeshes=std::vector<Mesh*>());
 		
 		//Destroy Model:
 		HYD uint32 DestroyModel();
 		 
 		//Transform the Model with Matrix
-		HYD uint32 SetTransform(const Transform& pTransform);
+		HYD uint32 SetTransform(const Transformation& pTransform);
 		//Transform the Model with TRS properties
-		HYD uint32 SetTransform(Vec3 pScale=Vec3(1.0f), Vec3 pTranslate=Vec3(0.0f), Vec4 pRotate=Vec4(0.0f));
+		HYD uint32 SetTransform(Scaler pScale = VecF3(1.0f), Rotation pRotate = VecF4(0.0f), Translation pTranslate = VecF3(0.0f));
 		
 		//HYD uint32 BakeTransform(Vec3 pScale = Vec3(1.0f), Vec3 pTranslate = Vec3(0.0f), Vec4 pRotate = Vec4(0.0f));
 
 		HYD uint32 RenderModel();
 
 		//Get Transformer
-		HYD inline const Mat4& GetModelMatrix() { return m_ModelMatrix; }
+		HYD inline const Transformation& GetLocalTransformation() { return m_Transform; }
 
 		//Name Setter & Getter
 		HYD uint32 SetName(std::string pName);
@@ -77,8 +78,11 @@ namespace Hydrogen
 
 		//bakes the input transform into each mesh
 		//recommended for models that are static.
-		HYD uint32 BakeTransform(Transform& pTransform);
-		//Retrive a specific mesh
+		HYD uint32 BakeTransform(const Transformation& pTransform);
+		HYD uint32 BakeTransform(Scaler pScale = VecF3(1.0f), Rotation pRotate = VecF4(0.0f, 0.0f, 0.0f, 1.0f), Translation pTranslate = VecF3(0.0f));
+
+		HYD inline Transformation& GetTransformation() { return m_Transform; }
+
 
 
 	private:
@@ -88,7 +92,7 @@ namespace Hydrogen
 		//Name of the Model (not guaranteed to be unique)
 		std::string m_Name;
 		//Global Transformation of model which applies to all the meshes
-		Mat4 m_ModelMatrix;
+		Transformation m_Transform;
 	};
 
 };

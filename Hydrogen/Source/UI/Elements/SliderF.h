@@ -12,7 +12,7 @@ namespace Hydrogen
 	public:
 
 
-		HYD int Setup(const std::string& pTitle, Vec2 pPosition, float pMin=0.0f, float pMax=1.0f)
+		HYD int Setup(const std::string& pTitle, VecF2 pPosition, float pMin=0.0f, float pMax=1.0f)
 		{
 			m_Label = pTitle;
 			m_Position = pPosition;

@@ -11,7 +11,7 @@ namespace Hydrogen
 			delete i.second;
 		}
 	}
-	int GuiWindow::CreateUIWindow(const std::string& pTitle, Vec2 pSize, Vec2 pPosition, RefernceOrigin pOrigin)
+	int GuiWindow::CreateUIWindow(const std::string& pTitle, VecF2 pSize, VecF2 pPosition, RefernceOrigin pOrigin)
 	{
 		m_Title = pTitle;
 		m_Size = pSize;
@@ -47,7 +47,7 @@ namespace Hydrogen
 
 	}
 
-	int GuiWindow::CreateButton(std::string pLabel, Vec2 pSize, Vec2 pPos, std::string pID)
+	int GuiWindow::CreateButton(const std::string& pLabel, VecF2 pSize, VecF2 pPos, std::string pID)
 	{
 
 		if (pID.size() == 0)
@@ -60,7 +60,7 @@ namespace Hydrogen
 		return CreateElement(button, pID);
 	}
 
-	int GuiWindow::CreateText(std::string pText, Vec2 pPos, std::string pID)
+	int GuiWindow::CreateText(const std::string& pText, VecF2 pPos, std::string pID)
 	{
 
 		Text* text = new Text();
@@ -68,7 +68,7 @@ namespace Hydrogen
 		return CreateElement(text, pID);
 	}
 
-	int GuiWindow::CreateInputF(std::string pLabel, Vec2 pPos, std::string pID)
+	int GuiWindow::CreateInputF(const std::string& pLabel, VecF2 pPos, std::string pID)
 	{
 		if (pID.size() == 0)
 		{
@@ -79,7 +79,7 @@ namespace Hydrogen
 		return CreateElement(input, pID);
 	}
 
-	int GuiWindow::CreateSliderF(std::string pLabel, Vec2 pPos, float pMin, float pMax, std::string pID)
+	int GuiWindow::CreateSliderF(const std::string& pLabel, VecF2 pPos, float pMin, float pMax, std::string pID)
 	{
 		if (pID.size() == 0)
 		{
@@ -90,7 +90,7 @@ namespace Hydrogen
 		return CreateElement(input, pID);
 	}
 
-	int GuiWindow::CreateCheckbox(std::string pLabel, Vec2 pPos, std::string pID)
+	int GuiWindow::CreateCheckbox(const std::string& pLabel, VecF2 pPos, std::string pID)
 	{
 		if (pID.size() == 0)
 		{
@@ -101,39 +101,39 @@ namespace Hydrogen
 		return CreateElement(input, pID);
 	}
 
-	int GuiWindow::CreateComboBox(std::string pLabel, std::vector<std::string> Items, Vec2 pPos, std::string pID)
+	int GuiWindow::CreateComboBox(const std::string& pLabel, std::vector<std::string> Items, VecF2 pPos, std::string pID)
 	{
 		Combo* combo = new Combo();
 		combo->Setup(pLabel, Items, pPos);
 		return CreateElement(combo, pID);
 	}
 
-	Button * GuiWindow::GetButton(std::string pID)
+	Button * GuiWindow::GetButton(const std::string& pID)
 	{
 		return dynamic_cast<Button*>(GetElement(pID));
 	}
 
-	Text * GuiWindow::GetText(std::string pID)
+	Text * GuiWindow::GetText(const std::string& pID)
 	{
 		return dynamic_cast<Text*>(GetElement(pID));
 	}
 
-	SliderF * GuiWindow::GetSliderF(std::string pID)
+	SliderF * GuiWindow::GetSliderF(const std::string& pID)
 	{
 		return dynamic_cast<SliderF*>(GetElement(pID));
 	}
 
-	InputF * GuiWindow::GetInput(std::string pID)
+	InputF * GuiWindow::GetInput(const std::string& pID)
 	{
 		return dynamic_cast<InputF*>(GetElement(pID));
 	}
 
-	Combo * GuiWindow::GetCombo(std::string pID)
+	Combo * GuiWindow::GetCombo(const std::string& pID)
 	{
 		return dynamic_cast<Combo*>(GetElement(pID));
 	}
 
-	int GuiWindow::CreateElement(Element * pElement, std::string pID)
+	int GuiWindow::CreateElement(Element* pElement, std::string pID)
 	{
 		if (m_Elements.find(pID) != m_Elements.end())
 		{

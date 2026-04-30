@@ -105,7 +105,7 @@ namespace Hydrogen
 
 		HYD Type& operator[](uint32 pIndex)
 		{
-			ASSERT((pIndex >= t_Length), "Out of Range");
+			//ASSERT((pIndex >= t_Length), "Out of Range");
 
 			return m_Array[pIndex];
 		}
@@ -113,7 +113,7 @@ namespace Hydrogen
 		HYD Type At(uint32 pIndex) const
 		{
 
-			ASSERT((pIndex >= t_Length), "Out of Range");
+			//ASSERT((pIndex >= t_Length), "Out of Range");
 
 			return m_Array[pIndex];
 		}

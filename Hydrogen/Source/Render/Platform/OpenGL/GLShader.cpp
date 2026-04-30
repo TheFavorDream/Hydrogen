@@ -39,8 +39,6 @@ namespace Hydrogen
 	{
 		std::vector<std::string> Lines = FilterSource(pSource);
 
-		Log::DebugPrint(pSource);
-		ASSERT("STOP");
 		if (Lines.size() == 0)
 		{
 			Log::SetError("Shader: There were nothing to process");
@@ -148,20 +146,12 @@ namespace Hydrogen
 	}
 
 
-	void Shader::SetUniformMat4(const char * pName, float * pValue) const
+	void Shader::SetUniformMat4(const char* pName, float* pValue, bool pTranspose) const
 	{
 		int Location = GetUniformLocation(pName);
 		if (Location < 0)
 			return;
-		glProgramUniformMatrix4fv(m_ProgramID, Location, 1, GL_FALSE, pValue);
-	}
-
-	HYD void Shader::SetUniformMat4(const char * pName, Mat4 pMat) const
-	{
-		int Location = GetUniformLocation(pName);
-		if (Location < 0)
-			return;
-		glProgramUniformMatrix4fv(m_ProgramID, Location, 1, GL_FALSE, pMat.GetPtr());
+		glProgramUniformMatrix4fv(m_ProgramID, Location, 1, (pTranspose == true)? GL_TRUE : GL_FALSE, pValue);
 	}
 
 	void Shader::SetUniformMat4(const char * pName, double * pValue) const

@@ -62,6 +62,8 @@ namespace Hydrogen
 		if (m_CameraLocked)
 			return;
 
+		float DeltaTime = Core::GetDeltaTime()/1000.0f;
+
 		if (Hydrogen::Mouse::GetLeftKeyState() == Hydrogen::KEY_DOWN)
 		{
 			if (FirstTime)

@@ -1,6 +1,7 @@
 #include "HydPch.h"
 #include "Core.h"
 
+using namespace std::chrono_literals;
 
 namespace Hydrogen
 {
@@ -16,8 +17,13 @@ namespace Hydrogen
 
 	Core::Core(int32 pWidth, int32 pHeight, const char* pTitle)
 	{
+#ifndef DIST
 		Log::SetLevel(LV3);
 		Log::EnableFile();
+#else
+		Log::SetLevel(LV0);
+		Log::DisableFile();
+#endif
 
 		m_Window.MakeWindow(pWidth, pHeight, pTitle);
 		Renderer::Init(API_OPENGL);
@@ -46,10 +52,14 @@ namespace Hydrogen
 
 		m_Window.DestroyWindow();
 		glfwTerminate();
+
+
 		m_Running = false;
+
+		Memory::CheckAllocation();
 	}
 
-	uint32 Core::PushLayer(Layer* pLayer)
+	uint32 Core::PushLayer(Ptr<Layer> pLayer)
 	{
 
 		if (pLayer == nullptr)
@@ -62,12 +72,18 @@ namespace Hydrogen
 		return HYD_OK;
 	}
 
-	HYD uint32 Core::PushScene(Scene* pScene)
+	HYD uint32 Core::PushScene(Ptr<Scene> pScene)
 	{
 		if (pScene == nullptr)
 			return HYD_INVALID_VALUE;
 		s_CurrentScene = pScene;
 		return HYD_OK;
+	}
+
+	Ptr<Scene> Core::GetCurrentScene()
+	{
+		ASSERT(s_CurrentScene==nullptr, "No Scene is Current!")
+		return s_CurrentScene;
 	}
 
 	void Core::SetDeltaTime(float pDelta)
@@ -88,11 +104,15 @@ namespace Hydrogen
 
 			m_Window.ProcessWindow(m_Running);
 
+
 			timer.StopTimer();
 			//Calculate delta Time:
 
-			SetDeltaTime((float)timer.GetElapsedInMillis());
+			SetDeltaTime(timer.GetElapsedInMillis());
 			timer.ResetTimer();
+
+
+			
 		}
 	}
 

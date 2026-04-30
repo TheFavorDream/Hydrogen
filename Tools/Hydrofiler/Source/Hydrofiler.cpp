@@ -12,7 +12,13 @@ namespace Tools
 
 	void Hydrofiler::StartProfiling(const std::string & pBlockName)
 	{
-		m_Profiles.push({ pBlockName, std::chrono::steady_clock::now(), std::chrono::steady_clock::now() });
+
+		Profile NewProfile;
+		NewProfile.BlockName = pBlockName;
+		m_Profiles.push(NewProfile);
+
+		m_Profiles.top().StartPoint = std::chrono::steady_clock::now();
+
 	}
 
 	Profile Hydrofiler::StopProfiling()

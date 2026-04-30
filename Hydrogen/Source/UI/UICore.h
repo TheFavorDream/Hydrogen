@@ -1,7 +1,9 @@
 #pragma once
 
 #include "Common.h"
+#include "Log/Log.h"
 #include "GuiWindow.h"
+#include "HydPch.h"
 
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_opengl3.h"
@@ -9,11 +11,9 @@
 
 #include "Glew/glew.h"
 #include "Window/Window.h"
-#include "VecMath/Vector/VectorDef.h"
+#include "VecMath/Vector/Vectors.h"
 
-#include <unordered_map>
-#include <string>
-#include "Log/Log.h"
+
 namespace Hydrogen
 {
 
@@ -34,20 +34,22 @@ namespace Hydrogen
 		HYD int InitUI();
 		HYD int ShutdownUI();
 		 
-		HYD int CreateUIWindow(std::string pTitle, Vec2 pSize, Vec2 pPos=Vec2(0.0f), RefernceOrigin pOrigin = UP_LEFT,std::string pID="");
+		HYD int CreateUIWindow(const std::string& pTitle, VecF2 pSize, VecF2 pPos=VecF2(0.0f), RefernceOrigin pOrigin = UP_LEFT,std::string pID="");
+		//HYD int CreateUIWindow(const std::string& pTitle);
 		HYD void Render();
 		 
 		HYD inline uint32 GetFPS() { return (uint32)ImGui::GetIO().Framerate; }
 
 		HYD inline bool WantToCapture() { return (ImGui::GetIO().WantCaptureKeyboard || ImGui::GetIO().WantCaptureMouse); }
 
-		HYD GuiWindow* GetWindow(std::string pID);
+		HYD GuiWindow* GetWindow(const std::string& pID);
 
 	private:
+
 		std::unordered_map<std::string, GuiWindow> m_GUIs;
 
-		Vec4 m_BackgroundColor = Vec4(0.035f, 0, 0.082f, 1.0f);
-		Vec4 m_ForeGroundColor = Vec4(1.0f, 0.238f, 0.895f, 1.0f);
+		VecF4 m_BackgroundColor = VecF4(0.035f, 0, 0.082f, 1.0f);
+		VecF4 m_ForeGroundColor = VecF4(1.0f, 0.238f, 0.895f, 1.0f);
 
 
 	private:

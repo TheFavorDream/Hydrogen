@@ -9,9 +9,9 @@ namespace Hydrogen
 	uint32				GLTFLoader::s_Version;
 	std::string			GLTFLoader::s_RootPath;
 	Load_Flags			GLTFLoader::s_Flags;
-	Scene*              GLTFLoader::s_CurrentScene;
+	Ptr<Scene>              GLTFLoader::s_CurrentScene;
 
-	Model* GLTFLoader::Load(const std::string& pPath, Scene* pScene ,Load_Flags pFlags)
+	Ptr<Model> GLTFLoader::Load(const std::string& pPath, Ptr<Scene> pScene ,Load_Flags pFlags)
 	{
 
 		if (pScene == nullptr)
@@ -33,7 +33,7 @@ namespace Hydrogen
 		return nullptr;
 	}
 
-	Model* GLTFLoader::LoadGLTF(const std::string& pPath)
+	Ptr<Model> GLTFLoader::LoadGLTF(const std::string& pPath)
 	{
 
 		PROFILE_START("Parsing")
@@ -77,7 +77,7 @@ namespace Hydrogen
 
 		//Process Materials:
 		PROFILE_START("Material Loading")
-		std::vector<Id> Materials;
+		std::vector<Wraper<Material>> Materials;
 		if (GLTF.find("materials") != GLTF.end() && s_Flags != NO_MATERIAL)
 		{
 			LoadMaterials(GLTF, Materials, BufferViews);
@@ -96,7 +96,7 @@ namespace Hydrogen
 		//BufferViews.clear();
 
 
-		Model* model = ResourcePool<Model>::New();
+		Ptr<Model> model = ResourcePool<Model>::New();
 
 
 		PROFILE_START("Setup Mesh")
@@ -139,12 +139,12 @@ namespace Hydrogen
 		return model;
 	}
 
-	Model* GLTFLoader::LoadGLB(const std::string& pPath)
+	Ptr<Model> GLTFLoader::LoadGLB(const std::string& pPath)
 	{
 		return nullptr;
 	}
 
-	uint32 GLTFLoader::Free(Model ** pModel)
+	uint32 GLTFLoader::Free(Ptr<Ptr<Model>> pModel)
 	{
 		uint32 Err = (*pModel)->DestroyModel();
 		delete *pModel;
@@ -176,7 +176,7 @@ namespace Hydrogen
 			for (auto &i : pBuffers)
 			{
 				pBufferData.emplace_back(); //Push an empty string
-				std::string* Data = &pBufferData.back();
+				Ptr<std::string> Data = &pBufferData.back();
 
 				std::string Path = s_RootPath + std::string(i["uri"]);
 				std::fstream Source(Path, std::ios::binary || std::ios::in);
@@ -222,7 +222,7 @@ namespace Hydrogen
 			for (auto &i : pBufferViews)
 			{
 				pBufferViewData.emplace_back();
-				BufferView* bufferView = &pBufferViewData.back();
+				Ptr<BufferView> bufferView = &pBufferViewData.back();
 
 				int32 Target = i.value("target", -1);
 				if (Target == -1)
@@ -272,7 +272,7 @@ namespace Hydrogen
 			for (auto& i : pAccessors)
 			{
 				pAccessorData.emplace_back();
-				Accessor* accessor = &pAccessorData.back();
+				Ptr<Accessor> accessor = &pAccessorData.back();
 
 				int32 BufferviewIndex = i.value("bufferView", -1);
 				if (BufferviewIndex == -1 || BufferviewIndex >= pBufferViewData.size())
@@ -304,7 +304,7 @@ namespace Hydrogen
 		return HYD_OK;
 	}
 
-	uint32 GLTFLoader::SetupMeshes(json& pMeshes, const std::vector<Accessor>& pAccessorData, std::vector<Id>& pMaterials, std::vector<Id>& pMeshIDs, Model* pCurrentModel)
+	uint32 GLTFLoader::SetupMeshes(json& pMeshes, const std::vector<Accessor>& pAccessorData, std::vector<Wraper<Material>>& pMaterials, std::vector<Id>& pMeshIDs, Model* pCurrentModel)
 	{
 
 		if (pMeshes == nullptr)
@@ -315,7 +315,7 @@ namespace Hydrogen
 			
 			for (auto& i : pMeshes)
 			{
-				Mesh* mesh = ResourcePool<Mesh>::New();
+				Ptr<Mesh> mesh = ResourcePool<Mesh>::New();
 
 				mesh->m_Name = i.value("name", "unamed");
 				if (SetupPrimitives(i["primitives"], pAccessorData, pMaterials, mesh) == HYD_INVALID_VALUE)
@@ -342,7 +342,7 @@ namespace Hydrogen
 		we construct buffers from accessors here
 	
 	*/
-	uint32 GLTFLoader::SetupPrimitives(json& pPrimitives, const std::vector<Accessor>& pAccessorData,  std::vector<Id>& pMaterials, Mesh* pCurrentMesh)
+	uint32 GLTFLoader::SetupPrimitives(json& pPrimitives, const std::vector<Accessor>& pAccessorData,  std::vector<Wraper<Material>>& pMaterials, Ptr<Mesh> pCurrentMesh)
 	{
 		if (pPrimitives == nullptr)
 			return HYD_INVALID_VALUE; //this means this mesh doesn't have any primitive therefore it's an empty mesh.
@@ -356,7 +356,7 @@ namespace Hydrogen
 
 				int32 MaterialIndex = i.value("material", -1);
 				if (s_Flags != NO_MATERIAL && MaterialIndex != -1)
-					primitive.m_Material = pMaterials[MaterialIndex];
+					primitive.m_Material = s_CurrentScene->m_Materials.Push(std::move(pMaterials[MaterialIndex]));
 
 				//Creates Vertex Buffer
 				ProcessAttributes(i["attributes"], pAccessorData, primitive);
@@ -367,8 +367,6 @@ namespace Hydrogen
 					uint32 indicies = i["indices"];
 
 					//Create Element Buffer:
-					primitive.Count = pAccessorData[indicies].Count;
-					primitive.Type  = VertexArray::GetGLType(pAccessorData[indicies].ComponentType);
 					
 					primitive.m_ElementBuffer = s_CurrentScene->m_Buffers.CreateElementBuffer(
 						pAccessorData[indicies].Count,
@@ -504,7 +502,7 @@ namespace Hydrogen
 				{
 					if (i.find("scale") != i.end())
 					{
-						node.Transformation.Scale = Vec3(
+						node.Transform.t_Scale = VecF3(
 							(float)i["scale"].at(0),
 							(float)i["scale"].at(1),
 							(float)i["scale"].at(2)
@@ -513,22 +511,23 @@ namespace Hydrogen
 
 					if (i.find("rotation") != i.end())
 					{
-						node.Transformation.Rotation.Vector = Vec3(
+						node.Transform.t_Rotate = VecF4(
 							(float)i["rotation"].at(0),
 							(float)i["rotation"].at(1),
-							(float)i["rotation"].at(2)
+							(float)i["rotation"].at(2),
+							(float)i["rotation"].at(3)
 						);
-						node.Transformation.Rotation.Scaler = (float)i["rotation"].at(3);
 					}
 
 					if (i.find("translation") != i.end())
 					{
 
-						node.Transformation.Translation.X = (float)i["translation"].at(0);
-						node.Transformation.Translation.Y = (float)i["translation"].at(1);
-						node.Transformation.Translation.Z = (float)i["translation"].at(2);
+						node.Transform.t_Translate.X = (float)i["translation"].at(0);
+						node.Transform.t_Translate.Y = (float)i["translation"].at(1);
+						node.Transform.t_Translate.Z = (float)i["translation"].at(2);
 					}
-					node.ModelMatrix = CalculateMatrix(node.Transformation);
+
+					//node.ModelMatrix = CalculateMatrix(node.Transformation);
 				}
 
 				nodes.push_back(node);
@@ -546,7 +545,7 @@ namespace Hydrogen
 		return HYD_OK;
 	}
 
-	uint32 GLTFLoader::ProcessScene(json& pScene, const std::vector<GeoNode>& nodes, const std::vector<Id>& pMeshIDs, Model* pCurrentModel)
+	uint32 GLTFLoader::ProcessScene(json& pScene, const std::vector<GeoNode>& nodes, const std::vector<Id>& pMeshIDs, Ptr<Model> pCurrentModel)
 	{
 		if (pScene == nullptr)
 			return HYD_CORRUPTED_GLTF;
@@ -574,13 +573,13 @@ namespace Hydrogen
 
 				if (Current.Mesh != -1)
 				{
-					pCurrentModel->GetMesh(pMeshIDs[Current.Mesh]).SetTransform(Current.ModelMatrix);
+					pCurrentModel->GetMesh(pMeshIDs[Current.Mesh]).SetTransform(Current.Transform);
 				}
 
 				for (auto &i : Current.Children)
 				{
 					GeoNode Child = nodes[i];
-					Child.ModelMatrix =  Current.ModelMatrix * Child.ModelMatrix;
+					Child.Transform =  Current.Transform * Child.Transform;
 					Stack.push(Child);
 				}
 			}
@@ -596,7 +595,7 @@ namespace Hydrogen
 		return HYD_OK;
 	}
 
-	uint32 GLTFLoader::LoadMaterials(json & pGLTF, std::vector<Id>& pMaterials, const std::vector<BufferView>& pBufferViews)
+	uint32 GLTFLoader::LoadMaterials(json & pGLTF, std::vector<Wraper<Material>>& pMaterials, const std::vector<BufferView>& pBufferViews)
 	{
 
 		uint32 Err = HYD_OK;
@@ -629,7 +628,7 @@ namespace Hydrogen
 
 
 		PROFILE_START("Loading Texture")
-		std::vector<Id> Textures;
+		std::vector<Wraper<TextureBase>> Textures;
 		Err = SetupTextures(pGLTF["textures"], Textures, Samplers, Images);
 
 		if (Err != HYD_OK)
@@ -652,7 +651,7 @@ namespace Hydrogen
 	}
 
 	//======================Material Loading================================
-	uint32 GLTFLoader::LoadImages(json & pImages, const std::string & pRootPath, std::vector<Image>& pImageData, const std::vector<BufferView>& pBufferViews)
+	uint32 GLTFLoader::LoadImages(json& pImages, const std::string& pRootPath, std::vector<Image>& pImageData, const std::vector<BufferView>& pBufferViews)
 	{
 		if (pImages == nullptr)
 			return HYD_CORRUPTED_GLTF; //We don't have any images 
@@ -661,22 +660,24 @@ namespace Hydrogen
 		{
 			for (auto& image : pImages)
 			{
-				pImageData.emplace_back();
-				Image& CurrentImage = pImageData.back();
+				Image CurrentImage; 
+
 				//If URI was defined:
 				if (image.find("uri") != image.end())
 				{
 					std::string URI = image["uri"];
 					
-					if (CurrentImage.LoadImage((pRootPath + URI).c_str()) == HYD_IMAGE_FAILED)
+					if (CurrentImage.LoadImageFromDisk((pRootPath + URI).c_str()) == HYD_IMAGE_FAILED)
 						Log::SetError(Log::FmtStr("Failed to Load Image at %s", (s_RootPath+URI).c_str()));
+
+					pImageData.push_back(std::move(CurrentImage));
 				}
 				// if bufferView was defined
 				else if (image.find("bufferView") != image.end())
 				{
 					uint32 Index = (uint32)image["bufferView"];
 
-					CurrentImage.LoadImage(&pBufferViews[Index].Data[0]);
+					//CurrentImage.LoadImageFromMemory(&pBufferViews[Index].Data[0], );
 				}
 				//File curreupted
 				else
@@ -724,7 +725,7 @@ namespace Hydrogen
 	}
 
 
-	uint32 GLTFLoader::SetupTextures(json& pTextures, std::vector<Id>& pTextureIds, const std::vector<Sampler>& pSamplerData, const std::vector<Image>& pImageData)
+	uint32 GLTFLoader::SetupTextures(json& pTextures, std::vector<Wraper<TextureBase>>& pTextureData, const std::vector<Sampler>& pSamplerData, const std::vector<Image>& pImageData)
 	{
 
 		if (pTextures == nullptr)
@@ -740,7 +741,7 @@ namespace Hydrogen
 				if (texture.find("sampler") != texture.end())
 					sampler = pSamplerData.at(texture["sampler"]);
 
-				//pTextureIds.push_back(Create2DTexture(pImageData[ImageIndex], sampler));
+				pTextureData.push_back(std::move(TexturePool::CreateTexture2D(pImageData[ImageIndex], sampler)));
 
 			}
 		}
@@ -755,7 +756,7 @@ namespace Hydrogen
 	}
 
 
-	uint32 GLTFLoader::SetupMaterials(json& pMaterials, std::vector<Id>& pMaterial, std::vector<Id>& pTextureIds)
+	uint32 GLTFLoader::SetupMaterials(json& pMaterials, std::vector<Wraper<Material>>& pMaterial, std::vector<Wraper<TextureBase>>& pTextures)
 	{
 		if (pMaterials == nullptr)
 			return HYD_CORRUPTED_GLTF;
@@ -763,14 +764,12 @@ namespace Hydrogen
 		{
 			for (auto& material : pMaterials)
 			{
-				Material* Current =  ResourcePool<Material>::New();
-
-				//Current->m_Name = material.value("name", "unamed");
+				Wraper<Material> CurrentMaterial = new Material();
 
 				json& pbrMetal = material["pbrMetallicRoughness"];
 
-				//Current->m_MetalicnessFactor = pbrMetal.value("metallicFactor", 1.0f);
-				//Current->m_RoughnessFactor   = pbrMetal.value("roughnessFactor", 1.0f);
+				CurrentMaterial.Ptr->SetMetallicnessFactor(pbrMetal.value("metallicFactor", 1.0f));
+				CurrentMaterial.Ptr->SetRoughnessFactor(pbrMetal.value("roughnessFactor", 1.0f));
 
 				//Textures:
 				if (pbrMetal.find("baseColorTexture") != pbrMetal.end())
@@ -778,9 +777,10 @@ namespace Hydrogen
 					json& BaseColor = pbrMetal["baseColorTexture"];
 
 					uint32 Index = BaseColor["index"];
-					//Current->m_BaseColorTexture = pTextureIds[Index];
+					CurrentMaterial.Ptr->SetBaseColorTexture(std::move(pTextures[Index]));
 				}
 
+				pMaterial.push_back(std::move(CurrentMaterial));
 				
 			}
 		}

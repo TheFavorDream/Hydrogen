@@ -19,6 +19,6 @@ public:
 
 private:
 
-
-	Hydrogen::Scene* m_Scene = nullptr;
+	Hydrogen::Id model = 0;
+	Hydrogen::Ptr<Hydrogen::Scene> m_Scene = nullptr;
 };

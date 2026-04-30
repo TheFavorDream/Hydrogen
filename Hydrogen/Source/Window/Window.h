@@ -3,7 +3,7 @@
 #include "Common.h"
 #include "Log/Log.h"
 #include "GLFW/glfw3.h"
-#include "VecMath/Vector/VectorDef.h"
+#include "VecMath/Vector/Vectors.h"
 #include "Event/Mouse.h"
 
 namespace Hydrogen
@@ -28,15 +28,15 @@ namespace Hydrogen
 		HYD inline GLFWwindow* GetWindow() { return m_Window; }
 		HYD inline int32 GetWidth() { return m_Width; }
 		HYD inline int32 GetHeight() { return m_Height; }
-		HYD inline Vec4 GetViewportSize() { return m_ViewportSize; }
+		HYD inline VecF4 GetViewportSize() { return m_ViewportSize; }
 
 	public:
 		HYD static Window* const GetCurrentWindow();
 
 	private:
 
-		Vec2 m_ViewportRatios;
-		Vec4 m_ViewportSize;
+		VecF2 m_ViewportRatios;
+		VecF4 m_ViewportSize;
 
 		int32 m_Width, m_Height;
 		const char* m_Title;

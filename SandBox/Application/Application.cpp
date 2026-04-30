@@ -6,11 +6,11 @@ Application::Application()
 	: Core(1400, 700, "Hydrogen")
 {
 	m_AppLayer = new AppLayer();
-	//m_UILayer = new UILayer();
-	m_Window.SetViewportRatio(100.0f, 100.0f);
+	m_UILayer  = new UILayer();
+	m_Window.SetViewportRatio(80.0f, 70.0f);
 
 	PushLayer(m_AppLayer);
-	//PushLayer(m_UILayer);
+	PushLayer(m_UILayer);
 }
 
 Application::~Application()								

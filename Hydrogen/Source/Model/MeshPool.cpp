@@ -40,17 +40,21 @@ namespace Hydrogen
 		return m_MeshePool.Pop(pId);
 	}
 
-	uint32 MeshPool::BakeTransform(const Transform& pTransform)
+	uint32 MeshPool::BakeTransform(const Transformation& pTransform)
 	{
+		for (auto& mesh : m_MeshePool.GetTable())
+		{
+			m_MeshePool[mesh.first].SetTransform( pTransform * m_MeshePool[mesh.first].GetTransform());
+		}
 		return HYD_OK;
 	}
 
-	uint32 MeshPool::RenderMeshes(const Mat4& pTransform)
+	uint32 MeshPool::RenderMeshes(Transformation& pTransform)
 	{
 
 		for (auto &meshID : m_MeshePool.GetTable())
 		{
-			m_MeshePool.GetResource(meshID.first).Render((pTransform));
+			m_MeshePool.GetResource(meshID.first).Render(pTransform);
 		}
 		return HYD_OK;
 	}
@@ -60,14 +64,24 @@ namespace Hydrogen
 //Get Methods:
 	Mesh& MeshPool::GetMesh(const std::string& pName) noexcept
 	{
-		if (m_MeshTable.find(pName) == m_MeshTable.end())
-			ASSERT("Invalid Mesh Name");
+		
+		ASSERT(m_MeshTable.find(pName) == m_MeshTable.end(), "Invalid Mesh Name");
 		return m_MeshePool.GetResource(m_MeshTable[pName]);
 	}
 
 	Mesh& MeshPool::GetMesh(const Id pId) noexcept
 	{
 		return m_MeshePool.GetResource(pId);
+	}
+
+	const std::unordered_map<Id, int32>::const_iterator MeshPool::begin() const
+	{
+		return m_MeshePool.begin();
+	}
+
+	const std::unordered_map<Id, int32>::const_iterator MeshPool::end() const
+	{
+		return m_MeshePool.end();
 	}
 
 

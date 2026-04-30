@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Hydrogen.h"
+#include <string>
 
 class UILayer : public Hydrogen::Layer
 {
@@ -12,6 +13,7 @@ public:
 	void Event() override;
 	void Update() override;
 
+	void UpdateWidgetSizes();
 
 
 private:
@@ -21,9 +23,11 @@ private:
 
 	Hydrogen::LongAverage m_DeltaTimeAvg;
 
-	Hydrogen::Vec2 m_WindowSize;
-	Hydrogen::Vec4 m_ViewPortSize;
+	Hydrogen::VecF2 m_WindowSize;
+	Hydrogen::VecF4 m_ViewPortSize;
 
+	Hydrogen::Id m_CurrentModel = 0;
+	Hydrogen::Id m_CurrentMesh  = 0;
 
 	Hydrogen::UICore* m_UI = nullptr;
 	Hydrogen::GuiWindow* m_ControlWindow = nullptr;

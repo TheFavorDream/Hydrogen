@@ -1,7 +1,8 @@
 #pragma once
 
 #include "Common.h"
-#include "VecMath/Transformation.h"
+#include "VecMath/Transform/Transformation.h"
+
 #include "Core/ResourcePool.h"
 #include "Render/Platform/OpenGL/GLVertexArray.h"
 
@@ -47,8 +48,8 @@ namespace Hydrogen
 	struct GeoNode //structure for GLTF nodes
 	{
 		int32 Mesh = -1;
-		Mat4      ModelMatrix;
-		Transform Transformation;
+		MatF4           ModelMatrix;
+		Transformation Transform;
 		std::vector<uint32> Children;
 	};
 

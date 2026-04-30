@@ -44,6 +44,9 @@ namespace Hydrogen
 		HYD  uint32  CopyElementDataChunk(Id pBufferID, uint32 pOffset, uint32 pSize, void* pData);
 		HYD  uint32  DestroyElementBuffer(Id* pBufferID);
 
+		HYD uint32 GetElementCount(Id pId);
+		HYD uint32 GetElementType(Id pId);
+
 			 
 		HYD  uint32  BindVertexBuffer(Id pBufferID);
 		HYD  uint32  UnbindVertexBuffer(Id pBufferID);

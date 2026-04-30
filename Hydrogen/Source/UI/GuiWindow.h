@@ -4,7 +4,7 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_opengl3.h"
 #include "imgui/imgui_impl_glfw.h"
-#include "VecMath/Vector/VectorDef.h"
+#include "VecMath/Vector/Vectors.h"
 #include "Elements/Element.h"
 #include "Elements/Button.h"
 #include "Elements/Text.h"
@@ -27,24 +27,24 @@ namespace Hydrogen
 		HYD GuiWindow() = default;
 		HYD ~GuiWindow();
 
-		HYD int CreateUIWindow(const std::string& pTitle, Vec2 pSize, Vec2 pPosition, RefernceOrigin pOrigin);
+		HYD int CreateUIWindow(const std::string& pTitle, VecF2 pSize, VecF2 pPosition, RefernceOrigin pOrigin);
 		HYD void Render();
 
 
 
-		HYD int CreateButton(std::string pLabel, Vec2 pSize, Vec2 pPos, std::string pID="");
-		HYD int CreateText(std::string pText, Vec2 pPos, std::string pID);
-		HYD int CreateInputF(std::string pLabel, Vec2 pPos, std::string pID="");
-		HYD int CreateSliderF(std::string pLabel, Vec2 pPos, float pMin=0.0f, float pMax=1.0f, std::string pID="");
-		HYD int CreateCheckbox(std::string pLabel, Vec2 pPos, std::string pID="");
-		HYD int CreateComboBox(std::string pLabel, std::vector<std::string> Items, Vec2 pPos, std::string pID);
+		HYD int CreateButton(  const std::string& pLabel, VecF2 pSize, VecF2 pPos, std::string pID="");
+		HYD int CreateText(    const std::string& pText,  VecF2 pPos, std::string pID);
+		HYD int CreateInputF(  const std::string& pLabel, VecF2 pPos, std::string pID="");
+		HYD int CreateSliderF( const std::string& pLabel, VecF2 pPos, float pMin=0.0f, float pMax=1.0f, std::string pID="");
+		HYD int CreateCheckbox(const std::string& pLabel, VecF2 pPos, std::string pID="");
+		HYD int CreateComboBox(const std::string& pLabel, std::vector<std::string> Items, VecF2 pPos, std::string pID);
 
 
-		HYD Button* GetButton(std::string pID);
-		HYD Text* GetText(std::string pID);
-		HYD SliderF* GetSliderF(std::string pID);
-		HYD InputF* GetInput(std::string pID);
-		HYD Combo* GetCombo(std::string pID);
+		HYD Button*  GetButton (const std::string& pID);
+		HYD Text*    GetText   (const std::string& pID);
+		HYD SliderF* GetSliderF(const std::string& pID);
+		HYD InputF*  GetInput  (const std::string& pID);
+		HYD Combo*   GetCombo  (const std::string& pID);
 
 
 		HYD int CreateElement(Element* pElement, std::string pID = "");
@@ -60,24 +60,24 @@ namespace Hydrogen
 		HYD void SetSizeMin(float pWidth, float pHeight);
 
 
-		HYD inline Vec2 GetMinSize() { return m_MinSize; }
-		HYD inline Vec2 GetMaxSize() { return m_MaxSize; }
+		HYD inline VecF2 GetMinSize() { return m_MinSize; }
+		HYD inline VecF2 GetMaxSize() { return m_MaxSize; }
 
 
 		HYD inline std::string& GetTitle() { return m_Title; }
-		HYD inline Vec2 GetSize() { return m_Size; }
-		HYD inline Vec2 GetPos() { return m_Position; }
+		HYD inline VecF2 GetSize() { return m_Size; }
+		HYD inline VecF2 GetPos() { return m_Position; }
 
 	private:
 
 		//Window Properties:
 		std::string m_Title;
-		Vec2 m_Size;
-		Vec2 m_Position;
-		Vec2 m_Origin;
+		VecF2 m_Size;
+		VecF2 m_Position;
+		VecF2 m_Origin;
 
-		Vec2 m_MaxSize = Vec2(-1.0f);
-		Vec2 m_MinSize = Vec2(-1.0f);
+		VecF2 m_MaxSize = VecF2(-1.0f);
+		VecF2 m_MinSize = VecF2(-1.0f);
 
 		bool m_FirstRender = false; //Used for setting the size of the window but only once
 

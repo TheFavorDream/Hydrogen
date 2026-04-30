@@ -8,41 +8,21 @@
 #include <thread>
 #include "Hydrofiler.h"
 
+
+using namespace std::chrono_literals;
 using namespace Hydrogen;
+
 
 void PrintVector(VecF4 Vec);
 
 int main(int argc, char** arvg)
 {
 
-	START_PROFILE("Matrix Creation");
-		MatI4 Mat;
-	STOP_PROFILE;
+	START_PROFILE("Test")
+		std::this_thread::sleep_for(1000us);
+	auto Profile = STOP_PROFILE
 
-	auto Profile = Tools::Hydrofiler::GetLatestProfile();
-	std::cout << "Profile: " << Profile.BlockName << " Time: " << Tools::Hydrofiler::GetDurationInMicroSeconds(Profile) << " us\n";
-
-	START_PROFILE("Matrix Copy");
-		MatI4 MatC = Mat;
-	STOP_PROFILE;
-
-	Profile = Tools::Hydrofiler::GetLatestProfile();
-	std::cout << "Profile: " << Profile.BlockName << " Time: " << Tools::Hydrofiler::GetDurationInMicroSeconds(Profile) << " us\n";
-
-	START_PROFILE("Matrix Addition");
-		MatC + Mat;
-	STOP_PROFILE;
-
-	Profile = Tools::Hydrofiler::GetLatestProfile();
-	std::cout << "Profile: " << Profile.BlockName << " Time: " << Tools::Hydrofiler::GetDurationInMicroSeconds(Profile) << " us\n";
-
-	START_PROFILE("Matrix multipication");
-		MatC * Mat;
-	STOP_PROFILE;
-
-	Profile = Tools::Hydrofiler::GetLatestProfile();
-	std::cout << "Profile: " << Profile.BlockName << " Time: " << Tools::Hydrofiler::GetDurationInMicroSeconds(Profile) << " us\n";
-
+	std::cout << Tools::Hydrofiler::GetDurationInMicroSeconds(Profile);
 
 	return 0;
 }

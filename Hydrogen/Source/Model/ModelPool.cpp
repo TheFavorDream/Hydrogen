@@ -34,14 +34,40 @@ namespace Hydrogen
 		return m_Models.Pop(pId);
 	}
 
+	uint32 ModelPool::BakeTransform(const Transformation& pTransform)
+	{
+		for (auto& model : m_Models) 
+		{
+			m_Models.GetResource(model.first).BakeTransform(pTransform);
+		}
+		return HYD_OK;
+	}
+
 	uint32 ModelPool::RenderModels()
 	{
-		for (auto& model : m_Models.GetTable())
+		for (auto& model : m_Models)
 		{
 			m_Models.GetResource(model.first).RenderModel();
 		}
 		return HYD_OK;
 	}
+
+	const std::unordered_map<Id, int32>::const_iterator ModelPool::begin() const
+	{
+		return m_Models.begin(); 
+	}
+
+	const std::unordered_map<Id, int32>::const_iterator ModelPool::end() const
+	{
+		return m_Models.end();
+	}
+
+	Model& ModelPool::operator[](Id pID)
+	{
+		return m_Models.GetResource(pID);
+	}
+
+
 
 //Bulk Operations:
 

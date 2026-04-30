@@ -48,6 +48,16 @@ typedef int					   int32;
 typedef short				   int16;
 typedef char				   int8;
 
+#include "Core/Base.h"
+#include "Core/Memory.h"
+
+#ifdef WINDOWS
+
+#include <windows.h>
+
+#endif
+
+
 #include "HydPch.h"
 
 //Decleartions

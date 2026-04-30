@@ -15,14 +15,15 @@ struct Material{
 
 	float Metallicness;
 	float Roughness;
+	vec3  BaseColorFactor;
 };
 
 uniform Material material;
 
 void main ()
 {
-	FragColor   = vec4(Normal, 1.0f);
-	//FragColor = texture(material.BaseColor, TexCoords);
+	//FragColor   = vec4(Normal, 1.0f);
+	FragColor =   vec4(material.BaseColorFactor, 1.0f) * texture(material.BaseColor, TexCoords);
 }
 
 

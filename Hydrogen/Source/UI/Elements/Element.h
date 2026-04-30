@@ -2,7 +2,7 @@
 
 #include "Common.h"
 #include "imgui/imgui.h"
-#include "VecMath/Vector/VectorDef.h"
+#include "VecMath/Vector/Vectors.h"
 
 namespace Hydrogen
 {
@@ -14,13 +14,13 @@ namespace Hydrogen
 
 
 		HYD inline std::string& GetLabel() { return m_Label; }
-		HYD inline Vec2 GetSize() { return m_Size; }
-		HYD inline Vec2 GetPosition() { return m_Position; }
+		HYD inline VecF2 GetSize() { return m_Size; }
+		HYD inline VecF2 GetPosition() { return m_Position; }
 
 	protected:
 		std::string m_Label;
-		Vec2 m_Size;
-		Vec2 m_Position;
+		VecF2 m_Size;
+		VecF2 m_Position;
 	};
 
 

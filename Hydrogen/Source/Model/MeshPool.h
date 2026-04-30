@@ -25,8 +25,8 @@ namespace Hydrogen
 		HYD Id     PushMesh(Mesh** pMesh);
 		HYD uint32 PopMesh(Id* pId);
 
-		HYD uint32 BakeTransform(const Transform& pTransform);
-		HYD uint32 RenderMeshes(const Mat4& pTransform=Mat4());
+		HYD uint32 BakeTransform(const Transformation& pTransform);
+		HYD uint32 RenderMeshes(Transformation& pTransform= Transformation());
 
 		HYD Mesh& GetMesh(const std::string& pName) noexcept;
 		HYD Mesh& GetMesh(const Id pId) noexcept;
@@ -34,6 +34,8 @@ namespace Hydrogen
 		HYD Mesh& operator[](const std::string& pName);
 		HYD Mesh& operator[](const Id pId);
 
+		HYD const std::unordered_map<Id, int32>::const_iterator begin() const;
+		HYD const std::unordered_map<Id, int32>::const_iterator end() const;
 
 		HYD MeshPool(MeshPool&& pOther);
 		HYD MeshPool(const MeshPool& pOther) = delete;

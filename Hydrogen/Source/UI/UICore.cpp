@@ -1,6 +1,6 @@
 #include "UICore.h"
 #include "HydPch.h"
-
+#include "Core/ResourcePool.h"
 
 namespace Hydrogen
 {
@@ -10,7 +10,7 @@ namespace Hydrogen
 	UICore* UICore::Self()
 	{
 		if (s_Self == nullptr)
-			s_Self = new UICore();
+			s_Self = ResourcePool<UICore>::New();
 
 		return s_Self;
 	}
@@ -76,20 +76,18 @@ namespace Hydrogen
 		return HYD_OK;
 	}
 
-	int UICore::CreateUIWindow(std::string pTitle, Vec2 pSize, Vec2 pPos, RefernceOrigin pOrigin, std::string pID)
+	int UICore::CreateUIWindow(const std::string& pTitle, VecF2 pSize, VecF2 pPos, RefernceOrigin pOrigin, std::string pID)
 	{
-		if (m_GUIs.find(pID) != m_GUIs.end())
-		{
-			Log::SetError(std::string("ID:" + pID + " Already exists!").c_str(), HYD_UI_INVALID_WINDOW, __FILE__, __LINE__);
-			return HYD_UI_INVALID_WINDOW;
-		}
-
+		ASSERT(m_GUIs.find(pID) != m_GUIs.end(), std::string("ID:" + pID + " Already exists!"));
+		
 		if (pID.size() == 0)
 			pID = pTitle;
-
+		
 		int Err = m_GUIs[pID].CreateUIWindow(pTitle, pSize, pPos, pOrigin);
 		return Err;
 	}
+
+
 
 	void UICore::Render()
 	{
@@ -106,7 +104,7 @@ namespace Hydrogen
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	}
 
-	GuiWindow * UICore::GetWindow(std::string pID)
+	GuiWindow* UICore::GetWindow(const std::string& pID)
 	{
 		return &m_GUIs[pID];
 	}

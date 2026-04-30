@@ -1,4 +1,4 @@
-#include "VectorDef.h"
+#include "Vectors.h"
 
 namespace Hydrogen
 {
@@ -116,5 +116,7 @@ namespace Hydrogen
 			pVec4.W / length
 		);
 	}
+
+
 
 };

@@ -10,7 +10,7 @@ namespace Hydrogen
 	{
 	public:
 
-		HYD int Setup(const std::string& pLabel, Vec2 pSize, Vec2 pPosition)
+		HYD int Setup(const std::string& pLabel, VecF2 pSize, VecF2 pPosition)
 		{
 			
 			m_Label = pLabel;

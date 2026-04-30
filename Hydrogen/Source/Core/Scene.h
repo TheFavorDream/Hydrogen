@@ -13,8 +13,10 @@
 #include "Render/RenderPool/ShaderPool.h"
 #include "Render/RenderPool/BufferPool.h"
 #include "Render/RenderPool/MaterialPool.h"
+#include "Render/MatrixPool.h"
 #include "Camera/Camera.h"
 #include "Loaders/GLTF.h"
+
 
 namespace Hydrogen
 {
@@ -33,8 +35,15 @@ namespace Hydrogen
 
 		//Model & mesh Loading & Creation
 		HYD Id      LoadModel(const std::string& pPath);
-		HYD Id      NewModel(const std::string& pName, std::vector<Mesh*>& pMeshes = std::vector<Mesh*>(), const Transform& pTransform = Transform());
+		HYD Id      NewModel(const std::string& pName, std::vector<Ptr<Mesh>>& pMeshes = std::vector<Ptr<Mesh>>(), const Transformation& pTransform = Transformation());
 		HYD Id		CreateMesh(Id pModel, const std::vector<Vertex>& pVertices, const std::vector<uint16>& pIndices);
+
+
+		//Model:
+		HYD uint32 SetModelTransform(Id pModel, const Transformation& pTransform);
+		HYD uint32 SetModelTransform(Id pModel, const Scaler& pScale=VecF3(1.0f), const Rotation& pRotation=VecF4(VecF3(0.0f), 1.0f), const Translation& pTranslate=VecF3(0.0f));
+
+		HYD Transformation GetModelTransformation(Id pModel);
 
 
 		//Renders the Scene
@@ -54,12 +63,14 @@ namespace Hydrogen
 		ModelPool		m_Models;
 		BufferPool		m_Buffers;
 		MaterialPool	m_Materials;
+		MatrixPool      m_Matrices;
 
 		Camera			m_Camera;
 
 		friend class GLTFLoader;
 		friend class Renderer;
 		friend class MeshGenerator;
+		friend class Mesh;
 	};
 
 };

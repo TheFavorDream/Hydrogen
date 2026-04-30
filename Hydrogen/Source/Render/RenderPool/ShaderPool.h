@@ -40,7 +40,7 @@ namespace Hydrogen
 		HYD uint32 SetUniformInt2(Id pShaderID, const char* pName, int32 pValue1, int32 pValue2);
 		HYD uint32 SetUniformInt3(Id pShaderID, const char* pName, int32 pValue1, int32 pValue2, int32 pValue3);
 
-		HYD uint32 SetUniformMat4(Id pShaderID, const char* pName, float* pValue);
+		HYD uint32 SetUniformMat4(Id pShaderID, const char* pName, float* pValue, bool Transpose=false);
 
 
 		//Uniform Broadcasting

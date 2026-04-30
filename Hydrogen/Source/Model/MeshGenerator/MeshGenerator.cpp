@@ -6,7 +6,7 @@
 namespace Hydrogen
 {
 
-	uint32 MeshGenerator::GenerateCube(Scene* pTargetScene, Id pTargetModel, const Transform& pTransform)
+	uint32 MeshGenerator::GenerateCube(Scene* pTargetScene, Id pTargetModel, const Transformation& pTransform)
 	{
 
 		//Calculate The Vertices:
@@ -51,7 +51,7 @@ namespace Hydrogen
 	}
 
 
-	uint32 MeshGenerator::GenerateSphere(Scene* pTargetScene, Id pTargetModel, const Transform& pTransform)
+	uint32 MeshGenerator::GenerateSphere(Scene* pTargetScene, Id pTargetModel, const Transformation& pTransform)
 	{
 		std::vector<Vertex> Vertices;
 		std::vector<uint16> Indices;
@@ -89,12 +89,12 @@ namespace Hydrogen
 		return HYD_OK;
 
 	}
-	uint32 MeshGenerator::GenerateCone(Scene* pTargetScene, Id pTargetModel, const Transform& pTransform)
+	uint32 MeshGenerator::GenerateCone(Scene* pTargetScene, Id pTargetModel, const Transformation& pTransform)
 	{
 		return HYD_OK;
 
 	}
-	uint32 MeshGenerator::GeneratePlane(Scene* pTargetScene, Id pTargetModel, const Transform& pTransform)
+	uint32 MeshGenerator::GeneratePlane(Scene* pTargetScene, Id pTargetModel, const Transformation& pTransform)
 	{
 
 		std::vector<Vertex> Vertices = {

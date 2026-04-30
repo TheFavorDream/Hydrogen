@@ -1,6 +1,7 @@
 #include "MaterialPool.h"
 #include "HydPch.h"
 
+#include "Render/Renderer.h"
 
 namespace Hydrogen
 {
@@ -8,6 +9,14 @@ namespace Hydrogen
 
 	uint32 MaterialPool::InitPool()
 	{
+		Wraper<Material> DefMat = new Material();
+
+
+		DefMat.Ptr->SetBaseColorTexture(TexturePool::CreateTexture2D(std::move(TexturePool::GenerateMagneta(512, 512, 64))));
+
+		m_DefaultMaterial = m_Materials.Push(std::move(DefMat));
+		
+		Renderer::SetDefaultMaterial(m_DefaultMaterial);
 		return HYD_OK;
 	}
 
@@ -15,6 +24,11 @@ namespace Hydrogen
 	{
 		m_Materials.Clear();
 		return HYD_OK;
+	}
+
+	Id MaterialPool::Push(Wraper<Material>& pNewMaterial)
+	{
+		return m_Materials.Push(pNewMaterial);
 	}
 
 	Id MaterialPool::CreateMaterial()
@@ -44,6 +58,12 @@ namespace Hydrogen
 		return HYD_OK;
 	}
 
+
+	HYD Id MaterialPool::GetDefaultMaterial()
+	{
+		ASSERT(m_DefaultMaterial == 0, "No Default Material has been setted");
+		return m_DefaultMaterial;
+	}
 
 	Material& MaterialPool::GetMaterial(Id pMatID)
 	{

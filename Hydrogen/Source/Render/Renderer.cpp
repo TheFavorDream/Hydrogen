@@ -6,13 +6,13 @@ namespace Hydrogen
 {
 
 
-	APIs				   Renderer::s_RenderingAPI  = API_NONE;
-	Id					   Renderer::s_DefaultShader = 0;
-	Id					   Renderer::s_StageTwo      = 0;
-	Id					   Renderer::s_StageThree    = 0;
-
-	ShaderPool			   Renderer::s_Shaders;
-	std::queue<Primitive*> Renderer::s_PrimitiveQueue;
+	APIs						Renderer::s_RenderingAPI    = API_NONE;
+	Id							Renderer::s_DefaultShader   = 0;
+	Id							Renderer::s_StageTwo        = 0;
+	Id							Renderer::s_StageThree      = 0;
+	Id							Renderer::s_DefaultMaterial = 0;
+	ShaderPool					Renderer::s_Shaders;
+	std::queue<Ptr<Primitive>>  Renderer::s_PrimitiveQueue;
 
 
 
@@ -58,7 +58,7 @@ namespace Hydrogen
 
 			glEnable(GL_DEPTH_TEST);
 			//glCullFace(GL_CCW);
-			glEnable(GL_CULL_FACE);
+			//glEnable(GL_CULL_FACE);
 
 			break;
 		}
@@ -100,27 +100,40 @@ namespace Hydrogen
 			s_PrimitiveQueue.pop();
 
 			s_Shaders.BindShader(Current->m_Shader);
-			s_Shaders.SetUniformMat4(Current->m_Shader, "Model", Current->m_ModelMatrix.GetPtr());
 
-			
+
+			s_Shaders.SetUniformMat4(Current->m_Shader, "Model", CurrentScene->m_Matrices.GetPtr(Current->m_Matrix), true);
+
+			CurrentScene->m_Buffers.BindCollection(Current->m_VertexArrays, Current->m_VertexBuffer, Current->m_ElementBuffer);
 			CurrentScene->m_Materials.BindMaterial(Current->m_Material, s_Shaders.GetShader(Current->m_Shader));
 
-			CurrentScene->m_Buffers.BindArray(Current->m_VertexArrays);
-			CurrentScene->m_Buffers.BindVertexBuffer(Current->m_VertexBuffer);
-			CurrentScene->m_Buffers.BindElementBuffer(Current->m_ElementBuffer);
+			GL_CALL(glDrawElements(
+							Current->m_RenderingMode,
+							CurrentScene->m_Buffers.GetElementCount(Current->m_ElementBuffer),
+							CurrentScene->m_Buffers.GetElementType(Current->m_ElementBuffer),
+							0
+			));
 
-			GL_CALL(glDrawElements(Current->m_RenderingMode, Current->Count, Current->Type, 0));
+			CurrentScene->m_Materials.UnbindMaterial(Current->m_Material);
+			CurrentScene->m_Buffers.UnbindCollection(Current->m_VertexArrays, Current->m_VertexBuffer, Current->m_ElementBuffer);
 
-			CurrentScene->m_Buffers.UnbindArray(Current->m_VertexArrays);
-			CurrentScene->m_Buffers.UnbindVertexBuffer(Current->m_VertexBuffer);
-			CurrentScene->m_Buffers.UnbindElementBuffer(Current->m_ElementBuffer);
 			
 			s_Shaders.UnbindCurrentShader();
 		
 		
 		}
 
+
+		//Render UI as needed:
+
+		UICore::Self()->Render();
+
 		return HYD_OK;
+	}
+
+	void Renderer::SetDefaultMaterial(Id pMaterialID) noexcept
+	{
+		s_DefaultMaterial = pMaterialID;
 	}
 
 };

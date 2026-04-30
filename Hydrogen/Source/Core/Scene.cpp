@@ -11,6 +11,7 @@ namespace Hydrogen
 		m_Buffers.InitPool();
 		m_Materials.InitPool();
 		m_Models.InitPool();
+		m_Matrices.InitPool();
 	}
 
 	Scene::~Scene()
@@ -20,13 +21,13 @@ namespace Hydrogen
 
 	Id Scene::LoadModel(const std::string& pPath)
 	{
-		Model* NewModel = GLTFLoader::Load(pPath, this, NO_MATERIAL);
+		Model* NewModel = GLTFLoader::Load(pPath, this);
 		if (NewModel == nullptr)
 			return 0;
 		return m_Models.PushModel(&NewModel);
 	}
 
-	Id Scene::NewModel(const std::string& pName, std::vector<Mesh*>& pMeshes, const Transform& pTransform)
+	Id Scene::NewModel(const std::string& pName, std::vector<Mesh*>& pMeshes, const Transformation& pTransform)
 	{
 		Model* NewModel = ResourcePool<Model>::New();
 		NewModel->SetupModel(pName, pTransform, pMeshes);
@@ -36,6 +37,7 @@ namespace Hydrogen
 
 	uint32 Scene::FreeScene()
 	{
+		m_Matrices.ShutdownPool();
 		m_Models.ShutdownPool();
 		m_Materials.ShutdownPool();
 		m_Buffers.ShutdownPool();
@@ -46,9 +48,6 @@ namespace Hydrogen
 	Id Scene::CreateMesh(Id pModel, const std::vector<Vertex>& pVertices, const std::vector<uint16>& pIndices)
 	{
 		Primitive primitive;
-
-		primitive.Count = (uint32)pIndices.size();
-		primitive.Type = GL_UNSIGNED_SHORT;
 
 		primitive.m_VertexArrays = m_Buffers.CreateVertexArray();
 		m_Buffers.BindArray(primitive.m_VertexArrays);
@@ -71,6 +70,23 @@ namespace Hydrogen
 		Mesh* NewMesh = ResourcePool<Mesh>::New();
 		NewMesh->PushPremitive(primitive);
 		return GetModel(pModel).AddMesh(&NewMesh);
+	}
+
+
+
+	uint32 Scene::SetModelTransform(Id pModel, const Transformation& pTransform)
+	{
+		return GetModel(pModel).SetTransform(pTransform);
+	}
+
+	uint32 Scene::SetModelTransform(Id pModel, const Scaler& pScale, const Rotation& pRotation, const Translation& pTranslate)
+	{
+		return GetModel(pModel).SetTransform(pScale, pRotation, pTranslate);
+	}
+
+	Transformation Scene::GetModelTransformation(Id pModel)
+	{
+		return GetModel(pModel).GetLocalTransformation();
 	}
 
 	uint32 Scene::Render()

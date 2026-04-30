@@ -4,10 +4,10 @@
 
 namespace Hydrogen
 {
-	Model::Model(const std::string& pName, const Transform& pTransform )
+	Model::Model(const std::string& pName, const Transformation& pTransform )
 	{
 		m_Name      = pName;
-		m_ModelMatrix = CalculateMatrix(pTransform);
+		m_Transform = pTransform;
 	}
 
 	Model::~Model()
@@ -18,25 +18,25 @@ namespace Hydrogen
 
 	Model::Model(Model&& pOther)
 	{
-		m_ModelMatrix = std::move(pOther.m_ModelMatrix);
-		m_Meshes    = std::move(pOther.m_Meshes);
-		m_Name      = std::move(pOther.m_Name);
+		m_Transform   = std::move(pOther.m_Transform);
+		m_Meshes      = std::move(pOther.m_Meshes);
+		m_Name        = std::move(pOther.m_Name);
 	}
 
 	Model& Model::operator=(Model&& pOther)
 	{
 		if (this != &pOther)
 		{
-			m_ModelMatrix = std::move(pOther.m_ModelMatrix);
-			m_Meshes = std::move(pOther.m_Meshes);
-			m_Name = std::move(pOther.m_Name);
+			m_Transform = std::move(pOther.m_Transform);
+			m_Meshes    = std::move(pOther.m_Meshes);
+			m_Name      = std::move(pOther.m_Name);
 
 		}
 
 		return *this;
 	}
 
-	uint32 Model::SetupModel(const std::string& pName, const Transform& pTransform, std::vector<Mesh*>& pMeshes)
+	uint32 Model::SetupModel(const std::string& pName, const Transformation& pTransform, std::vector<Mesh*>& pMeshes)
 	{
 		uint32 ErrorCode = HYD_OK;
 		ErrorCode = SetName(pName);
@@ -58,27 +58,36 @@ namespace Hydrogen
 
 
 
-	uint32 Model::SetTransform(const Transform& pTransform)
+	uint32 Model::SetTransform(const Transformation& pTransform)
 	{
-		m_ModelMatrix = m_ModelMatrix*CalculateMatrix(pTransform);
+		m_Transform = pTransform;
 		return HYD_OK;
 	}
 
-	uint32 Model::SetTransform(Vec3 pScale, Vec3 pTranslate, Vec4 pRotate)
+	uint32 Model::SetTransform(Scaler pScale, Rotation pRotate, Translation pTranslate)
 	{
+		m_Transform.t_Scale		    = pScale;
+		m_Transform.t_Rotate		= pRotate;
+		m_Transform.t_Translate     = pTranslate;
 		return HYD_OK;
 	}
 
 
-	uint32 Model::BakeTransform(Transform& pTransform)
+
+	uint32 Model::BakeTransform(const Transformation& pTransform)
 	{
-		m_Meshes.BakeTransform(pTransform);
-		return HYD_OK;
+		return m_Meshes.BakeTransform(pTransform);
+	}
+
+	HYD uint32 Model::BakeTransform(Scaler pScale, Rotation pRotate, Translation pTranslate)
+	{
+		return m_Meshes.BakeTransform(Transformation(pScale, pRotate, pTranslate));
 	}
 
 	uint32 Model::RenderModel()
 	{
-		m_Meshes.RenderMeshes(m_ModelMatrix);
+		m_Meshes.RenderMeshes(m_Transform);
+		m_Transform.IsDirty = false;
 		return HYD_OK;
 	}
 

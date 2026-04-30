@@ -10,6 +10,8 @@ workspace "tests"
         optimize "on"
 
 
+
+
     project "LinkedList_test"
             location "./Misc_tests/"
             kind "ConsoleApp"
@@ -29,7 +31,7 @@ workspace "tests"
             kind "ConsoleApp"
             language "C++"
 
-            defines{"TEST"}
+
 
             files {
                 "./VecMath_tests/**.cpp",
@@ -53,7 +55,6 @@ workspace "tests"
             location "./ResourcePool_tests"
             kind "ConsoleApp"
             language "C++"
-            defines {"TEST"}
 
             files{
                 "./ResourcePool_tests/**.cpp",
@@ -61,5 +62,21 @@ workspace "tests"
                 "../Hydrogen/Source/Core/ResourcePool.h"
             }
             includedirs {
+                "../Hydrogen/Source/"
+            }
+
+
+    project "Memory_Test"
+            location "./Memory_tests"
+            kind "ConsoleApp"
+            language "C++"
+            
+            files{
+                "./Memory_tests/**.cpp",
+                "../Hydrogen/Source/Core/Memory.**",
+                "../Hydrogen/Source/Core/Memory.**",
+            }
+            defines{"TEST"}
+            includedirs{
                 "../Hydrogen/Source/"
             }

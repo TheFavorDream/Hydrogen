@@ -2,7 +2,7 @@
 
 
 #include "Common.h"
-#include "VecMath/Vector/VecTemplate.h"
+#include "VecMath/Vector/Vectors.h"
 #include "VecMath/Vector/UniVec.h"
 
 namespace Hydrogen
@@ -126,7 +126,7 @@ namespace Hydrogen
 		}
 
 	protected:
-		Row<Column<Type, tColumn>, tRow> m_Mat;
+		UniVec<UniVec<Type, tColumn>, tRow> m_Mat;
 	};
 
 };

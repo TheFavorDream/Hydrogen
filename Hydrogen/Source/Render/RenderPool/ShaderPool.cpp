@@ -135,11 +135,11 @@ namespace Hydrogen
 		return HYD_OK;
 	}
 
-	uint32 ShaderPool::SetUniformMat4(Id pShaderID, const char* pName, float * pValue)
+	uint32 ShaderPool::SetUniformMat4(Id pShaderID, const char* pName, float * pValue, bool pTranspose)
 	{
 		if (pShaderID == 0)
 			return HYD_INVALID_VALUE;
-		GetShader(pShaderID).SetUniformMat4(pName, pValue);
+		GetShader(pShaderID).SetUniformMat4(pName, pValue, pTranspose);
 		return HYD_OK;
 	}
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Common.h"
+#include <vector>
 #include "Log/Log.h"
 
 #ifdef TEST
@@ -30,7 +31,7 @@ namespace Hydrogen
 
 	public:
 
-		 ResourcePool();
+		 ResourcePool() = default;
 		~ResourcePool();
 
 		ResourcePool(ResourcePool&& pOther);
@@ -38,12 +39,21 @@ namespace Hydrogen
 
 		ResourcePool& operator=(ResourcePool&& pOther);
 		ResourcePool& operator=(const ResourcePool& pOther) = delete;
+		
 
+		bool Exists(Id pId);
 
 		Id      Push(ResourceType* pResource);
+		Id		Push(Wraper<ResourceType>& pResource);
 		uint32  Pop(Id* pId);
 
 		ResourceType& GetResource(Id pID);
+		ResourceType& operator[](Id pID);
+
+		const std::unordered_map<Id, int32>::const_iterator begin() const { return m_IdTable.begin(); }
+		const std::unordered_map<Id, int32>::const_iterator end()   const { return   m_IdTable.end(); }
+
+
 		uint32 Clear();
 
 		inline const std::unordered_map<Id, int32>& GetTable() noexcept { return m_IdTable; }
@@ -73,16 +83,8 @@ namespace Hydrogen
 	}
 
 	template<typename ResourceType>
-	inline uint32 ResourcePool<ResourceType>::GetAllocations()
-	{
+	inline uint32 ResourcePool<ResourceType>::GetAllocations(){
 		return s_Allocated;
-	}
-
-
-	template<typename ResourceType>
-	inline ResourcePool<ResourceType>::ResourcePool()
-	{
-
 	}
 
 	template<typename ResourceType>
@@ -108,12 +110,26 @@ namespace Hydrogen
 		}
 		return *this;
 	}
-//------------------Creation & Destruction-----------------------------------
+	template<typename ResourceType>
+	inline bool ResourcePool<ResourceType>::Exists(Id pId)
+	{
+		return (m_IdTable.find(pId) != m_IdTable.end());
+	}
+	//------------------Creation & Destruction-----------------------------------
 	template<typename ResourceType>
 	inline Id ResourcePool<ResourceType>::Push(ResourceType* pResource)
 	{
 		Id ID = reinterpret_cast<Id>(pResource);
-		m_IdTable[ID] = 0;
+		m_IdTable.emplace(std::pair<Id, int32>(ID, 0));
+		return ID;
+	}
+
+	template<typename ResourceType>
+	inline Id ResourcePool<ResourceType>::Push(Wraper<ResourceType>& pResource)
+	{
+		Id ID = reinterpret_cast<Id>(pResource.Ptr);
+		pResource.Set(nullptr);
+		m_IdTable.emplace(std::pair<Id, int32>(ID, 0));
 		return ID;
 	}
 
@@ -136,18 +152,17 @@ namespace Hydrogen
 	template<typename ResourceType>
 	inline  ResourceType& ResourcePool<ResourceType>::GetResource(Id pID)
 	{
-		if (m_IdTable.find(pID) == m_IdTable.end())
-		{
-			ASSERT("Invalid Resource");	
-		}
-
-		if (m_IdTable[pID] == -1)
-		{
-			ASSERT("Invalid ID");
-		}
-
+		
+		ASSERT(m_IdTable.find(pID) == m_IdTable.end(), "Invalid Resource");
+		ASSERT(m_IdTable[pID] == -1, "Invalid ID");
 		m_IdTable[pID] += 1;
 		return *(reinterpret_cast<ResourceType*>(pID));
+	}
+
+	template<typename ResourceType>
+	inline ResourceType& ResourcePool<ResourceType>::operator[](Id pID)
+	{
+		return GetResource(pID);
 	}
 
 //-------------------------------------------------------------------------

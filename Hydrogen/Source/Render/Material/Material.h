@@ -1,8 +1,10 @@
 #pragma once
 
 #include "Common.h"
+#include "Textures/TextureBase.h"
 #include "Render/RenderPool/TexturePool.h"
 #include "Render/Platform/OpenGL/GLShader.h"
+//#include "Image.h"
 
 namespace Hydrogen
 {
@@ -24,9 +26,12 @@ namespace Hydrogen
 		HYD uint32 SetMetallicnessFactor(float pMetalicnessFactor);
 		HYD uint32 SetRoughnessFactor(float   pRoughnessFactor);
 
-		HYD uint32 SetBaseColorTexture(Texture** pBaseColor);
-		HYD uint32 SetNormalMapTexture(Texture** pNormalMap);
-		HYD uint32 SetMetallicTexture(Texture**   pMetallic);
+
+		HYD uint32 SetBaseColorTexture(Wraper<TextureBase>&  pBaseColor);
+		HYD uint32 SetNormalMapTexture(Wraper<TextureBase>&  pNormal);
+		HYD uint32 SetMetallicTexture( Wraper<TextureBase>&  pMetallic);
+		HYD uint32 SetEmissiveTexture( Wraper<TextureBase>&  pEmissive);
+		HYD uint32 SetOcclusionTexture(Wraper<TextureBase>&  pOcclusion);
 
 
 		//Bind Material:
@@ -37,11 +42,14 @@ namespace Hydrogen
 	private:
 
 		float m_MatallicnessFactor = 0.0f;
-		float m_RoughnessFactor   = 1.0f;
+		float m_RoughnessFactor    = 1.0f;
+		VecF3 m_BaseColorFactor    = VecF3(1.0f);
 
-		Id          m_BaseColor  = 0;
-		Id          m_NormalMap  = 0;
-		Id          m_MetallicMap = 0;
+		Id          m_BaseColor    = 0;
+		Id          m_NormalMap    = 0;
+		Id          m_MetallicMap  = 0;
+		Id			m_EmissiveMap  = 0;
+		Id			m_OcclusionMap = 0;
 		TexturePool m_TexturePool;
 	};
 

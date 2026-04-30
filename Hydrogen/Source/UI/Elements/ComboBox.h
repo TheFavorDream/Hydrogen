@@ -14,7 +14,7 @@ namespace Hydrogen
 	public:
 
 
-		HYD int Setup(const std::string& pTitle, const std::vector<std::string>& pItems, Vec2 pPosition)
+		HYD int Setup(const std::string& pTitle, const std::vector<std::string>& pItems, VecF2 pPosition)
 		{
 			m_Label = pTitle;
 			m_Position = pPosition;
@@ -46,6 +46,12 @@ namespace Hydrogen
 			
 
 			
+		}
+
+		HYD uint32 PushItem(const std::string& pItem)
+		{
+			m_Items.push_back(pItem);
+			return HYD_OK;
 		}
 
 		HYD inline int32& GetCurrentItem() { return m_CurrentItem; }
