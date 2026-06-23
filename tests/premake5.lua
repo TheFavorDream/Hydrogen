@@ -9,7 +9,7 @@ workspace "tests"
         defines {"RELEASE"}
         optimize "on"
 
-
+    OutputDir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 
     project "LinkedList_test"
@@ -23,10 +23,10 @@ workspace "tests"
             }
 
             includedirs {
-                "../Hydrogen/Source/"
+                "../Hydrogen/Engine/"
             }
 
-    project "VecMath_test"
+    project "VecMath_tes"
             location "./VecMath_tests/"
             kind "ConsoleApp"
             language "C++"
@@ -36,13 +36,13 @@ workspace "tests"
             files {
                 "./VecMath_tests/**.cpp",
                 "./VecMath_tests/**.h",
-                "../Hydrogen/Source/VecMath/**.cpp",
-                "../Hydrogen/Source/VecMath/**.h"
+                "../Hydrogen/Engine/VecMath/**.cpp",
+                "../Hydrogen/Engine/VecMath/**.h"
             }
 
             includedirs {
-                "../Hydrogen/Source/",
-                "../Tools/Hydrofiler/Source/"
+                "../Hydrogen/Engine/",
+                "../Tools/Hydrofiler/Engine/"
             }
 
             libdirs{
@@ -51,32 +51,62 @@ workspace "tests"
 
             links{"Hydrofiler"}
 
-    project "ResourcePool"
+    project "ResourcePool_test"
             location "./ResourcePool_tests"
             kind "ConsoleApp"
             language "C++"
 
+            defines 
+            {
+                "WINDOWS", "TEST"
+            }
+
             files{
                 "./ResourcePool_tests/**.cpp",
                 "./ResourcePool_tests/**.h",
-                "../Hydrogen/Source/Core/ResourcePool.h"
+                "../Hydrogen/Engine/Core/ResourcePool.h",
+                "../Hydrogen/Engine/Core/Memory.h", 
+                "../Hydrogen/Engine/Core/Memory.cpp"
             }
             includedirs {
-                "../Hydrogen/Source/"
+                "../Hydrogen/Engine/"
             }
 
 
-    project "Memory_Test"
+    project "Memory_test"
             location "./Memory_tests"
             kind "ConsoleApp"
             language "C++"
             
             files{
                 "./Memory_tests/**.cpp",
-                "../Hydrogen/Source/Core/Memory.**",
-                "../Hydrogen/Source/Core/Memory.**",
+                "../Hydrogen/Engine/Core/Memory.**",
+                "../Hydrogen/Engine/Core/Memory.**",
             }
             defines{"TEST"}
             includedirs{
-                "../Hydrogen/Source/"
+                "../Hydrogen/Engine/"
             }
+
+    include "../Hydrogen/Xenon/"
+
+    project "Xenon_test"
+            location "./Xenon_tests"
+            kind "ConsoleApp"
+            language "C++"
+            cppdialect "C++17"
+
+        files 
+        {
+            "./Xenon_tests/**.cpp"
+        }
+        includedirs{
+            "../Hydrogen/Xenon/",
+            "../Tools/Hydrofiler/"
+        }
+        libdirs{
+            "../bin/"..OutputDir.."/Xenon"
+        }
+        links{
+            "Xenon", "Hydrofiler"
+        }

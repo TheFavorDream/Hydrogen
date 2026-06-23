@@ -14,7 +14,7 @@ project "SandBox"
     includedirs{
      "%{wks.location}/SandBox/",
      "%{wks.location}/Hydrogen/",
-     "%{wks.location}/Hydrogen/Source/",
+     "%{wks.location}/Hydrogen/Engine/",
      "%{wks.location}/Hydrogen/3rdParty/glfw/include",
      "%{wks.location}/Hydrogen/3rdParty/imgui",
      "%{wks.location}/Hydrogen/3rdParty"
@@ -24,7 +24,7 @@ project "SandBox"
      "%{wks.location}/bin/"..OutputDir.."/Hydrogen"
     }
      
-    links {"Hydrogen","kernel32", "user32" , "gdi32", "winspool", "comdlg32", "advapi32", "shell32","ole32", "oleaut32", "uuid", "odbc32", "odbccp32"}
+    links {"Hydrogen"}
 	
     postbuildcommands {"{COPY} %{wks.location}/bin/" .. OutputDir .. "/Hydrogen/Hydrogen.dll %{wks.location}/bin/" .. OutputDir .. "/SandBox",
                     "{COPY} %{wks.location}/bin/" .. OutputDir .. "/glfw/glfw.dll %{wks.location}bin/" .. OutputDir .. "/SandBox"}

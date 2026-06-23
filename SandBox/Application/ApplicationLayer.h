@@ -18,7 +18,5 @@ public:
 
 
 private:
-
-	Hydrogen::Id model = 0;
-	Hydrogen::Ptr<Hydrogen::Scene> m_Scene = nullptr;
+	Hydrogen::Wraper<Hydrogen::World> m_World;
 };

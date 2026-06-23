@@ -13,7 +13,7 @@ workspace "Tools"
         defines {"WINDOWS"}
         filter {"configurations:Debug"}
             defines {"DEBUG"}
-            buildoptions {"/MTd"}
+            --buildoptions {"/MTd"}
         filter {"configurations:Release"}
             defines {"RELEASE"}
             optimize "on"

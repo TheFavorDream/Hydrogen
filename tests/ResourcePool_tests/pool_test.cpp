@@ -1,26 +1,84 @@
 #include "Core/ResourcePool.h"
 #include "TestObject.h"
-
+#include <string>
 using namespace Hydrogen;
+
+
+struct Dummy
+{
+	Dummy()
+	{
+		std::cout << "Hi\n";
+	}
+
+	~Dummy()
+	{
+		std::cout << "Goodbye\n";
+	}
+
+	int a; 
+};
+
+struct Data
+{
+
+	Data()
+	{
+		std::cout << "Data Constructed\n";
+	}
+
+	Data(Data&& pOther)
+	{
+		Name = std::move(pOther.Name);
+		Age  = pOther.Age;
+		R	 = pOther.R;
+		m_ShadersSources = std::move(pOther.m_ShadersSources);
+		m_UniformLookUp  = std::move(pOther.m_UniformLookUp);
+	}
+
+	Data& operator=(Data&& pOther)
+	{
+		if (&pOther == this)
+			return *this;
+		Name = std::move(pOther.Name);
+		Age  = pOther.Age;
+		R    = pOther.R;
+
+		m_ShadersSources = (pOther.m_ShadersSources);
+		m_UniformLookUp  = (pOther.m_UniformLookUp);
+
+		return *this;
+	}
+
+	~Data()
+	{
+		std::cout << "Data Destructor\n";
+		Name.clear();
+	}
+
+	std::string Name = "kfkfkrfokrofkdpafipjwifgjerigj";
+	uint64 Age = 67;
+	std::unordered_map<GLenum, std::string>			m_ShadersSources;
+	std::unordered_map<const char*, int32>          m_UniformLookUp; //for faster uniform access
+	uint64 R = 233;
+	Dummy D;
+};
 
 int main(int argc, char** arvg)
 {
 
+	ResourcePool<Data> Pool;
+	std::vector<Instance<Data>> Inss;
 
-	Hydrogen::ResourcePool<Object> Pool;
+	Data D;
 
-	Id ID1 = Pool.Create(new Object());
-	Id ID2 = Pool.Create(new Object());
+	for (int i = 0; i < 20; ++i)
+	{
+		D.R = i;
+		Inss.push_back(Pool.Resource());
+	}
 
-	Pool.GetResource(ID1).Do(ID1);
-	Pool.GetResource(ID1).Do(ID1);
-	Pool.GetResource(ID1).Do(ID1);
-	Pool.GetResource(ID1).Do(ID1);
+	Inss.clear();
 
-
-
-	Pool.Destroy(&ID2);
-
-	std::cin.get();
 	return 0;
 }

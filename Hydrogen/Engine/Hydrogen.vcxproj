@@ -1,0 +1,270 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Distrib|x64">
+      <Configuration>Distrib</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{854A0F42-7117-6A4D-9A30-58F5865C9FDB}</ProjectGuid>
+    <IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>Hydrogen</RootNamespace>
+    <LatestTargetPlatformVersion>$([Microsoft.Build.Utilities.ToolLocationHelper]::GetLatestSDKTargetPlatformVersion('Windows', '10.0'))</LatestTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Distrib|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Distrib|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(ProjectDir)..\..\bin\Debug-windows-x86_64\Hydrogen\</OutDir>
+    <IntDir>$(ProjectDir)..\..\bin-obj\Debug-windows-x86_64\Hydrogen\</IntDir>
+    <TargetName>Hydrogen</TargetName>
+    <TargetExt>.dll</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(ProjectDir)..\..\bin\Release-windows-x86_64\Hydrogen\</OutDir>
+    <IntDir>$(ProjectDir)..\..\bin-obj\Release-windows-x86_64\Hydrogen\</IntDir>
+    <TargetName>Hydrogen</TargetName>
+    <TargetExt>.dll</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Distrib|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(ProjectDir)..\..\bin\Distrib-windows-x86_64\Hydrogen\</OutDir>
+    <IntDir>$(ProjectDir)..\..\bin-obj\Distrib-windows-x86_64\Hydrogen\</IntDir>
+    <TargetName>Hydrogen</TargetName>
+    <TargetExt>.dll</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WINDOWS;DEBUG;GLEW_STATIC;HYD_DLL_BUILD;HYD_DEBUG;HYD_PLATFORM_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.;..\3rdParty;..\3rdParty\glfw\include;..\3rdParty\imgui;..\3rdParty\glm;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <Optimization>Disabled</Optimization>
+      <AdditionalOptions>/MDd %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>opengl32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>Glew;..\..\bin\Debug-windows-x86_64\glfw;..\..\bin\Debug-windows-x86_64\imgui;..\..\bin\Debug-windows-x86_64\stb_image;..\..\bin\Debug-windows-x86_64\SimdJson;..\..\bin\Debug-windows-x86_64\Xenon;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ImportLibrary>..\..\bin\Debug-windows-x86_64\Hydrogen\Hydrogen.lib</ImportLibrary>
+    </Link>
+    <PostBuildEvent>
+      <Command>IF EXIST $(SolutionDir)bin\Debug-windows-x86_64\Hydrogen\Hydrogen.dll\ (xcopy /Q /E /Y /I $(SolutionDir)bin\Debug-windows-x86_64\Hydrogen\Hydrogen.dll   $(SolutionDir)bin\Debug-windows-x86_64\SandBox &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)bin\Debug-windows-x86_64\Hydrogen\Hydrogen.dll   $(SolutionDir)bin\Debug-windows-x86_64\SandBox &gt; nul)</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WINDOWS;RELEASE;GLEW_STATIC;HYD_DLL_BUILD;HYD_RELEASE;HYD_PLATFORM_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.;..\3rdParty;..\3rdParty\glfw\include;..\3rdParty\imgui;..\3rdParty\glm;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>None</DebugInformationFormat>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/MD %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>opengl32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>Glew;..\..\bin\Release-windows-x86_64\glfw;..\..\bin\Release-windows-x86_64\imgui;..\..\bin\Release-windows-x86_64\stb_image;..\..\bin\Release-windows-x86_64\SimdJson;..\..\bin\Release-windows-x86_64\Xenon;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ImportLibrary>..\..\bin\Release-windows-x86_64\Hydrogen\Hydrogen.lib</ImportLibrary>
+    </Link>
+    <PostBuildEvent>
+      <Command>IF EXIST $(SolutionDir)bin\Release-windows-x86_64\Hydrogen\Hydrogen.dll\ (xcopy /Q /E /Y /I $(SolutionDir)bin\Release-windows-x86_64\Hydrogen\Hydrogen.dll   $(SolutionDir)bin\Release-windows-x86_64\SandBox &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)bin\Release-windows-x86_64\Hydrogen\Hydrogen.dll   $(SolutionDir)bin\Release-windows-x86_64\SandBox &gt; nul)</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Distrib|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>DIST;WINDOWS;GLEW_STATIC;HYD_DLL_BUILD;HYD_PLATFORM_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.;..\3rdParty;..\3rdParty\glfw\include;..\3rdParty\imgui;..\3rdParty\glm;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>None</DebugInformationFormat>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalOptions>/MD %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>opengl32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>Glew;..\..\bin\Distrib-windows-x86_64\glfw;..\..\bin\Distrib-windows-x86_64\imgui;..\..\bin\Distrib-windows-x86_64\stb_image;..\..\bin\Distrib-windows-x86_64\SimdJson;..\..\bin\Distrib-windows-x86_64\Xenon;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ImportLibrary>..\..\bin\Distrib-windows-x86_64\Hydrogen\Hydrogen.lib</ImportLibrary>
+    </Link>
+    <PostBuildEvent>
+      <Command>IF EXIST $(SolutionDir)bin\Distrib-windows-x86_64\Hydrogen\Hydrogen.dll\ (xcopy /Q /E /Y /I $(SolutionDir)bin\Distrib-windows-x86_64\Hydrogen\Hydrogen.dll   $(SolutionDir)bin\Distrib-windows-x86_64\SandBox &gt; nul) ELSE (xcopy /Q /Y /I $(SolutionDir)bin\Distrib-windows-x86_64\Hydrogen\Hydrogen.dll   $(SolutionDir)bin\Distrib-windows-x86_64\SandBox &gt; nul)</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Hydrogen.h" />
+    <ClInclude Include="Camera\Camera.h" />
+    <ClInclude Include="Common.h" />
+    <ClInclude Include="Core\Base.h" />
+    <ClInclude Include="Core\Core.h" />
+    <ClInclude Include="Core\Layer.h" />
+    <ClInclude Include="Core\Memory.h" />
+    <ClInclude Include="Core\ResourcePool.h" />
+    <ClInclude Include="Core\Scene.h" />
+    <ClInclude Include="Core\World.h" />
+    <ClInclude Include="Event\Keyboard.h" />
+    <ClInclude Include="Event\Mouse.h" />
+    <ClInclude Include="Extra\LinkedList.h" />
+    <ClInclude Include="Geometry\Mesh.h" />
+    <ClInclude Include="Geometry\MeshGenerator\MeshGenerator.h" />
+    <ClInclude Include="Geometry\Primitive.h" />
+    <ClInclude Include="Glew\eglew.h" />
+    <ClInclude Include="Glew\glew.h" />
+    <ClInclude Include="Glew\glxew.h" />
+    <ClInclude Include="Glew\wglew.h" />
+    <ClInclude Include="HydPch.h" />
+    <ClInclude Include="Log\Log.h" />
+    <ClInclude Include="Render\ElementBuffer.h" />
+    <ClInclude Include="Render\Material\Image.h" />
+    <ClInclude Include="Render\Material\Material.h" />
+    <ClInclude Include="Render\Material\Texture.h" />
+    <ClInclude Include="Render\Platform\OpenGL\GLElementBuffer.h" />
+    <ClInclude Include="Render\Platform\OpenGL\GLVertexBuffer.h" />
+    <ClInclude Include="Render\Platform\OpenGL\GLShader.h" />
+    <ClInclude Include="Render\Platform\OpenGL\GLTextures.h" />
+    <ClInclude Include="Render\Platform\OpenGL\GLVertexArray.h" />
+    <ClInclude Include="Render\ShaderPool.h" />
+    <ClInclude Include="Render\Renderer.h" />
+    <ClInclude Include="Render\VertexArray.h" />
+    <ClInclude Include="Render\VertexBuffer.h" />
+    <ClInclude Include="Timer\Timer.h" />
+    <ClInclude Include="UI\Elements\Button.h" />
+    <ClInclude Include="UI\Elements\CheckBox.h" />
+    <ClInclude Include="UI\Elements\ComboBox.h" />
+    <ClInclude Include="UI\Elements\Element.h" />
+    <ClInclude Include="UI\Elements\InputF.h" />
+    <ClInclude Include="UI\Elements\SliderF.h" />
+    <ClInclude Include="UI\Elements\Text.h" />
+    <ClInclude Include="UI\GuiWindow.h" />
+    <ClInclude Include="UI\UICore.h" />
+    <ClInclude Include="VecMath\Math.h" />
+    <ClInclude Include="VecMath\Matrix\General\Mat2.h" />
+    <ClInclude Include="VecMath\Matrix\General\Mat3.h" />
+    <ClInclude Include="VecMath\Matrix\General\Mat4.h" />
+    <ClInclude Include="VecMath\Matrix\General\UniMat.h" />
+    <ClInclude Include="VecMath\Matrix\MatDef.h" />
+    <ClInclude Include="VecMath\Quaternion.h" />
+    <ClInclude Include="VecMath\Transform\Rotate.h" />
+    <ClInclude Include="VecMath\Transform\Scale.h" />
+    <ClInclude Include="VecMath\Transform\Transformation.h" />
+    <ClInclude Include="VecMath\Transform\Translate.h" />
+    <ClInclude Include="VecMath\Vector\UniVec.h" />
+    <ClInclude Include="VecMath\Vector\Vectors.h" />
+    <ClInclude Include="Window\Window.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Camera\Camera.cpp" />
+    <ClCompile Include="Core\Core.cpp" />
+    <ClCompile Include="Core\Layer.cpp" />
+    <ClCompile Include="Core\Memory.cpp" />
+    <ClCompile Include="Core\Scene.cpp" />
+    <ClCompile Include="Core\World.cpp" />
+    <ClCompile Include="Event\Keyboard.cpp" />
+    <ClCompile Include="Event\Mouse.cpp" />
+    <ClCompile Include="Geometry\Mesh.cpp" />
+    <ClCompile Include="Geometry\MeshGenerator\MeshGenerator.cpp" />
+    <ClCompile Include="HydPch.cpp" />
+    <ClCompile Include="Log\Log.cpp" />
+    <ClCompile Include="Render\BufferImpl.cpp" />
+    <ClCompile Include="Render\Material\Image.cpp" />
+    <ClCompile Include="Render\Material\Material.cpp" />
+    <ClCompile Include="Render\Material\Texture.cpp" />
+    <ClCompile Include="Render\Platform\OpenGL\GLElementBuffer.cpp" />
+    <ClCompile Include="Render\Platform\OpenGL\GLVertexBuffer.cpp" />
+    <ClCompile Include="Render\Platform\OpenGL\GLShader.cpp" />
+    <ClCompile Include="Render\Platform\OpenGL\GLTextures.cpp" />
+    <ClCompile Include="Render\Platform\OpenGL\GLVertexArray.cpp" />
+    <ClCompile Include="Render\ShaderPool.cpp" />
+    <ClCompile Include="Render\Renderer.cpp" />
+    <ClCompile Include="Timer\Timer.cpp" />
+    <ClCompile Include="UI\GuiWindow.cpp" />
+    <ClCompile Include="UI\UICore.cpp" />
+    <ClCompile Include="VecMath\Math.cpp" />
+    <ClCompile Include="VecMath\Quaternion.cpp" />
+    <ClCompile Include="VecMath\Transform\Transformation.cpp" />
+    <ClCompile Include="VecMath\Vector\VecMath.cpp" />
+    <ClCompile Include="Window\Window.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\3rdParty\glfw\GLFW.vcxproj">
+      <Project>{154B857C-0182-860D-AA6E-6C109684020F}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\3rdParty\imgui\ImGui.vcxproj">
+      <Project>{C0FF640D-2C14-8DBE-F595-301E616989EF}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\3rdParty\stb_image\Stb_image.vcxproj">
+      <Project>{10765821-7CE0-0C98-C51E-BE3D31C8EAEC}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\3rdParty\SimdJson\SimdJson.vcxproj">
+      <Project>{0CA52CAD-F871-87B8-218B-75600DB7BC46}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Xenon\Xenon.vcxproj">
+      <Project>{6DB1700E-D9C5-98BF-A247-3C1F0E1B95F0}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -1,38 +1,53 @@
-#pragma once
 
-#include <iostream>
-#include "Core/ResourcePool.h"
-
-class Object
+class GLBuffer
 {
-
 public:
 
-	Object()
+	uint32 CreateBuffer()
 	{
-		std::cout << "Object Created: address:" << this << "\tID:" << reinterpret_cast<Hydrogen::Id>(this) << '\n';
+		std::cout << "Created Buffer\n";
+		return 2;
+	}
+	uint32 DeleteBuffer()
+	{
+		std::cout << "Delete Buffer\n";
+		return 3;
 	}
 
-	~Object()
-	{
-		std::cout << "Object Destructed: address:" << this  << '\n';
-	}
 
-	void Do(Hydrogen::Id pID)
+	void Do()
 	{
-		std::cout << "I did something: ID:" << pID << '\n';
+		std::cout << "Buffer: Do\n";
 	}
+};
 
-	//Used by Resource Pool
-	uint32 Destroy()
-	{
-		std::cout << "Object Destroyed: address:" << this << "\tID:" << reinterpret_cast<Hydrogen::Id>(this) << '\n';
-		return HYD_OK;
-	}
-
+class Buffer
+{
 public:
 
-	Object* Next = nullptr;
-	Object* Prev = nullptr;
+	Buffer() = default;
+   ~Buffer() = default;
+
+
+   template <typename T>
+   void Init(const T& pT)
+   {
+	   //m_CreateBuffer = &pT.CreateBuffer;
+	   //m_DeleteBuffer = &pT.DeleteBuffer;
+   }
+
+   uint32 CreateBuffer()
+   {
+	   return m_CreateBuffer();
+   }
+
+	uint32 DeleteBuffer()
+	{
+		return m_DeleteBuffer();
+	}
+
+private:
+	uint32 (*m_CreateBuffer)() = nullptr; //Empty Buffer 
+	uint32 (*m_DeleteBuffer)() = nullptr;
 
 };
