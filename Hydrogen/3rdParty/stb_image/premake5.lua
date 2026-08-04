@@ -10,4 +10,8 @@ project "Stb_image"
         "stb_image.cpp"
     }
 
+    filter "system:linux"
+        pic "On"
+    
+
     

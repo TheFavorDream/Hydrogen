@@ -9,13 +9,9 @@
 
 #include "Common.h"
 #include "Geometry/Mesh.h"
-#include "Render/ShaderPool.h"
-#include "Render/VertexArray.h"
-#include "Render/VertexBuffer.h"
-#include "Render/ElementBuffer.h"
 #include "Render/Material/Material.h"
 #include "Camera/Camera.h"
-//#include "Xenon/include/Xenon.h"
+#include "Xenon/include/Xenon.h"
 
 
 namespace Hydrogen
@@ -23,19 +19,43 @@ namespace Hydrogen
 
 
 
-	struct Node
+	class Node
 	{
+	public:
 		HYD Node() = default;
+
+
+		HYD Node(const Node& pOther); 
+		HYD Node(Node&& pOther);
+
+		HYD Node& operator=(const Node& pOther);
+		HYD Node& operator=(Node&& pOther);
+
 		
-		HYD_VEC<Node>   m_Children;
-		HYD_STRING      m_Name;
+		HYD inline std::vector<Node>::iterator begin() const { return m_Children.begin(); }
+		HYD inline std::vector<Node>::iterator end()   const { return m_Children.end(); }
+
+
+		inline HYD_STRING&     GetName()	  { return m_Name; }
+		inline Instance<Mesh>& GetMesh()	  { return m_Mesh; }
+		inline Transformation& GetTransform() { return m_Transform; }
+
+
+
+	private:
 		Instance<Mesh>	m_Mesh;
-		Ptr<Node>       m_PointerToParent;
-		Transformation  m_Transform;
+		Ptr<Node>	    m_PointerToParent;
+		friend class Core;
+
+	protected:
+		mutable HYD_VEC<Node>   m_Children;
+		HYD_STRING				m_Name;
+		Transformation		    m_Transform;
+		friend class Core;
 	};
 
 
-	class Scene
+	class Scene : public Node
 	{
 	public:
 
@@ -51,6 +71,9 @@ namespace Hydrogen
 		HYD Scene& operator=(const Scene& pOther) = delete;
 
 
+		//Pushes the node to the tree
+		HYD uint32 PushNode(Node pNode);
+
 		//Free ups the Resource Pools
 		HYD uint32 FreeScene();
 
@@ -62,19 +85,11 @@ namespace Hydrogen
 	private:
 
 		ResourcePool<Mesh>		    m_Meshes;
-		ResourcePool<Material>	    m_Materials;
-		ResourcePool<VertexBuffer>	m_VBOs;
-		ResourcePool<ElementBuffer>	m_EBOs;
-		ResourcePool<VertexArray>	m_VAOs;
-
-		Camera			m_Camera;
-
-		HYD_STRING      m_Name;
-		HYD_VEC<Node>   m_Nodes;
+		Camera					    m_Camera;
 
 		friend class Renderer;
 		friend class MeshGenerator;
-		friend class World;
+		friend class Core;
 	};
 
 };

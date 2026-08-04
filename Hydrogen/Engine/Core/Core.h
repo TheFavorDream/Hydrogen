@@ -6,11 +6,10 @@
 */
 
 #pragma once
-#include "Common.h"
-#include "Log/Log.h"
-#include "Render/Renderer.h"
-#include "Window/Window.h"
-#include "World.h"
+#include "../Common.h"
+#include "../Log/Log.h"
+#include "../Render/Renderer.h"
+#include "Scene.h"
 #include "Timer/Timer.h"
 
 #include "Layer.h"
@@ -24,7 +23,7 @@ namespace Hydrogen
 	public:
 		
 		HYD  Core(); //Default Constructor
-		HYD  Core(int32 pWidth, int32 pHeight, const char* pTitle); //Constructor with a window
+		HYD  Core(WindowInfo pWindowInfo); //Constructor with a window
 		HYD ~Core();
 
 
@@ -40,25 +39,26 @@ namespace Hydrogen
 		HYD void Update();
 
 	public:
-		HYD static uint32		PushWorld(Ptr<World> pScene);
-		HYD static Ptr<World>   GetCurrentWorld();
-		HYD inline static float GetDeltaTime() { return s_DeltaTime; }
+		HYD static Instance<Scene>   GetCurrentScene();
+		HYD inline static float		 GetDeltaTime() { return s_DeltaTime; }
+
+		HYD static Instance<Scene> LoadSceneGLTF(const std::string& pPath);
+
 	private:
 		HYD static void SetDeltaTime(float pDelta);
 
 	private:
 
 		std::vector<Ptr<Layer>> m_Layers;
-
-		bool  m_Running		= false;
+		
+		bool  m_Running = false;
 
 	private:
-		static float s_DeltaTime;
-		static Ptr<World> s_CurrentWorld;
+		static float		       s_DeltaTime;
+		static ResourcePool<Scene> s_Scenes;
+		static Instance<Scene>	   s_CurrentScene;
 
-	protected:
-		Window m_Window;
-		
+		friend class Renderer;
 	};
 
 };

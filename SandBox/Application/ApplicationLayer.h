@@ -3,6 +3,9 @@
 #include "Hydrogen.h"
 #include <iostream>
 
+using namespace Hydrogen;
+
+
 class AppLayer : public Hydrogen::Layer
 {
 public:
@@ -18,5 +21,5 @@ public:
 
 
 private:
-	Hydrogen::Wraper<Hydrogen::World> m_World;
+	Hydrogen::Instance<Hydrogen::Scene> m_Scene;
 };

@@ -30,10 +30,7 @@ namespace Hydrogen
 		W = pOther.W;
 	}
 
-	Quaternion::operator VecF4() const
-	{
-		return VecF4(X, Y, Z, W);
-	}
+
 
 	Quaternion Quaternion::operator*(const Quaternion& pOther) const
 	{

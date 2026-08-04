@@ -345,7 +345,7 @@ typedef VkResult (APIENTRY * PFN_vkEnumerateInstanceExtensionProperties)(const c
     }
 #define _GLFW_REQUIRE_INIT_OR_RETURN(x)              \
     if (!_glfw.initialized)                          \
-    {     __debugbreak();                                           \
+    {    /* __debugbreak();*/                                           \
         _glfwInputError(GLFW_NOT_INITIALIZED, NULL); \
         return x;                                    \
     }

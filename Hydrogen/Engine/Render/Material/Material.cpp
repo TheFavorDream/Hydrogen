@@ -1,26 +1,46 @@
+#include "Xenon/include/Xenon.h"
 #include "Material.h"
 #include "HydPch.h"
-
-
+#include "Render/Renderer.h"
+#include "Image.h"
 
 namespace Hydrogen
 {
+
+	Material Material::CreateMaterialGLTF(const Xenon::Material& pMaterial, std::unordered_map<uint64, Instance<Texture2D>>& pTextureTable)
+	{
+		Material NewMaterial;
+
+		if (pMaterial.HasBaseColor())
+		{
+			NewMaterial.m_BaseColor = pTextureTable[pMaterial.GetBaseColor().value()];
+		}
+
+		if (pMaterial.HasNormalMap())
+		{
+			NewMaterial.m_NormalMap = pTextureTable[pMaterial.GetNormalMap().value()];
+		}
+
+		return std::move(NewMaterial);
+	}
+
 
 
 
 	Material::Material()
 	{
-		m_TexturePool.Init();
+		
 	}
 
 	Material::~Material()
 	{
-		m_TexturePool.Shutdown();
+		
 	}
+
+
 
 	Material::Material(Material&& pOther)
 	{
-		m_TexturePool  = std::move(pOther.m_TexturePool);
 		m_BaseColor    = std::move(pOther.m_BaseColor);
 		m_MetallicMap  = std::move(pOther.m_MetallicMap);
 		m_NormalMap    = std::move(pOther.m_NormalMap);
@@ -33,7 +53,6 @@ namespace Hydrogen
 		if (this == &pOther)
 			return *this;
 
-		m_TexturePool = std::move(pOther.m_TexturePool);
 		m_BaseColor   = std::move(pOther.m_BaseColor);
 		m_MetallicMap = std::move(pOther.m_MetallicMap);
 		m_NormalMap   = std::move(pOther.m_NormalMap);
@@ -55,63 +74,33 @@ namespace Hydrogen
 		return HYD_OK;
 	}
 
-
-
-	uint32 Material::SetBaseColorTexture(Texture2D& pBaseColor)
+	/*
+	uint32 Material::Bind(Instance<Program>  pShader)
 	{
-		m_BaseColor = m_TexturePool.PushObject(std::move(pBaseColor));
-		return HYD_OK;
-	}
+		//pShader.SetUniformInt1("material.BaseColor", 0);
+		//pShader.SetUniformInt1("material.NormalMap", 1);
+		//pShader.SetUniformInt1("material.Metalic",   2);
+		//
+		//pShader.SetUniformFloat1("material.Metallicness", m_MatallicnessFactor);
+		//pShader.SetUniformFloat1("material.Roughness",   m_RoughnessFactor);
+		//pShader.SetUniformFloat3("material.BaseColorFactor", m_BaseColorFactor.X, m_BaseColorFactor.Y, m_BaseColorFactor.Z);
 
-	uint32 Material::SetNormalMapTexture(Texture2D&   pNormalMap)
-	{
-		m_NormalMap = m_TexturePool.PushObject(std::move(pNormalMap));
-		return HYD_OK;
-
-	}
-
-	uint32 Material::SetMetallicTexture(Texture2D&   pMetallic)
-	{
-		m_MetallicMap = m_TexturePool.PushObject(std::move(pMetallic));
-		return HYD_OK;
-	}
-
-	uint32 Material::SetEmissiveTexture(Texture2D&   pEmissive)
-	{
-		m_EmissiveMap = m_TexturePool.PushObject(std::move(pEmissive));
-		return HYD_OK;
-	}
-
-	uint32 Material::SetOcclusionTexture(Texture2D& pOcclusion)
-	{
-		m_OcclusionMap = m_TexturePool.PushObject(std::move(pOcclusion));
-		return HYD_OK;
-	}
-
-
-
-	uint32 Material::Bind(const Shader& pShader)
-	{
-		pShader.SetUniformInt1("material.BaseColor", 0);
-		pShader.SetUniformInt1("material.NormalMap", 1);
-		pShader.SetUniformInt1("material.Metalic",   2);
-
-		pShader.SetUniformFloat1("material.Metallicness", m_MatallicnessFactor);
-		pShader.SetUniformFloat1("material.Roughness",   m_RoughnessFactor);
-		pShader.SetUniformFloat3("material.BaseColorFactor", m_BaseColorFactor.X, m_BaseColorFactor.Y, m_BaseColorFactor.Z);
-
-		m_BaseColor->Bind(0);
-		m_NormalMap->Bind(1);
-		m_MetallicMap->Bind(2);
+		if (!m_BaseColor.IsNull())
+			m_BaseColor->Bind(0);
+		if (!m_NormalMap.IsNull())
+			m_NormalMap->Bind(1);
+		//m_MetallicMap->Bind(2);
 
 		return HYD_OK;
 	}
-
+*/
 	uint32 Material::Unbind()
 	{
-		m_BaseColor->Unbind(0);
-		m_NormalMap->Unbind(1);
-		m_MetallicMap->Unbind(2);
+		if (!m_BaseColor.IsNull())
+			m_BaseColor->Unbind(0);
+		if (!m_NormalMap.IsNull())
+			m_NormalMap->Unbind(1);
+		//m_MetallicMap->Unbind(2);
 		return HYD_OK;
 	}
 

@@ -1,12 +1,20 @@
 #pragma once
 
-
-
+#if defined(__gnuc__)
+	#define SHEARED_EXPORT  __attribute__((visibility("default")))
+	#define SHEARED_IMPORT
+#elif defined(_MSC_VER)
+	#define SHEARED_EXPORT __declspec(dllexport)
+	#define SHEARED_IMPORT __declspec(dllimport)
+#else
+	#define SHEARED_EXPORT
+	#define SHEARED_IMPORT
+#endif
 
 #ifdef HYD_DLL_BUILD
-	#define HYD _declspec(dllexport)
+	#define HYD SHEARED_EXPORT
 #else
-	#define HYD _declspec(dllimport)
+	#define HYD SHEARED_IMPORT
 #endif
 
 //#define HYD
@@ -48,8 +56,8 @@ typedef int					   int32;
 typedef short				   int16;
 typedef char				   int8;
 
-#include "Core/Base.h"
-#include "Core/Memory.h"
+#include "HydPch.h"
+#include "Core/Memory/Memory.h"
 
 #ifdef WINDOWS
 
@@ -57,8 +65,27 @@ typedef char				   int8;
 
 #endif
 
+#define VULKAN_ALLOCATION_CALLBACK nullptr
 
-#include "HydPch.h"
+
+
+#define HYD_VERSION_MAJOR 0
+#define HYD_VERSION_MINOR 3
+#define HYD_VERSION_PATCH 0
+
+
+
+enum DataType {
+	TYPE_UNKNOWN	    = 0,
+	TYPE_SIGNED_BYTE    = 5120,
+	TYPE_UNSIGNED_BYTE  = 5121,
+	TYPE_SIGNED_SHORT	= 5122,
+	TYPE_UNSIGNED_SHORT = 5123,
+	TYPE_UNSIGNED_INT	= 5125,
+	TYPE_FLOAT			= 5126
+};
+
+
 
 
 
@@ -70,6 +97,11 @@ typedef char				   int8;
 namespace Hydrogen
 {
 
+
+	class  FileSys;
+	class  Memeory;
+	struct Buffer;
+
 	struct Primitive;
 
 	class MaterialPool;
@@ -77,7 +109,7 @@ namespace Hydrogen
 
 	class  MeshGenerator;
 	class  Scene;
-	struct Node;
+	class  Node;
 	class  Renderer;
 	class  Mesh;
 	struct Primitive;
@@ -89,6 +121,19 @@ namespace Hydrogen
 	class Mouse;
 	class Keyboard;
 	
+
+	//Vulkan:
+	namespace Vulkan
+	{
+		class FrameBuffer;
+		class Shader;
+		class RenderPass;
+		class Swapchain;
+		class CommandBuffer;
+		class CommandPool;
+		class Pipeline;
+	}; 
+
 };
 
 

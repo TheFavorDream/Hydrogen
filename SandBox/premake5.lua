@@ -17,7 +17,8 @@ project "SandBox"
      "%{wks.location}/Hydrogen/Engine/",
      "%{wks.location}/Hydrogen/3rdParty/glfw/include",
      "%{wks.location}/Hydrogen/3rdParty/imgui",
-     "%{wks.location}/Hydrogen/3rdParty"
+     "%{wks.location}/Hydrogen/3rdParty",
+     "%{wks.location}/Hydrogen/3rdParty/Vulkan"
      }
      
     libdirs{
@@ -26,8 +27,8 @@ project "SandBox"
      
     links {"Hydrogen"}
 	
-    postbuildcommands {"{COPY} %{wks.location}/bin/" .. OutputDir .. "/Hydrogen/Hydrogen.dll %{wks.location}/bin/" .. OutputDir .. "/SandBox",
-                    "{COPY} %{wks.location}/bin/" .. OutputDir .. "/glfw/glfw.dll %{wks.location}bin/" .. OutputDir .. "/SandBox"}
+    --postbuildcommands {"{COPY} %{wks.location}/bin/" .. OutputDir .. "/Hydrogen/Hydrogen.dll %{wks.location}/bin/" .. OutputDir .. "/SandBox",
+    --                "{COPY} %{wks.location}/bin/" .. OutputDir .. "/glfw/glfw.dll %{wks.location}bin/" .. OutputDir .. "/SandBox"}
 
 
  

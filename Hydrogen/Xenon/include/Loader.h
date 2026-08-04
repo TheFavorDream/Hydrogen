@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Xenon.h"
-#include "../3rdParty/SimdJson/simdjson.h"
+#include "../../3rdParty/SimdJson/simdjson.h"
 
 namespace Xenon
 {
@@ -40,11 +40,11 @@ namespace Xenon
 
 		static uint32_t    SetMetallicRoughness(simdjson::ondemand::object pMetallicRoughness, Material& pMaterial);
 
-		static Texture	   LookUpTexture(simdjson::ondemand::object pTextureInfo);
+		static uint64_t	   LoadTextureIfHasnt (simdjson::ondemand::object pTextureInfo);
 
 		static uint32_t    LoadImageRefsFromJson(simdjson::ondemand::document_reference pGLTF);
-		static uint32_t    LoadSamplersFromJson(simdjson::ondemand::document_reference pGLTF);
-		static uint32_t    LoadTexturesFromJson(simdjson::ondemand::document_reference pGLTF);
+		static uint32_t    LoadSamplersFromJson (simdjson::ondemand::document_reference pGLTF);
+		static uint32_t    LoadTexturesFromJson (simdjson::ondemand::document_reference pGLTF);
 
 
 
@@ -66,7 +66,7 @@ namespace Xenon
 		struct TextureInfo
 		{
 			ImageInfo Image;
-			Sampler   Sampler;
+			Sampler   TextureSample;
 		};
 
 		//Temporary Buffers

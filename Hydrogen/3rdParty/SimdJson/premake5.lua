@@ -10,5 +10,10 @@ project "SimdJson"
         "**.cpp"
     }
 
+    filter "system:linux"
+        pic "On"
+    
+
+
     targetdir ("%{wks.location}/bin/"..OutputDir.."/SimdJson")
     objdir ("%{wks.location}/bin-obj/"..OutputDir.."/SimdJson")

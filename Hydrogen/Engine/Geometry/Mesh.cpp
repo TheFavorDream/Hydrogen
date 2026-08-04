@@ -6,10 +6,22 @@
 
 namespace Hydrogen 
 {
+
+
+	Mesh Mesh::CreateGLTFMesh(const Xenon::Mesh & pMesh)
+	{
+		Mesh NewMesh;
+
+
+		return std::move(NewMesh);
+	}
+
+
 	Mesh::Mesh()
 	{
 
 	}
+
 
 	Mesh::Mesh(const std::string& pName, std::vector<Primitive>&& pPrimitives)
 	{
@@ -23,14 +35,26 @@ namespace Hydrogen
 		m_Primitives = std::move(pOther.m_Primitives);
 	}
 
-	uint32 Mesh::SetMesh(const std::string& pName, std::vector<Primitive>&& pPrimitives)
+	Mesh::Mesh(const Mesh& pOther)
 	{
-		m_Name		 = pName;
-		m_Primitives = std::move(pPrimitives);
-		return HYD_OK;
+	
+	}
+
+	Mesh& Mesh::operator=(const Mesh& pOther)
+	{
+		return *this;
 	}
 
 
+	Mesh& Mesh::operator=(Mesh&& pOther)
+	{
+		if (this != &pOther)
+		{
+			m_Name = std::move(pOther.m_Name);
+			m_Primitives = std::move(pOther.m_Primitives);
+		}
+		return *this;
+	}
 
 	uint32 Mesh::PushPremitive(const Primitive& pPrimitive)
 	{
@@ -38,22 +62,14 @@ namespace Hydrogen
 		return HYD_OK;
 	}
 
-	Primitive& Mesh::GetPrimitve(uint32 pIndex)
+	Primitive& Mesh::GetPrimitve(uint64 pIndex)
 	{
 		
-		ASSERT((pIndex >= m_Primitives.size()), "Index Out of Range");
+		ASSERT((pIndex < m_Primitives.size()), "Index Out of Range");
 		return m_Primitives[pIndex];
 	}
 
-	Mesh& Mesh::operator=(Mesh&& pOther)
-	{
-		if (this != &pOther)
-		{
-			m_Name		 = std::move(pOther.m_Name);
-			m_Primitives = std::move(pOther.m_Primitives);
-		}
-		return *this;
-	}
+
 
 	uint32 Mesh::Render(const Transformation& m_Transform)
 	{
@@ -64,17 +80,39 @@ namespace Hydrogen
 		for (auto& pri : m_Primitives)
 		{
 			pri.m_Transform = Matrix;
-			Renderer::PushPrimitive(&pri);
+			Renderer::Self().PushPrimitive(&pri);
 		}
 		return HYD_OK;
 	}
 
 
+
+
+
+
+
 	Primitive::Primitive()
 	{
 		//Asign the Shader to primitves:
-		m_Shader   = Renderer::GetDefaultShader();
-		m_Material = Renderer::GetDefaultMaterial();
+		//m_Shader   = Renderer::GetDefaultShader();
+		//m_Material = Renderer::GetDefaultMaterial();
 	}
+
+	Primitive::Primitive(const Primitive& pOther)
+	{
+
+	}
+
+	Primitive::Primitive(Primitive&& pOther)
+	{
+
+		m_Transform     = std::move(pOther.m_Transform);
+		m_Material		= std::move(pOther.m_Material);
+		//m_Shader		= std::move(pOther.m_Shader);
+
+		m_RenderingMode = pOther.m_RenderingMode;
+
+	}
+
 
 };

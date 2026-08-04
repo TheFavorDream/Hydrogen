@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Common.h"
+#include "../Common.h"
 #include "GLFW/glfw3.h"
 #include "Keyboard.h"
 

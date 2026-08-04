@@ -1,9 +1,10 @@
 #pragma once
 
-#include "Common.h"
+#include "../../Common.h"
 #include "Texture.h"
 #include "Core/ResourcePool.h"
-#include "Render/Platform/OpenGL/GLShader.h"
+#include "Render/Shader.h"
+
 //#include "Image.h"
 
 namespace Hydrogen
@@ -11,6 +12,8 @@ namespace Hydrogen
 
 	class Material
 	{
+	public:
+		static Material CreateMaterialGLTF(const Xenon::Material& pMaterial, std::unordered_map<uint64, Instance<Texture2D>>& pTextureTable);
 	public:
 
 		HYD  Material();
@@ -22,20 +25,11 @@ namespace Hydrogen
 		HYD Material& operator=(const Material& pOther) = delete;
 		HYD Material& operator=(Material&& pOther);
 
-
 		HYD uint32 SetMetallicnessFactor(float pMetalicnessFactor);
 		HYD uint32 SetRoughnessFactor(float   pRoughnessFactor);
 
-
-		HYD uint32 SetBaseColorTexture(Texture2D&  pBaseColor);
-		HYD uint32 SetNormalMapTexture(Texture2D&  pNormal);
-		HYD uint32 SetMetallicTexture( Texture2D&  pMetallic);
-		HYD uint32 SetEmissiveTexture( Texture2D&  pEmissive);
-		HYD uint32 SetOcclusionTexture(Texture2D&  pOcclusion);
-
-
 		//Bind Material:
-		HYD uint32 Bind(const Shader& pShader);
+		//HYD uint32 Bind(Instance<Program> pShader);
 		HYD uint32 Unbind();
 
 
@@ -50,7 +44,8 @@ namespace Hydrogen
 		Instance<Texture2D>           m_MetallicMap;
 		Instance<Texture2D>			  m_EmissiveMap;
 		Instance<Texture2D>			  m_OcclusionMap;
-		ResourcePool<Texture2D>       m_TexturePool;
+
+		friend class Core;
 	};
 
 };

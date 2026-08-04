@@ -32,9 +32,11 @@
 	you can overwrite each vector type seperatly
 */
 
-//#define XE_VEC2_IMPL
-//#define XE_VEC3_IMPL
-//#define XE_VEC4_IMPL
+
+#include "../../Engine/VecMath/Vector/Vectors.h"
+#define XE_VEC2_IMPL Hydrogen::Vec2<float>
+#define XE_VEC3_IMPL Hydrogen::Vec3<float>
+#define XE_VEC4_IMPL Hydrogen::Vec4<float>
 
 
 /*

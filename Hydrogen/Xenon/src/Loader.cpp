@@ -62,6 +62,8 @@ namespace Xenon
 		case FORMAT_GLB:
 			 LoadGLB(data);
 			 break;
+		case FORMAT_INVALID:
+			return Model();
 		}
 
 
@@ -264,7 +266,7 @@ namespace Xenon
 		Because it's not guaranteed that User Defined string has Substr() and find_last_of() functions,
 		We have to Retrive the extension manaully
 		*/
-		uint32_t Index = pPath.size() - 1;
+		uint64_t Index = pPath.size() - 1;
 
 		for (; Index >= 0; Index--)
 		{
@@ -307,7 +309,7 @@ namespace Xenon
 	{
 		//just have to remove the file name from the rest
 
-		for (int i = 0, j = pPath.size() - 1; i <= j; i++)
+		for (size_t i = 0, j = pPath.size() - 1; i <= j; i++)
 		{
 			if (pPath[j] != '\\' && pPath[j] != '/')
 				j--;
@@ -341,10 +343,6 @@ namespace Xenon
 		//Scene Loading:
 		for (auto scene : pGLTF["scenes"])
 		{
-			//Stores the index of meshes needed for this scene
-			std::set<uint64_t> MeshIndices;
-
-
 			std::shared_ptr<Scene> NewScene = std::make_shared<Scene>();
 
 			NewScene->m_Name = (scene["name"].has_value()) ? std::string_view(scene["name"]) : "Unnamed Scene";
@@ -364,6 +362,9 @@ namespace Xenon
 
 			XE_VECTOR<Node>* CurrentNodes = nullptr;
 
+			std::set<uint64_t> MeshIndices;
+
+
 			while (!Stack.empty())
 			{
 				GLTFNode Current = std::move(Stack.top());
@@ -375,8 +376,24 @@ namespace Xenon
 
 				Current.MainNode.m_Depth         = Depth;
 				Current.MainNode.m_PointerToRoot = NewScene;
+
+
 				if (Current.MainNode.m_Mesh >= 0)
+				{
+					const Mesh& mesh = Loader::s_Meshes[Current.MainNode.m_Mesh];
+					
+					for (auto& pri : mesh)
+					{
+						for (auto& texIndex : pri.m_Material)
+						{
+							if (!texIndex.has_value())
+								continue;
+							NewScene->m_Textures[texIndex.value()] = Loader::s_TextureLookUp[texIndex.value()];
+						}
+					}
+
 					MeshIndices.emplace(Current.MainNode.m_Mesh);
+				}
 
 				CurrentNodes->push_back(std::move(Current.MainNode));
 
@@ -389,10 +406,8 @@ namespace Xenon
 				}
 			}
 
-			for (auto Index : MeshIndices)
-			{
-				NewScene->m_Meshes.push_back(Loader::s_Meshes[Index]);
-			}
+			for (auto& index : MeshIndices)
+				NewScene->m_Meshes.push_back(Loader::s_Meshes[index]);
 
 			Loader::s_CurrentModel->m_Scenes.push_back(std::move(NewScene));
 			Loader::s_SceneCount += 1;
@@ -632,7 +647,6 @@ namespace Xenon
 			BVRef.Target = XE_BIN_GEOMETRY;
 
 			NewAccessor.Data		  = BVRef;
-			NewAccessor.Stride		  = BVRef.ByteStride;
 			NewAccessor.Count         = (uint64_t)accessor["count"];
 			NewAccessor.ComponentType = (DataType)(uint64_t)accessor["componentType"];
 			NewAccessor.Type		  = Accessor::RetriveArrayTypeFromString(accessor["type"]);
@@ -681,7 +695,11 @@ namespace Xenon
 			Primitive NewPrimtive;
 
 			if (primitive["indices"].has_value())
-				NewPrimtive.m_Indices = Loader::s_Accessors[size_t(primitive["indices"])];
+			{
+				Accessor& access	  = Loader::s_Accessors[size_t(primitive["indices"])];
+				access.Kind			  = XE_INDEX;
+				NewPrimtive.m_Indices = access;
+			}
 
 			if (primitive["mode"].has_value())
 				NewPrimtive.m_RenderMode = int32_t(primitive["mode"]);
@@ -693,30 +711,42 @@ namespace Xenon
 
 			if (Attribute["POSITION"].has_value())
 			{
-				NewPrimtive.m_Positions = Loader::s_Accessors[size_t(Attribute["POSITION"])];
+				Accessor& Access = Loader::s_Accessors[size_t(Attribute["POSITION"])];
+				Access.Kind = XE_POSITION;
+				NewPrimtive.m_Positions = Access;
 			}
 			if (Attribute["NORMAL"].has_value())
 			{
-				NewPrimtive.m_Normals  = Loader::s_Accessors[size_t(Attribute["NORMAL"])];
+				Accessor& Access      = Loader::s_Accessors[size_t(Attribute["NORMAL"])];
+				Access.Kind           = XE_NORMALS;
+				NewPrimtive.m_Normals = Access;
 			}
 			if (Attribute["TANGENT"].has_value())
 			{
-				NewPrimtive.m_Tangents = Loader::s_Accessors[size_t(Attribute["TANGENT"])];
+				Accessor& Access		= Loader::s_Accessors[size_t(Attribute["TANGENT"])];
+				Access.Kind				= XE_TANGENT;
+				NewPrimtive.m_Tangents  = Access;
 			}
 
 			if (Attribute["TEXCOORD_0"].has_value())
 			{
-				NewPrimtive.m_TexCoord_0 = Loader::s_Accessors[size_t(Attribute["TEXCOORD_0"])];
+				Accessor& Access		  = Loader::s_Accessors[size_t(Attribute["TEXCOORD_0"])];
+				Access.Kind				  = XE_TEXCOORDS_0;
+				NewPrimtive.m_TexCoord_0  = Access;
 			}
 
 			if (Attribute["TEXCOORD_1"].has_value())
 			{
-				NewPrimtive.m_TexCoord_1 = Loader::s_Accessors[size_t(Attribute["TEXCOORD_1"])];
+				Accessor& Access		 = Loader::s_Accessors[size_t(Attribute["TEXCOORD_1"])];
+				Access.Kind				 = XE_TEXCOORDS_1;
+				NewPrimtive.m_TexCoord_1 = Access;
 			}
 
 			if (Attribute["COLOR_0"].has_value())
 			{
-				NewPrimtive.m_Color_0 = Loader::s_Accessors[size_t(Attribute["COLOR_0"])];
+				Accessor& Access		 = Loader::s_Accessors[size_t(Attribute["COLOR_0"])];
+				Access.Kind			     = XE_COLOR_0;
+				NewPrimtive.m_Color_0    = Access;
 			}
 
 			pGroup.push_back(std::move(NewPrimtive));
@@ -769,10 +799,10 @@ namespace Xenon
 		{
 			Material NewMaterial;
 
-			NewMaterial.Name		= (material["name"].has_value())               ? std::string_view(material["name"])				   : "Unnamed Material";
-			NewMaterial.Alpha       = (material["alphaMode"].has_value())          ? RetriveAlphaModeFromString(material["alphaMode"]) : XE_OPAQUE;
-			NewMaterial.AlphaCutoff = (float)(material["alphaCutoff"].has_value()) ? double(material["alphaCutoff"])				   :  0.5f;
-			NewMaterial.DoubleSided = (material["doubleSided"].has_value())		   ? bool(material["doubleSided"])					   : false;
+			NewMaterial.m_Name		  = (material["name"].has_value())               ? std::string_view(material["name"])				 : "Unnamed Material";
+			NewMaterial.m_Alpha       = (material["alphaMode"].has_value())          ? RetriveAlphaModeFromString(material["alphaMode"]) : XE_OPAQUE;
+			NewMaterial.m_AlphaCutoff = (float)((material["alphaCutoff"].has_value()) ? double(material["alphaCutoff"])				     : 0.5f);
+			NewMaterial.m_DoubleSided = (material["doubleSided"].has_value())		 ? bool(material["doubleSided"])					 : false;
 
 			if (material["emissiveFactor"].has_value())
 			{
@@ -783,7 +813,7 @@ namespace Xenon
 					EmissiveFactor[Index] = float(Val);
 					Index++;
 				}
-				NewMaterial.EmissiveFactor = XE_VEC3(EmissiveFactor);
+				NewMaterial.m_EmissiveFactor = XE_VEC3(EmissiveFactor);
 			}
 
 
@@ -796,7 +826,7 @@ namespace Xenon
 			//Normal part of material
 			if (material["normalTexture"].has_value() && s_MaterialFlag != LF_BASE_COLOR_ONLY)
 			{
-				NewMaterial.Normal = Loader::LookUpTexture(material["normalTexture"]);
+				NewMaterial.m_Normal = LoadTextureIfHasnt(material["normalTexture"]);
 			}
 		
 
@@ -804,15 +834,15 @@ namespace Xenon
 		
 			if (material["occlusionTexture"].has_value() && s_MaterialFlag == LF_DEFAULT_MATERIAL)
 			{
-				NewMaterial.Occlusion         = Loader::LookUpTexture(material["occlusionTexture"]);
-				NewMaterial.OcclusionStrength = float((material["occlusionTexture"]["strength"].has_value()) ? double(material["occlusionTexture"]["strength"]) : 1.0f);
+				NewMaterial.m_Occlusion         = LoadTextureIfHasnt(material["occlusionTexture"]);
+				NewMaterial.m_OcclusionStrength = float((material["occlusionTexture"]["strength"].has_value()) ? double(material["occlusionTexture"]["strength"]) : 1.0f);
 			}
 		
 			//Emissive part:
 		
 			if (material["emissiveTexture"].has_value() && s_MaterialFlag == LF_DEFAULT_MATERIAL)
 			{
-				NewMaterial.Emissive = Loader::LookUpTexture(material["emissiveTexture"]);
+				NewMaterial.m_Emissive = LoadTextureIfHasnt(material["emissiveTexture"]);
 			}
 
 
@@ -826,8 +856,8 @@ namespace Xenon
 
 	uint32_t Loader::SetMetallicRoughness(simdjson::ondemand::object pMetallicRoughness, Material& pMaterial)
 	{
-		pMaterial.MetallicFactor  = (pMetallicRoughness["metallicFactor"].has_value())  ?  double(pMetallicRoughness["metallicFactor"]) : 1.0f;
-		pMaterial.RoughnessFactor = (pMetallicRoughness["roughnessFactor"].has_value()) ? double(pMetallicRoughness["roughnessFactor"]) : 1.0f;
+		pMaterial.m_MetallicFactor  = (float)(pMetallicRoughness["metallicFactor"].has_value()  ?  double(pMetallicRoughness["metallicFactor"]) : 1.0f);
+		pMaterial.m_RoughnessFactor = (float)(pMetallicRoughness["roughnessFactor"].has_value() ? double(pMetallicRoughness["roughnessFactor"]) : 1.0f);
 
 		if (pMetallicRoughness["baseColorFactor"].has_value())
 		{
@@ -838,18 +868,19 @@ namespace Xenon
 				BaseColorFactor[Index] = float(Val);
 				Index++;
 			}
-			pMaterial.BaseColorFactor = XE_VEC4(BaseColorFactor);
+			pMaterial.m_BaseColorFactor = XE_VEC4(BaseColorFactor);
 		}
 
 
 		if (pMetallicRoughness["baseColorTexture"].has_value())
 		{
-			pMaterial.BaseColorTexture = LookUpTexture(pMetallicRoughness["baseColorTexture"]);
+			pMaterial.m_BaseColorTexture = LoadTextureIfHasnt(pMetallicRoughness["baseColorTexture"]);
+
 		}
 
 		if (pMetallicRoughness["metallicRoughnessTexture"].has_value() && s_MaterialFlag == LF_DEFAULT_MATERIAL)
 		{
-			pMaterial.MetallicRoughnessTexture = LookUpTexture(pMetallicRoughness["metallicRoughnessTexture"]);
+			pMaterial.m_MetallicRoughnessTexture = LoadTextureIfHasnt(pMetallicRoughness["metallicRoughnessTexture"]);
 		}
 
 		return 0;
@@ -858,48 +889,50 @@ namespace Xenon
 
 
 
-	Texture Loader::LookUpTexture(simdjson::ondemand::object pTextureInfo)
+	uint64_t Loader::LoadTextureIfHasnt(simdjson::ondemand::object pTextureInfo)
 	{
-		uint64_t Index = pTextureInfo["index"];
-		if (Loader::s_TextureLookUp.find(Index) == Loader::s_TextureLookUp.end())
+
+		uint64_t TextureIndex = pTextureInfo["index"];
+
+		if (Loader::s_TextureLookUp.find(TextureIndex) != Loader::s_TextureLookUp.end())
 		{
-			//Load Texture:
-			const Loader::TextureInfo& textureInfo = Loader::s_TexturesInfo[Index];
-
-			Texture NewTexture;
-			
-			//Image Data
-			if (textureInfo.Image.ImageBV.Target == XE_BIN_IMAGE)
-			{
-				NewTexture.ImageData = textureInfo.Image.ImageBV;
-			}
-
-			else if (textureInfo.Image.URI.length() > 0)
-			{
-				BinaryData* Image = new BinaryData();
-				Image->Ptr = (uint8_t*)XE_STREAM_READ((s_RootPath + textureInfo.Image.URI), Image->ByteLength);
-				
-				BufferView View;
-				View.ByteLength = Image->ByteLength;
-				View.Target		= XE_BIN_IMAGE;
-
-				Loader::s_CurrentModel->m_Buffers.push_back(std::move(std::shared_ptr<BinaryData>(Image)));
-				s_CurrentModel->m_BuffersCount += 1;
-
-				View.Buffer			 = Loader::s_CurrentModel->m_Buffers.at(Loader::s_CurrentModel->m_Buffers.size()-1);
-				NewTexture.ImageData = View;
-			}
-
-			NewTexture.Sampler = textureInfo.Sampler;
-			NewTexture.TexCoordSet = uint16_t((pTextureInfo["texCoord"].has_value())? uint64_t(pTextureInfo["texCoord"]) : 0);
-			NewTexture.ImageMime = textureInfo.Image.MimeType;
-
-			Loader::s_TextureLookUp[Index] = NewTexture;
-			return NewTexture;
-
+			return TextureIndex;
 		}
 
-		return Loader::s_TextureLookUp[Index];
+		//Load Texture:
+		const Loader::TextureInfo& textureInfo = Loader::s_TexturesInfo[TextureIndex];
+
+		Texture NewTexture;
+		
+		//Image Data
+		if (textureInfo.Image.ImageBV.Target == XE_BIN_IMAGE)
+		{
+			NewTexture.ImageData = textureInfo.Image.ImageBV;
+		}
+
+		else if (textureInfo.Image.URI.length() > 0)
+		{
+			BinaryData* Image = new BinaryData();
+			Image->Ptr = (uint8_t*)XE_STREAM_READ((s_RootPath + textureInfo.Image.URI), Image->ByteLength);
+			
+			BufferView View;
+			View.ByteLength = Image->ByteLength;
+			View.Target		= XE_BIN_IMAGE;
+
+			Loader::s_CurrentModel->m_Buffers.push_back(std::move(std::shared_ptr<BinaryData>(Image)));
+			s_CurrentModel->m_BuffersCount += 1;
+
+			View.Buffer			 = Loader::s_CurrentModel->m_Buffers.at(Loader::s_CurrentModel->m_Buffers.size()-1);
+			NewTexture.ImageData = View;
+		}
+
+		NewTexture.TextureSample = textureInfo.TextureSample;
+		NewTexture.TexCoordSet   = uint16_t((pTextureInfo["texCoord"].has_value())? uint64_t(pTextureInfo["texCoord"]) : 0);
+		NewTexture.ImageMime     = textureInfo.Image.ImageMime;
+
+		Loader::s_TextureLookUp[TextureIndex] = NewTexture;
+
+		return TextureIndex;
 	}
 
 	uint32_t Loader::LoadImageRefsFromJson(simdjson::ondemand::document_reference pGLTF)
@@ -918,13 +951,13 @@ namespace Xenon
 				BufferView& BVRef   = Loader::s_BufferViews[(size_t)image["bufferView"]];
 				BVRef.Target        = XE_BIN_IMAGE;
 				NewImage.ImageBV    = BVRef;
-				NewImage.MimeType   = RetriveMimeType(std::string(std::string_view(image["mimeType"])));
+				NewImage.ImageMime   = RetriveMimeType(std::string(std::string_view(image["mimeType"])));
 			}
 			else
 			{
 				std::string_view Path;
 				image["uri"].get_string(Path);
-				NewImage.MimeType = RetriveMimeType("image/" + RetriveExtension(std::string(Path)));
+				NewImage.ImageMime = RetriveMimeType("image/" + RetriveExtension(std::string(Path)));
 				NewImage.URI = Path;
 			}
 
@@ -966,10 +999,10 @@ namespace Xenon
 			Loader::TextureInfo NewTexture;
 
 			if (Loader::s_Samplers.size() != 0)
-				NewTexture.Sampler = Loader::s_Samplers[(uint64_t)texture["sampler"]];
+				NewTexture.TextureSample = Loader::s_Samplers[(uint64_t)texture["sampler"]];
 
 			if (Loader::s_ImagesInfo.size() != 0)
-				NewTexture.Image = Loader::s_ImagesInfo[(uint64_t)texture["source"]];
+				NewTexture.Image   = Loader::s_ImagesInfo[(uint64_t)texture["source"]];
 
 			Loader::s_TexturesInfo.push_back(NewTexture);
 		}

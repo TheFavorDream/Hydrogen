@@ -1,41 +1,42 @@
 #pragma once
 
-#include "Common.h"
-#include "Render/Platform/OpenGL/GLVertexArray.h"
+#include "../Common.h"
 #include "Primitive.h"
 #include "VecMath/Transform/Transformation.h"
 #include "Core/ResourcePool.h"
+#include "Xenon/include/Xenon.h"
 
 namespace Hydrogen
 {
 
 
-	struct Vertex
-	{
-		VecF3 Position;
-		VecF3 Normal;
-		VecF2 TexCoord;
-	};
+
 
 	class Mesh
 	{
 	public:
 
+		//Creates a mesh obhect from given xenon::mesh
+		static Mesh CreateGLTFMesh(const Xenon::Mesh& pMesh);
 
+	public:
 
 		HYD Mesh();
 		HYD Mesh(const std::string& pName, std::vector<Primitive>&& pPrimitives);
 
-		HYD Mesh(const Mesh& pOther) = delete;
+		HYD Mesh(const Mesh& pOther);
 		HYD Mesh(Mesh&& pOther);
 
-		HYD Mesh& operator=(const Mesh& pOther) = delete;
+		HYD Mesh& operator=(const Mesh& pOther);
 		HYD Mesh& operator=(Mesh&& pOther);
-
-		HYD uint32 SetMesh(const std::string& pName, std::vector<Primitive>&& pPrimitives);
 		
+
+		HYD inline HYD_VEC<Primitive>::iterator begin() const { return m_Primitives.begin(); }
+		HYD inline HYD_VEC<Primitive>::iterator end()   const { return m_Primitives.end(); }
+
+
 		HYD uint32     PushPremitive(const Primitive& pPrimitive);
-		HYD Primitive& GetPrimitve(uint32 pIndex);
+		HYD Primitive& GetPrimitve(uint64 pIndex);
 
 		HYD inline const std::string GetName() { return m_Name; }
 
@@ -44,8 +45,7 @@ namespace Hydrogen
 
 	private:
 		std::string				m_Name; 
-		HYD_VEC<Primitive>      m_Primitives;
-		Transformation			m_Transform;
+		mutable HYD_VEC<Primitive>      m_Primitives;
 	};
 
 };

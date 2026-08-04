@@ -1,28 +1,30 @@
 #pragma once
 
 
-#include "Common.h"
-#include "Core/ResourcePool.h"
-#include "VecMath/Matrix/MatDef.h"
-#include "Render/ElementBuffer.h"
-#include "Render/VertexBuffer.h"
-#include "Render/VertexArray.h"
+#include "../Common.h"
+#include "../Core/ResourcePool.h"
+#include "../VecMath/Matrix/MatDef.h"
+#include "../Render/Material/Material.h"
+#include "Xenon/include/Xenon.h"
+#include "Render/Shader.h"
+
 
 namespace Hydrogen
 {
 
 	struct Primitive
 	{
-		Instance<VertexArray>   m_VertexArrays;
-		Instance<VertexBuffer>	m_VertexBuffer;
-		Instance<ElementBuffer> m_ElementBuffer;
-		Instance<Material>      m_Material;
-		Instance<Shader>        m_Shader;
-		MatF4	   m_Transform;
-		uint16     m_RenderingMode = 4;
+		MatF4				    m_Transform;
+		Material				m_Material;
+
+
+		uint16					m_RenderingMode = 4;
 
 
 		HYD Primitive();
+		HYD Primitive(const Primitive& pOther);
+		HYD Primitive(Primitive&& pOther);
+
 
 	};
 };

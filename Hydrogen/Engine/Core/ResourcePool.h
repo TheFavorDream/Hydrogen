@@ -1,9 +1,10 @@
 #pragma once
 
-#include "Common.h"
-#include "Memory.h"
+#include "../Common.h"
+#include "Memory/Memory.h"
 #include <queue>
-#include "Log/Log.h"
+#include "../Log/Log.h"
+#include <optional>
 
 #ifdef TEST
 	#define HYD 
@@ -13,7 +14,7 @@
 namespace Hydrogen
 {
 
-	#define HYD_BUCKET_SIZE 32
+	#define HYD_BUCKET_SIZE 128
 
 
 	template <typename T>
@@ -284,7 +285,7 @@ namespace Hydrogen
 		}
 
 
-		inline uint64 PoolSizeInBytes() { return (m_BucketCount * sizeof(Bucket)); }
+		inline uint64 PoolSizeInBytes() { return (m_BucketCount * sizeof(Bucket<Type>)); }
 
 		//Object-wise operations:
 
@@ -361,7 +362,7 @@ namespace Hydrogen
 		inline Bucket<Type>& GetHead() { return *m_Head; }
 
 
-		Iterator begin() { return Iterator(m_Head, m_Used, m_Head->m_Used); }
+		Iterator begin() { return Iterator(m_Head, m_Used, ((m_Head)? m_Head->m_Used : 0)); }
 		Iterator end()   { return Iterator(nullptr, 0, 0); }
 
 
@@ -455,12 +456,15 @@ namespace Hydrogen
 
 	    Instance(const Instance& pOther)
 	    {
-			m_Bucket = pOther.m_Bucket;
-			m_Index  = pOther.m_Index;
-			m_Obj    = pOther.m_Obj;
+			if (pOther.m_Bucket != nullptr)
+			{
+				m_Bucket = pOther.m_Bucket;
+				m_Index  = pOther.m_Index;
+				m_Obj    = pOther.m_Obj;
 
-			m_Bucket->RiseRefCount(m_Index);
 
+				m_Bucket->RiseRefCount(m_Index);
+			}
 		}
 
 		Instance(Instance&& pOther)
@@ -480,11 +484,14 @@ namespace Hydrogen
 			if (&pOther == this)
 				return *this;
 
-			m_Bucket = pOther.m_Bucket;
-			m_Index  = pOther.m_Index;
-			m_Obj    = pOther.m_Obj;
+			if (pOther.m_Bucket != nullptr)
+			{
+				m_Bucket = pOther.m_Bucket;
+				m_Index = pOther.m_Index;
+				m_Obj = pOther.m_Obj;
 
-			m_Bucket->RiseRefCount(m_Index);
+				m_Bucket->RiseRefCount(m_Index);
+			}
 			return *this;
 		}
 
@@ -551,8 +558,12 @@ namespace Hydrogen
 				{
 					m_Bucket->ResetObject(m_Index);
 				}
+				m_Bucket = nullptr;
+				m_Obj	 = nullptr;
 			}
 		}
+
+		inline uint64 Index() { return m_Index; }
 
 	private:
 		Ptr<

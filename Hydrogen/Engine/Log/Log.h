@@ -9,15 +9,15 @@
 #pragma once
 
 
-#include "Common.h"
-#include "Glew/glew.h"
+#include "../Common.h"
 
-#include "VecMath/Vector/Vectors.h"
+#include "../VecMath/Vector/Vectors.h"
 #include <iostream>
 #include <string>
 #include <fstream>
 #include <vector>
 #include <cstdarg>
+#include "../../Xenon/include/Xenon.h"
 
 namespace Hydrogen
 {
@@ -71,9 +71,10 @@ namespace Hydrogen
 		HYD static void SetOutputColor(OutColor pColor);
 		
 		//API specific:
-		HYD static void CheckOpenGLErrors(std::string pFile, int32 pLine);
 
 
+		//Xenon Call Back:
+		HYD static void CheckXenonErrors(const Xenon::Log::LogMessage& pMessage);
 
 	private:
 		HYD static std::string TranslateErrorCode(uint32 ErrorCode);
@@ -92,10 +93,14 @@ namespace Hydrogen
 
 };
 
-#define GL_CALL(x) x;Hydrogen::Log::CheckOpenGLErrors(__FILE__, __LINE__);
+
 
 #ifndef TEST
-	#define ASSERT(a,s)  if (a!=true) {Hydrogen::Log::SetError(s);__debugbreak();}
+	#if defined(_MSC_VER)
+		#define ASSERT(a,s)  if (a!=true) {Hydrogen::Log::SetError(s);__debugbreak();}
+	#elif defined(__GNUC__)
+		#define ASSERT(a,s)  if (a!=true) {Hydrogen::Log::SetError(s);assert(false);}
+	#endif
 #else
 	#define ASSERT(a, s) if (a==true) {std::cout << "[Test:Error]" << s << '\n';}
 #endif

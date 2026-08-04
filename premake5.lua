@@ -10,16 +10,17 @@ workspace "Hydrogen"
     symbols "off"
     buildoptions {"/MD"}
     runtime "Release"
-  filter {"system:windows"}
+  
+  filter "system:windows"
     defines {"WINDOWS"}
     filter {"configurations:Debug"}
       defines {"DEBUG"}
-      buildoptions {"/MDd"}
+      --buildoptions {"/MDd"}
     filter {"configurations:Release"}
       defines {"RELEASE"}
       optimize "on"
       symbols "off"
-      buildoptions {"/MD"}
+      --buildoptions {"/MD"}
       runtime "Release"
   
 
@@ -29,7 +30,9 @@ workspace "Hydrogen"
   }
   
   startproject "SandBox"
-    
+  
+  
+
 
   group "Dependencies"
     include "./Hydrogen/3rdParty/imgui"

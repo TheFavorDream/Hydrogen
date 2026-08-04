@@ -1,9 +1,9 @@
 #pragma once
 
 
-#include "Common.h"
-#include "VecMath/Vector/Vectors.h"
-#include "VecMath/Vector/UniVec.h"
+#include "../../../Common.h"
+#include "../../Vector/Vectors.h"
+#include "../../Vector/UniVec.h"
 
 namespace Hydrogen
 {

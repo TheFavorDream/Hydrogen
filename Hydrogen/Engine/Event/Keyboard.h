@@ -2,7 +2,7 @@
 
 
 #include "../Common.h"
-#include "../3rdParty/glfw/include/GLFW/glfw3.h"
+#include "../../3rdParty/glfw/include/GLFW/glfw3.h"
 #include <unordered_map>
 #include <queue>
 

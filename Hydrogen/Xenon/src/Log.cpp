@@ -17,6 +17,7 @@ namespace Xenon
 	std::queue<Log::LogMessage> Log::s_Logs;
 	LogLevel					Log::s_Level = LV3;
 	uint64_t				    Log::s_LogCount = 0;
+	void(*Log::s_LogCallBack)(const Log::LogMessage& pMessage) = nullptr;
 
 	uint64_t Log::GetLogCount()
 	{
@@ -107,8 +108,19 @@ namespace Xenon
 		s_LogCount += 1;
 
 
+		if (s_LogCallBack != nullptr)
+		{
+			s_LogCallBack({ Kind + Res, pKind });
+			return;
+		}
+
 		s_Logs.push({Kind+Res, pKind});
 #endif
+	}
+
+	void Log::SetLogCallBack(void(*pLogCallBack)(const LogMessage &pMessage))
+	{
+		s_LogCallBack = pLogCallBack;
 	}
 
 

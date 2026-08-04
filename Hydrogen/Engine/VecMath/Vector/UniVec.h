@@ -1,6 +1,6 @@
 #pragma once
-#include "Common.h"
-#include "Log/Log.h"
+#include "../../Common.h"
+#include "../../Log/Log.h"
 
 #ifdef TEST
 	#define HYD

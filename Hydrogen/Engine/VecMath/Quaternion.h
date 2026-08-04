@@ -30,8 +30,6 @@ namespace Hydrogen
 		HYD Quaternion(const VecF4& pOther);
 
 
-		//Cast back to Vec4
-		HYD operator VecF4() const;
 
 		HYD Quaternion operator*(const Quaternion& pOther) const;
 

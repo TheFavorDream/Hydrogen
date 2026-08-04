@@ -11,13 +11,21 @@ namespace Hydrogen
 	OutColor Log::m_OutputColor = WHITE;
 
 
-	void Log::CheckOpenGLErrors(std::string pFile, int32 pLine)
+
+	void Log::CheckXenonErrors(const Xenon::Log::LogMessage& pMessage)
 	{
-		GLenum ErrorCode = 0;
-		while ((ErrorCode = glGetError()) != GL_NO_ERROR)
+		switch (pMessage.Kind)
 		{
-			SetError({ "", (int32)ErrorCode, pLine, pFile });
-		}	
+		case Xenon::LOG_INFO:
+			SetInfo(pMessage.Message);
+			break;
+		case Xenon::LOG_WARNING:
+			SetWarning(pMessage.Message);
+			break;
+		case Xenon::LOG_ERROR:
+			SetError(pMessage.Message);
+			break;
+		}
 	}
 
 	std::vector<LogHolder>& Log::GetLogs()
@@ -74,23 +82,6 @@ namespace Hydrogen
 			case HYD_IMAGE_FAILED:
 				return "HYD_IMAGE_FAILED";
 
-			//OpenGL:
-			case GL_INVALID_ENUM:
-				return "GL_INVALID_ENUM";
-			case GL_INVALID_VALUE:
-				return "GL_INVALID_VALUE";
-			case GL_INVALID_OPERATION:
-				return "GL_INVALID_OPERATION";
-			case GL_STACK_OVERFLOW:
-				return "GL_STACK_OVERFLOW";
-			case GL_STACK_UNDERFLOW:
-				return "GL_STACK_UNDERFLOW";
-			case GL_OUT_OF_MEMORY:
-				return "GL_OUT_OF_MEMORY";
-			case GL_INVALID_FRAMEBUFFER_OPERATION:
-				return "GL_INVALID_FRAMEBUFFER_OPERATION";
-			case GL_CONTEXT_LOST:
-				return "GL_CONTEXT_LOST";
 			
 		}
 

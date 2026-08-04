@@ -6,7 +6,7 @@ namespace Hydrogen
 
 	Scene::Scene()
 	{
-		m_Camera.SetupCamera(60.0f, glm::vec3(0.0f));
+		m_Camera.SetupCamera(60.0f, glm::vec3(0.0f), 2.0f, 0.001f, 10000.0f);
 	}
 
 	Scene::~Scene()
@@ -16,70 +16,34 @@ namespace Hydrogen
 
 	Scene::Scene(Scene&& pOther)
 	{
-		m_VBOs = std::move(pOther.m_VBOs);
-		m_VAOs = std::move(pOther.m_VAOs);
-		m_EBOs = std::move(pOther.m_EBOs);
-
 		m_Meshes    = std::move(pOther.m_Meshes);
-		m_Materials = std::move(pOther.m_Materials);
 		m_Name		= std::move(pOther.m_Name);
-		m_Nodes		= std::move(pOther.m_Nodes);
+		m_Children	= std::move(pOther.m_Children);
 	}
 
 	Scene& Scene::operator=(Scene&& pOther)
 	{
 		if (&pOther == this)
 			return *this;
-
-		m_VBOs = std::move(pOther.m_VBOs);
-		m_VAOs = std::move(pOther.m_VAOs);
-		m_EBOs = std::move(pOther.m_EBOs);
-
 		m_Meshes    = std::move(pOther.m_Meshes);
-		m_Materials = std::move(pOther.m_Materials);
 		m_Name      = std::move(pOther.m_Name);
-		m_Nodes     = std::move(pOther.m_Nodes);
+		m_Children  = std::move(pOther.m_Children);
+
 		return *this;
 	}
 
 
-	uint32 Scene::FreeScene()
+	uint32 Scene::PushNode(Node pNode)
 	{
-
+		m_Children.push_back(std::move(pNode));
 		return HYD_OK;
 	}
 
-/*
-	Id Scene::CreateMesh(Id pModel, const std::vector<Vertex>& pVertices, const std::vector<uint16>& pIndices)
+	uint32 Scene::FreeScene()
 	{
-		Primitive primitive;
-
-		primitive.m_VertexArrays = m_Buffers.CreateVertexArray();
-		m_Buffers.BindArray(primitive.m_VertexArrays);
-
-		primitive.m_VertexBuffer =  m_Buffers.CreateVertexBuffer((uint32)pVertices.size() * sizeof(Vertex), (void*)&pVertices[0]);
-		primitive.m_ElementBuffer = m_Buffers.CreateElementBuffer((uint32)pIndices.size(), GL_UNSIGNED_SHORT, (void*)&pIndices[0]);
-
-
-		m_Buffers.BindVertexBuffer(primitive.m_VertexBuffer);
-		m_Buffers.BindElementBuffer(primitive.m_ElementBuffer);
-
-
-		m_Buffers.AddVertexAttributes(primitive.m_VertexArrays, 
-			{ 
-				Layout(TYPE_FLOAT, 3, POSITION, false, 0, sizeof(Vertex)),
-				Layout(TYPE_FLOAT, 3, NORMALS,  false, 12,  sizeof(Vertex)),
-				Layout(TYPE_FLOAT, 2, TEXCOORDS_0, false, 24, sizeof(Vertex))
-			});
-
-		Mesh* NewMesh = ResourcePool<Mesh>::New();
-		NewMesh->PushPremitive(primitive);
-		return GetModel(pModel).AddMesh(&NewMesh);
+		m_Meshes.Shutdown();
+		return HYD_OK;
 	}
-	*/
-
-
-
 
 	uint32 Scene::Render()
 	{
@@ -87,8 +51,9 @@ namespace Hydrogen
 		std::stack<Node> Travers;
 
 
-		for (auto& node : m_Nodes)
+		for (auto node : m_Children)
 		{
+			node.GetTransform() = m_Transform * node.GetTransform();
 			Travers.push(node);
 		}
 
@@ -100,12 +65,12 @@ namespace Hydrogen
 			Travers.pop();
 
 			
-			if (!Current.m_Mesh.IsNull())
-				Current.m_Mesh->Render(Current.m_Transform);
+			if (!Current.GetMesh().IsNull())
+				Current.GetMesh()->Render(Current.GetTransform());
 
-			for (auto node : Current.m_Children)
+			for (auto node : Current)
 			{
-				node.m_Transform = Current.m_Transform * node.m_Transform;
+				node.GetTransform() = Current.GetTransform() * node.GetTransform();
 				Travers.push(node);
 			}
 		
@@ -115,5 +80,67 @@ namespace Hydrogen
 	}
 
 
+
+/*
+	Node Implementation:
+*/
+
+
+
+	Node::Node(const Node& pOther)
+	{
+		m_Name	    = pOther.m_Name;
+		m_Mesh	    = pOther.m_Mesh;
+		m_Children  = pOther.m_Children;
+		m_Transform = pOther.m_Transform;
+
+		m_PointerToParent = pOther.m_PointerToParent;
+		
+
+	}
+
+	Node::Node(Node&& pOther)
+	{
+		m_Name		= std::move(pOther.m_Name);
+		m_Mesh		= std::move(pOther.m_Mesh);
+		m_Children	= std::move(pOther.m_Children);
+		m_Transform = std::move(pOther.m_Transform);
+
+		m_PointerToParent	     = pOther.m_PointerToParent;
+		pOther.m_PointerToParent = nullptr;
+	}
+		
+	Node& Node::operator=(const Node& pOther)
+	{
+		if (&pOther == this)
+			return *this;
+
+		m_Name		= pOther.m_Name;
+		m_Mesh		= pOther.m_Mesh;
+		m_Children  = pOther.m_Children;
+		m_Transform = pOther.m_Transform;
+
+		m_PointerToParent = pOther.m_PointerToParent;
+
+		return *this;
+	}
+
+	Node& Node::operator=(Node&& pOther)
+	{
+
+		if (&pOther == this)
+			return *this;
+
+		m_Name		= std::move(pOther.m_Name);
+		m_Mesh		= std::move(pOther.m_Mesh);
+		m_Children  = std::move(pOther.m_Children);
+		m_Transform = std::move(pOther.m_Transform);
+
+		m_PointerToParent		 = pOther.m_PointerToParent;
+		pOther.m_PointerToParent = nullptr;
+
+		return *this;
+
+	}
 
 };

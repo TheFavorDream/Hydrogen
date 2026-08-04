@@ -18,31 +18,35 @@ namespace Hydrogen
 	template <typename Type>
 	struct Vec2
 	{
-		HYD Vec2() 
+		Vec2() 
 		{}
 
-		HYD Vec2(Type pX, Type pY) :
+		Vec2(Type pX, Type pY) :
 			X(pX), Y(pY)
 		{}
 
-		HYD Vec2(Type pVal) :
+		Vec2(Type pVal) :
 			X(pVal), Y(pVal)
 		{}
 
+		Vec2(Type pVal[2]) :
+			X(pVal[0]), Y(pVal[1])
+		{}
+
 		//Operators:
-		HYD Vec2 operator+(Vec2 pVec2) const noexcept
+		Vec2 operator+(Vec2 pVec2) const noexcept
 		{
 			return Vec2(X + pVec2.X, Y + pVec2.Y);
 		}
 
-		HYD Vec2 operator-(Vec2 pVec2) const noexcept
+		Vec2 operator-(Vec2 pVec2) const noexcept
 		{
 			return Vec2(X - pVec2.X, Y - pVec2.Y);
 		}
 
-		HYD Type operator[](uint32 Index) const noexcept
+		Type operator[](uint32 Index) const noexcept
 		{
-			return *(Type*(this + (sizeof(float)*Index)));
+			return *((Type*)(this + (sizeof(float)*Index)));
 		}
 
 		union
@@ -65,40 +69,43 @@ namespace Hydrogen
 	struct Vec3
 	{
 
-		HYD Vec3() 
+		Vec3() 
 		{}
 
-		HYD Vec3(Type pX, Type pY, Type pZ) :
+		Vec3(Type pX, Type pY, Type pZ) :
 			X(pX), Y(pY), Z(pZ)
 		{}
 
-		HYD Vec3(Type pVal) :
+		Vec3(Type pVal) :
 			X(pVal), Y(pVal), Z(pVal)
 		{}
 
-		HYD Vec3(Vec2<Type> pXY, Type pZ = Type()) :
+		Vec3(Vec2<Type> pXY, Type pZ = Type()) :
 			X(pXY.X), Y(pXY.Y), Z(pZ)
 		{}
 
+		Vec3(Type pVal[3]) :
+			X(pVal[0]), Y(pVal[1]), Z(pVal[2])
+		{}
 
 		//Operators:
-		HYD Vec3 operator+(Vec3 pVec3) const noexcept
+		Vec3 operator+(Vec3 pVec3) const noexcept
 		{
 			return Vec3(X + pVec3.X, Y + pVec3.Y, Z + pVec3.Z);
 		}
 
-		HYD Vec3 operator-(Vec3 pVec3) const noexcept
+		Vec3 operator-(Vec3 pVec3) const noexcept
 		{
 			return Vec3(X - pVec3.X, Y - pVec3.Y, Z - pVec3.Z);
 		}
 
-		HYD Vec3 operator*(Vec3 pVec3) const noexcept
+		Vec3 operator*(Vec3 pVec3) const noexcept
 		{
 			return Vec3(X * pVec3.X, Y * pVec3.Y, Z * pVec3.Z);
 		}
 
 
-		HYD bool operator==(Vec3<float> pVec3) const noexcept
+		bool operator==(Vec3<float> pVec3) const noexcept
 		{
 			return (abs(pVec3.X - X) < std::numeric_limits<float>::epsilon()) && (abs(pVec3.Y - Y) < std::numeric_limits<float>::epsilon()) && (abs(pVec3.Z - Z) < std::numeric_limits<float>::epsilon());
 		}
@@ -130,31 +137,35 @@ namespace Hydrogen
 	struct Vec4
 	{
 
-		HYD Vec4() 
+		Vec4() 
 		{}
 
-		HYD Vec4(Type pX, Type pY, Type pZ, Type pW) :
+		Vec4(Type pX, Type pY, Type pZ, Type pW) :
 			X(pX), Y(pY), Z(pZ), W(pW)
 		{}
 
-		HYD Vec4(Vec2<Type> pXY, Type pZ = Type(), Type pW = Type()) :
+		Vec4(Vec2<Type> pXY, Type pZ = Type(), Type pW = Type()) :
 			X(pXY.X), Y(pXY.Y), Z(pZ), W(pW)
 		{}
 
-		HYD Vec4(Vec3<Type> pXYZ, Type pW = 0.0f) :
+		Vec4(Vec3<Type> pXYZ, Type pW = 0.0f) :
 			X(pXYZ.X), Y(pXYZ.Y), Z(pXYZ.Z), W(pW)
 		{}
 
-		HYD Vec4(Type pVal) :
+		Vec4(Type pVal) :
 			X(pVal), Y(pVal), Z(pVal), W(pVal)
 		{}
 
-		HYD Vec4 operator+(Vec4 pVec4) const noexcept
+		Vec4(Type pVal[4]) :
+			X(pVal[0]), Y(pVal[1]), Z(pVal[2]), W(pVal[3])
+		{}
+
+		Vec4 operator+(Vec4 pVec4) const noexcept
 		{
 			return Vec4(X + pVec4.X, Y + pVec4.Y, Z + pVec4.Z, W + pVec4.W);
 		}
 
-		HYD Vec4 operator-(Vec4 pVec4) const noexcept
+		Vec4 operator-(Vec4 pVec4) const noexcept
 		{
 			return Vec4(X - pVec4.X, Y - pVec4.Y, Z - pVec4.Z, W - pVec4.W);
 		}

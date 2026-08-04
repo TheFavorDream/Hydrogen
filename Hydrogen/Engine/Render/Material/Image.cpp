@@ -34,15 +34,15 @@ namespace Hydrogen
 
 	uint32 Image::LoadImageFromDisk(const char* pSource)
 	{
-		Data = stbi_load(pSource, &Width, &Height, (int*)&ImageChannel, NULL);
+		Data = stbi_load(pSource, &Width, &Height, (int*)&ImageChannel, 0);
 		if (Data == nullptr)
 			return HYD_IMAGE_FAILED;
 		return HYD_OK;
 	}
 
-	uint32 Image::LoadImageFromMemory(uint8* pBuffer, const uint32 pLength)
+	uint32 Image::LoadImageFromMemory(uint8* pBuffer, const uint64 pLength)
 	{
-		//Data = stbi_loadf_from_memory(pBuffer, pLength, &Width, &Height, (int*)&ImageChannel, NULL);
+		Data = stbi_load_from_memory(pBuffer, (int32)pLength, &Width, &Height, (int*)&ImageChannel, 0);
 		if (Data == nullptr)
 			return HYD_IMAGE_FAILED;
 		return HYD_OK;

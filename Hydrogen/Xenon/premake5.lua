@@ -20,3 +20,7 @@ project "Xenon"
      "../3rdParty/SimdJson/"
     }
     links{"SimdJson"}
+
+    buildoptions{
+        "-fPIC"
+    }

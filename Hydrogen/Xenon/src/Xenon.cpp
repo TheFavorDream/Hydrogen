@@ -1,5 +1,4 @@
 #include "../include/Xenon.h"
-#include "../3rdParty/SimdJson/simdjson.h"
 
 
 /*
@@ -113,10 +112,24 @@ namespace Xenon
 
 
 
-	BinaryData BufferView::FetchData()
+	BinaryData BufferView::FetchData(uint64_t pOffset, uint64_t pElementSize, uint64_t pCount) const
 	{
-		BinaryData View;
-		View.Copy(Buffer->SubData(ByteOffset, ByteLength));
+		if(ByteStride == 0)
+			return std::move(Buffer->SubData(pOffset+ByteOffset, ByteLength));
+
+		//Non-zero stride needs repacking:
+
+		//Log::PushLog(LOG_INFO, "non-zero Stride, Repacking. Stride:%i \t Offset:%i", ByteStride, pOffset);
+
+		BinaryData View(pElementSize*pCount, (void*)new uint8_t[pElementSize*pCount]);
+		uint64 OffsetIn = pOffset + ByteOffset;
+
+		for (uint64_t Iter = 0 ; Iter < pCount ; ++Iter)
+		{
+			memcpy((void*)(View.Ptr+(Iter*pElementSize)), (void*)(Buffer->Ptr+ OffsetIn), pElementSize);
+			OffsetIn += ByteStride;
+		}
+
 		return std::move(View);
 	}
 
@@ -263,8 +276,6 @@ namespace Xenon
 
 	void BinaryData::Free() 
 	{
-		if (Ptr)
-			LOG(LOG_INFO, "%i bytes freed", ByteLength);
 		delete[] Ptr;
 		ByteLength = 0;
 		Ptr = nullptr;
@@ -285,7 +296,7 @@ namespace Xenon
 
 		Chunk.Ptr = new uint8_t[Chunk.ByteLength];
 
-		memcpy((void*)Chunk.Ptr, (void*)Ptr, Chunk.ByteLength);
+		memcpy((void*)Chunk.Ptr, (void*)(Ptr+pOffset), Chunk.ByteLength);
 
 		return std::move(Chunk);
 	}
@@ -321,12 +332,9 @@ namespace Xenon
 		return XE_UNSIGNED_BYTE;
 	}
 
-	BinaryData Accessor::RetriveData()
+	BinaryData Accessor::RetriveData() const
 	{
-		if (Offset == 0)
-			return Data.FetchData();
-		else
-			return std::move(Data.FetchData().SubData(Offset));
+		return std::move(Data.FetchData(Offset, Accessor::RetriveTypeSize(ComponentType)*(uint64_t)Type, Count));
 	}
 
 	ArrayType Accessor::RetriveArrayTypeFromString(const std::string_view& pType)
@@ -351,18 +359,54 @@ namespace Xenon
 
 
 	/*
+		Material:
+	*/
+
+	Material::Material(const Material& pOther)
+	{
+		m_Name              = pOther.m_Name;
+		m_Alpha             = pOther.m_Alpha;
+		m_AlphaCutoff       = pOther.m_AlphaCutoff;
+		m_BaseColorFactor   = pOther.m_BaseColorFactor;
+		m_DoubleSided       = pOther.m_DoubleSided;
+		m_EmissiveFactor    = pOther.m_EmissiveFactor;
+		m_MetallicFactor    = pOther.m_MetallicFactor;
+		m_OcclusionStrength = pOther.m_OcclusionStrength;
+		m_RoughnessFactor   = pOther.m_RoughnessFactor;
+		m_TextureIndices    = pOther.m_TextureIndices;
+	}
+
+
+
+	Material& Material::operator=(const Material& pOther)
+	{
+		if (&pOther == this)
+			return *this;
+
+
+		m_Name				= pOther.m_Name;
+		m_Alpha				= pOther.m_Alpha;
+		m_AlphaCutoff		= pOther.m_AlphaCutoff;
+		m_BaseColorFactor	= pOther.m_BaseColorFactor;
+		m_DoubleSided		= pOther.m_DoubleSided;
+		m_EmissiveFactor    = pOther.m_EmissiveFactor;
+		m_MetallicFactor    = pOther.m_MetallicFactor;
+		m_OcclusionStrength = pOther.m_OcclusionStrength;
+		m_RoughnessFactor   = pOther.m_RoughnessFactor;
+		m_TextureIndices    = pOther.m_TextureIndices;
+
+		return *this;
+	}
+
+
+	/*
 		Primitive:
 	
 	*/
 
 	Primitive::Primitive(const Primitive& pOther)
 	{
-		m_Positions  = pOther.m_Positions;
-		m_Normals    = pOther.m_Normals;
-		m_Tangents   = pOther.m_Tangents;
-		m_TexCoord_0 = pOther.m_TexCoord_0;
-		m_TexCoord_1 = pOther.m_TexCoord_1;
-		m_Color_0    = pOther.m_Color_0;
+		m_Accessors	 = pOther.m_Accessors;
 		m_Indices	 = pOther.m_Indices;
 		m_Material   = pOther.m_Material;
 		m_RenderMode = pOther.m_RenderMode;
@@ -370,13 +414,8 @@ namespace Xenon
 
 	Primitive::Primitive(Primitive&& pOther)
 	{
-		m_Positions  = pOther.m_Positions;
-		m_Normals    = pOther.m_Normals;
-		m_Tangents   = pOther.m_Tangents;
-		m_TexCoord_0 = pOther.m_TexCoord_0;
-		m_TexCoord_1 = pOther.m_TexCoord_1;
-		m_Color_0    = pOther.m_Color_0;
-		m_Indices    = pOther.m_Indices;
+		m_Accessors  = std::move(pOther.m_Accessors);
+		m_Indices	 = std::move(pOther.m_Indices);
 		m_Material   = pOther.m_Material;
 		m_RenderMode = pOther.m_RenderMode;
 	}
@@ -386,13 +425,8 @@ namespace Xenon
 		if (&pOther == this)
 			return *this;
 
-		m_Positions  = pOther.m_Positions;
-		m_Normals    = pOther.m_Normals;
-		m_Tangents   = pOther.m_Tangents;
-		m_TexCoord_0 = pOther.m_TexCoord_0;
-		m_TexCoord_1 = pOther.m_TexCoord_1;
-		m_Color_0	   = pOther.m_Color_0;
-		m_Indices    = pOther.m_Indices;
+		m_Accessors  = std::move(pOther.m_Accessors);
+		m_Indices	 = pOther.m_Indices;
 		m_Material   = pOther.m_Material;
 		m_RenderMode = pOther.m_RenderMode;
 		return *this;
@@ -403,18 +437,24 @@ namespace Xenon
 		if (&pOther == this)
 			return *this;
 
-		m_Positions  = pOther.m_Positions;
-		m_Normals    = pOther.m_Normals;
-		m_Tangents   = pOther.m_Tangents;
-		m_TexCoord_0 = pOther.m_TexCoord_0;
-		m_TexCoord_1 = pOther.m_TexCoord_1;
-		m_Color_0    = pOther.m_Color_0;
-		m_Indices    = pOther.m_Indices;
+		m_Accessors  = std::move(pOther.m_Accessors);
+		m_Indices	 = std::move(pOther.m_Indices);
 		m_Material   = pOther.m_Material;
 		m_RenderMode = pOther.m_RenderMode;
 		return *this;
 	}
 
+	uint64_t Primitive::ComputeVertexDataSize() const
+	{
+		uint64_t Sum = 0;
+
+		for (auto& access : m_Accessors)
+		{
+			Sum += (access.Count*Accessor::RetriveTypeSize(access.ComponentType)*(uint64_t)access.Type);
+		}
+
+		return Sum;
+	}
 
 
 	/*
@@ -613,6 +653,11 @@ namespace Xenon
 		return m_Meshes.at(pMeshIndex);
 	}
 
+
+	BinaryData Texture::RetriveImageData() const
+	{
+		return BinaryData(ImageData.Buffer->ByteLength, ImageData.Buffer->Ptr);
+	}
 
 };
 

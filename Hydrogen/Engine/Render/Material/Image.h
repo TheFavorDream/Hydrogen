@@ -5,9 +5,8 @@
 
 #pragma once
 
-#include "Common.h"
+#include "../../Common.h"
 #include "stb_image/stb_image.h"
-#include "Glew/glew.h"
 
 namespace Hydrogen
 {
@@ -15,24 +14,28 @@ namespace Hydrogen
 
 
 	enum Filter {
-		NEAREST			        = GL_NEAREST,
-		LINEAR				    = GL_LINEAR,
-		NEAREST_MIPMAP_NEAREST  = GL_NEAREST_MIPMAP_NEAREST,
-		LINEAR_MIPMAP_NEAREST   = GL_LINEAR_MIPMAP_NEAREST,
-		NEAREST_MIPMAP_LINEAR   = GL_NEAREST_MIPMAP_LINEAR,
-		LINEAR_MIPMAP_LINEAR    = GL_LINEAR_MIPMAP_LINEAR
+		NEAREST			        ,
+		LINEAR				    ,
+		NEAREST_MIPMAP_NEAREST  ,
+		LINEAR_MIPMAP_NEAREST   ,
+		NEAREST_MIPMAP_LINEAR   ,
+		LINEAR_MIPMAP_LINEAR    
 	};
 
 	enum Wrap {
-		CLAMP_TO_EDGE    = GL_CLAMP_TO_EDGE,
-		MIRRORED_REPEAT  = GL_MIRRORED_REPEAT,
-		REPEAT			 = GL_REPEAT
+		CLAMP_TO_EDGE    ,
+		MIRRORED_REPEAT  ,
+		REPEAT			 
 	};
 
 	// Texture Sampler structure
 	struct Sampler
 	{
 		Sampler() {}
+		Sampler(uint32 pMag, uint32 pMin, uint32 pWrapS, uint32 pWrapT) :
+			Mag((Filter)pMag), Min((Filter)pMin), WrapS((Wrap)pWrapS), WrapT((Wrap)pWrapT)
+		{}
+
 
 		Filter Mag=LINEAR;
 		Filter Min=LINEAR;
@@ -61,7 +64,7 @@ namespace Hydrogen
 		Image(const Image& pOther);
 
 		uint32 LoadImageFromDisk(const char* pSource);
-		uint32 LoadImageFromMemory(uint8* pBuffer, const uint32 pLength);
+		uint32 LoadImageFromMemory(uint8* pBuffer, const uint64 pLength);
 		uint32 FreeImage();
 
 	};

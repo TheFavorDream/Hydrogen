@@ -22,7 +22,10 @@
 #include <queue>
 #include <memory>
 #include <set>
-
+#include <array>
+#include <optional>
+#include <cstdint>
+#include <cstring>
 #include "Config.h"
 
 #ifndef DIST
@@ -33,25 +36,25 @@
 #ifndef XE_VEC2_IMPL
 	#define XE_VEC2  Xenon::Vec2<float>
 #else
-	#define XE_VEC2 XE_VEC2_IMPL;
+	#define XE_VEC2 XE_VEC2_IMPL
 #endif
 
 #ifndef XE_VEC3_IMPL
 	#define XE_VEC3  Xenon::Vec3<float>
 #else
-	#define XE_VEC3  XE_VEC3_IMPL;
+	#define XE_VEC3  XE_VEC3_IMPL
 #endif
 
 #ifndef XE_VEC4_IMPL
 	#define XE_VEC4  Xenon::Vec4<float>
 #else
-	#define XE_VEC4  XE_VEC4_IMPL;
+	#define XE_VEC4  XE_VEC4_IMPL
 #endif
 
 #ifndef XE_MAT4_IMPL
 	#define XE_MAT4  Xenon::Mat4<float>
 #else
-	#define XE_MAT4  XE_MAT4_IMPL;
+	#define XE_MAT4  XE_MAT4_IMPL
 #endif
 
 
@@ -60,7 +63,7 @@
 	Xenon Internal Assertions and logging
 */
 #ifndef XE_LOG_ASSERT_IMPL
-	#define XE_ASSERT(x, a) assert(x, a)
+	#define XE_ASSERT(x, a) assert(x)
 #else
 	#define XE_ASSERT(x, a) XE_LOG_ASSERT_IMPL(x, a)
 #endif
@@ -172,6 +175,18 @@ namespace Xenon
 	};
 
 
+	enum Attributes
+	{
+		XE_POSITION	   = 0,
+		XE_NORMALS     = 1,
+		XE_TANGENT     = 2,
+		XE_TEXCOORDS_0 = 3,
+		XE_TEXCOORDS_1 = 4,
+		XE_COLOR_0     = 5,
+		XE_INDEX	   = 6,
+		XE_EXTRA       = 7
+	};
+
 	enum TextureWrap {
 		CLAMP_TO_EDGE   = 33071,
 		MIRRORED_REPEAT = 33648,
@@ -238,7 +253,7 @@ namespace Xenon
 
 	class Log
 	{
-	private:
+	public:
 
 		struct LogMessage
 		{
@@ -258,9 +273,11 @@ namespace Xenon
 		//Pushes a new log to queue
 		static void PushLog(LogKind pKind, XE_STRING pString, ...);
 
+		static void SetLogCallBack(void(*pLogCallBack)(const LogMessage& pMessage));
+
 	private:
 
-
+		static void(*s_LogCallBack)(const LogMessage& pMessage);
 		static std::queue<LogMessage> s_Logs;
 		static LogLevel               s_Level;
 		static uint64_t				  s_LogCount;
@@ -291,16 +308,14 @@ namespace Xenon
 	class  Node;
 	class  Mesh;
 	class  Primitive;
+	class  Material;
 	struct Camera;
-	struct Vertex;
-	struct Matrial;
 	struct BinaryData;
 	struct BufferView;
 	struct Accessor;
 	struct Image;
 	struct Sampler;
 	struct Texture;
-	struct Material;
 
 
 	/*
@@ -363,7 +378,7 @@ namespace Xenon
 		size_t		ByteOffset = 0; //Start Offset in buffer
 
 		//Retrives the specified data from buffer
-		BinaryData FetchData();
+		BinaryData FetchData(uint64_t pOffset, uint64_t pElementSize, uint64_t pCount) const;
 
 		//Specifies what this binary data is used for
 		BinaryTarget Target = XE_BIN_UNSPECIFIED;
@@ -381,15 +396,16 @@ namespace Xenon
 		static uint32_t  RetriveTypeSize(DataType pEnum);
 
 
-		BinaryData RetriveData(); 
+		BinaryData RetriveData() const; 
 
 		uint64_t   Count  = 0;
 		uint64_t   Offset = 0;
-		uint64_t   Stride = 0;
 		bool       Normalized = false;
 		ArrayType  Type = XE_TYPE_UNSPECIFIED;
 		DataType   ComponentType;
+		Attributes Kind;
 
+		inline uint64_t ElementSize() const { return Accessor::RetriveTypeSize(ComponentType)*(uint64_t)Type; }
 	private:
 		BufferView Data;
 
@@ -419,9 +435,9 @@ namespace Xenon
 	struct ImageInfo
 	{
 		XE_STRING  URI;
-		MimeType   MimeType;
+		MimeType   ImageMime;
 		BufferView ImageBV;
-		Sampler    Sampler;
+		Sampler    ImageSampler;
 
 	};
 
@@ -435,31 +451,77 @@ namespace Xenon
 
 	struct Texture
 	{
+		BinaryData    RetriveImageData() const;
 		BufferView    ImageData;
-		Sampler       Sampler;
+		Sampler       TextureSample;
 		uint16_t      TexCoordSet = 0; // Default TEXCOORD_0
 		MimeType	  ImageMime = XE_IMG_UNSPECIFIED;
 	};
 
 
-	struct Material
+	class Material
 	{
+	public:
 
-		XE_STRING		Name = "Unnamed Material";
-		Texture			BaseColorTexture;
-		Texture			Occlusion;
-		Texture         MetallicRoughnessTexture;
-		Texture			Normal;
-		Texture         Emissive;
-		AlphaMode	    Alpha;
 
-		XE_VEC4         BaseColorFactor  = XE_VEC4(1.0f);
-		XE_VEC3		    EmissiveFactor	 = XE_VEC3(0.0f);
-		float           MetallicFactor   = 1.0f;
-		float           RoughnessFactor  = 1.0f;
-		float			OcclusionStrength   = 1.0;
-		float           AlphaCutoff      = 0.5f;
-		bool			DoubleSided         = false;
+		Material() = default;
+	   ~Material() = default;
+
+	    Material(const Material& pOther);
+
+		Material& operator=(const Material& pOther);
+
+
+		inline std::array<std::optional<uint64_t>, 5>::iterator begin() const { return m_TextureIndices.begin(); }
+		inline std::array<std::optional<uint64_t>, 5>::iterator end()   const { return m_TextureIndices.end(); }
+
+
+		inline bool HasBaseColor()   const { return m_BaseColorTexture.has_value(); }
+		inline bool HasNormalMap()   const { return m_Normal.has_value(); }
+		inline bool HasMetallicMap() const { return m_MetallicRoughnessTexture.has_value(); }
+		inline bool HasOclusionMap() const { return m_Occlusion.has_value(); }
+		inline bool HasEmissiveMap() const { return m_Emissive.has_value(); }
+
+
+		//Getters:
+		
+		inline const XE_STRING& GetName()      const { return m_Name; }
+		inline const std::optional<uint64> GetBaseColor()   const { return m_BaseColorTexture; }
+		inline const std::optional<uint64> GetNormalMap()   const { return m_Normal; }
+		inline const std::optional<uint64> GetMetallicMap() const { return m_MetallicRoughnessTexture; }
+		inline const std::optional<uint64> GetOclusionMap() const { return m_Occlusion; }
+		inline const std::optional<uint64> GetEmissiveMap() const { return m_Emissive; }
+
+		inline  const XE_VEC4  GetBaseColorFactor()   const { return m_BaseColorFactor; }
+		inline  const XE_VEC3  GetEmissiveFactor()    const { return m_EmissiveFactor; }
+		inline  const float    GetMetallicFactor()    const { return m_MetallicFactor; }
+		inline  const float    GetRoughnessFactor()   const { return m_RoughnessFactor; }
+		inline  const float	   GetOcclusionStrength() const { return m_OcclusionStrength; }
+		inline  const float    GetAlphaCutoff()	      const { return m_AlphaCutoff; }
+		inline  const bool	   GetDoubleSided()	      const { return m_DoubleSided; }
+
+	private:
+		XE_STRING			  m_Name = "Unnamed Material";
+
+		mutable std::array<std::optional<uint64_t>, 5> m_TextureIndices;
+
+		//Textures
+		std::optional<uint64_t>& m_BaseColorTexture			= m_TextureIndices[0];
+		std::optional<uint64_t>& m_Occlusion				= m_TextureIndices[1];
+		std::optional<uint64_t>& m_MetallicRoughnessTexture = m_TextureIndices[2];
+		std::optional<uint64_t>& m_Normal					= m_TextureIndices[3];
+		std::optional<uint64_t>& m_Emissive					= m_TextureIndices[4];
+		AlphaMode			    m_Alpha;
+
+		XE_VEC4         m_BaseColorFactor     = XE_VEC4(1.0f);
+		XE_VEC3		    m_EmissiveFactor	  = XE_VEC3(0.0f);
+		float           m_MetallicFactor      = 1.0f;
+		float           m_RoughnessFactor     = 1.0f;
+		float			m_OcclusionStrength   = 1.0;
+		float           m_AlphaCutoff         = 0.5f;
+		bool			m_DoubleSided         = false;
+
+		friend class Loader;
 
 	};
 
@@ -487,34 +549,47 @@ namespace Xenon
 		Primitive& operator=(const Primitive& pOther);
 		Primitive& operator=(Primitive&& pOther);
 
+
+		inline std::array<Accessor, 6>::iterator begin() { return m_Accessors.begin(); }
+		inline std::array<Accessor, 6>::iterator end()   { return m_Accessors.end(); }
+
+
+		uint64_t ComputeVertexDataSize() const;
+
 		//Getter Functions
 
 		inline uint64_t GetTopology() { return m_RenderMode; }
 
-		inline bool HasPosition()   { return (m_Positions.Type  != XE_TYPE_UNSPECIFIED); }
-		inline bool HasNormal()	    { return (m_Normals.Type    != XE_TYPE_UNSPECIFIED); }
-		inline bool HasTangent()    { return (m_Tangents.Type   != XE_TYPE_UNSPECIFIED); }
-		inline bool HasColor()		{ return (m_Color_0.Type    != XE_TYPE_UNSPECIFIED); }
-		inline bool HasTexCoord_0() { return (m_TexCoord_0.Type != XE_TYPE_UNSPECIFIED); }
-		inline bool HasTexCoord_1() { return (m_TexCoord_0.Type != XE_TYPE_UNSPECIFIED); }
-		inline bool HasIndices()	{ return (m_Indices.Type    != XE_TYPE_UNSPECIFIED); }
+		inline bool HasPosition()   const { return (m_Positions.Type  != XE_TYPE_UNSPECIFIED); }
+		inline bool HasNormal()	    const { return (m_Normals.Type    != XE_TYPE_UNSPECIFIED); }
+		inline bool HasTangent()    const { return (m_Tangents.Type   != XE_TYPE_UNSPECIFIED); }
+		inline bool HasColor()		const { return (m_Color_0.Type    != XE_TYPE_UNSPECIFIED); }
+		inline bool HasTexCoord_0() const { return (m_TexCoord_0.Type != XE_TYPE_UNSPECIFIED); }
+		inline bool HasTexCoord_1() const { return (m_TexCoord_0.Type != XE_TYPE_UNSPECIFIED); }
+		inline bool HasIndices()	const { return (m_Indices.Type    != XE_TYPE_UNSPECIFIED); }
 		
 		
-		const Accessor& GetPosition()	{return m_Positions;}
-		const Accessor& GetNormal()		{return m_Normals;}
-		const Accessor& GetTangent()	{return m_Tangents;}
-		const Accessor& GetTexCoord_0() {return m_TexCoord_0;}
-		const Accessor& GetTexCoord_1() {return m_TexCoord_1;}
-		const Accessor& GetColor()      {return m_Color_0;}
-		const Accessor& GetIndices()	{return m_Indices;}
+		const Accessor& GetPosition()	const {return m_Positions;}
+		const Accessor& GetNormal()		const {return m_Normals;}
+		const Accessor& GetTangent()	const {return m_Tangents;}
+		const Accessor& GetTexCoord_0() const {return m_TexCoord_0;}
+		const Accessor& GetTexCoord_1() const {return m_TexCoord_1;}
+		const Accessor& GetColor()      const {return m_Color_0;}
+		const Accessor& GetIndices()	const {return m_Indices;}
+
+		const Material& GetMatrial()   const { return m_Material; }
 
 	private:
-		Accessor m_Positions; 
-		Accessor m_Normals;
-		Accessor m_Tangents;
-		Accessor m_TexCoord_0;
-		Accessor m_TexCoord_1;
-		Accessor m_Color_0;
+
+		mutable std::array<Accessor, 6> m_Accessors;
+
+		Accessor& m_Positions  = m_Accessors[0]; 
+		Accessor& m_Normals    = m_Accessors[1];
+		Accessor& m_Tangents   = m_Accessors[2];
+		Accessor& m_TexCoord_0 = m_Accessors[3];
+		Accessor& m_TexCoord_1 = m_Accessors[4];
+		Accessor& m_Color_0    = m_Accessors[5];
+
 		Accessor m_Indices;
 
 		Material m_Material;
@@ -548,8 +623,8 @@ namespace Xenon
 
 		//Iterator over primitives:
 
-		inline std::vector<Primitive>::iterator begin() { return m_Primitives.begin(); }
-		inline std::vector<Primitive>::iterator end() { return   m_Primitives.end(); }
+		inline std::vector<Primitive>::iterator begin() const { return m_Primitives.begin(); }
+		inline std::vector<Primitive>::iterator end()   const { return m_Primitives.end(); }
 
 		//Primitive Access:
 		const Primitive&  operator[](uint64_t pIndex) const;
@@ -561,7 +636,7 @@ namespace Xenon
 	private:
 
 		XE_STRING			 m_Name;
-		XE_VECTOR<Primitive> m_Primitives;
+		mutable XE_VECTOR<Primitive> m_Primitives;
 
 		friend class Loader;
 	};
@@ -615,19 +690,22 @@ namespace Xenon
 		Node& operator=(const Node& pOther);
 
 		//Iterators
-		inline std::vector<Node>::iterator begin() { return m_Childern.begin(); }
-		inline std::vector<Node>::iterator end()   { return m_Childern.end(); }
+		inline std::vector<Node>::iterator begin() const { return m_Childern.begin(); }
+		inline std::vector<Node>::iterator end()   const { return m_Childern.end(); }
 
 		//Returns a child of this node
 		const Node&  operator[](size_t pIndex) const;
 
 		inline const XE_STRING GetName()   const { return m_Name; }
 		const Mesh& GetMesh() const;
-		inline const Camera&   GetCamera() const { return m_Camera; }
-		inline const uint64_t  GetDepth()  const { return m_Depth; }
+		inline const uint64_t  GetMeshIndex() const { return m_Mesh; }
+		inline const Camera&   GetCamera()    const { return m_Camera; }
+		inline const uint64_t  GetDepth()     const { return m_Depth; }
 
-		inline bool IsMeshEmpty()   { return (m_Mesh < 0); }
-		inline bool IsCameraEmpty() { return (m_Camera.Type == XE_CAMERA_UNDEFINED); }
+		inline uint64_t ChildCount() { return m_Childern.size(); }
+
+		inline bool IsMeshEmpty()   const { return (m_Mesh < 0); }
+		inline bool IsCameraEmpty() const { return (m_Camera.Type == XE_CAMERA_UNDEFINED); }
 
 		//Transformation:
 
@@ -640,7 +718,7 @@ namespace Xenon
 		inline XE_MAT4 Matrix()      { return m_LocalTransform; }
 
 	private:
-		XE_VECTOR<Node>     m_Childern;
+		mutable XE_VECTOR<Node>     m_Childern;
 		XE_STRING			m_Name;
 
 		uint64_t m_Depth = 0; // Show the depth of this node in tree
@@ -682,8 +760,8 @@ namespace Xenon
 
 		
 		//Iterator for nodes:
-		inline std::vector<Node>::iterator begin() { return m_Nodes.begin(); }
-		inline std::vector<Node>::iterator end()   { return m_Nodes.end(); }
+		inline std::vector<Node>::iterator begin() const { return m_Nodes.begin(); }
+		inline std::vector<Node>::iterator end()   const { return m_Nodes.end(); }
 
 		//Return a refrence to a node
 		const Node&  operator[](size_t pIndex) const;
@@ -692,12 +770,15 @@ namespace Xenon
 		inline size_t      NodeCount() { return m_Nodes.size(); }
 
 		inline Mesh& GetMesh(uint64_t pMeshIndex);
-		inline const XE_VECTOR<Mesh>& GetMeshes() const { return m_Meshes; }
+		inline const XE_VECTOR<Mesh>&           GetMeshes()   const { return m_Meshes; }
+		inline const XE_MAP<uint64_t, Texture>& GetTextures() const { return m_Textures; }
+
 
 	private:
-		XE_STRING         m_Name;
-		XE_VECTOR<Node>   m_Nodes;
-		XE_VECTOR<Mesh>   m_Meshes;
+		XE_STRING                 m_Name;
+		mutable XE_VECTOR<Node>   m_Nodes;
+		XE_VECTOR<Mesh>			  m_Meshes;
+		XE_MAP<uint64_t,Texture>  m_Textures;
 		friend class Loader;
 	};
 
