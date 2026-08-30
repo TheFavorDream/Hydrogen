@@ -20,6 +20,7 @@
 
 */
 
+
 //#define XE_LOG_ASSERT_IMPL(x, a)
 //#define XE_LOG_ERROR_IMPL(x) std::cout << "Error:" << x << '\n';
 //#define XE_LOG_WARNS_IMPL(x)

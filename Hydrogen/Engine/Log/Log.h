@@ -94,6 +94,8 @@ namespace Hydrogen
 };
 
 
+#define CHECK_ERROR(func) if (func != HYD_OK) {return HYD_FAILED;}
+
 
 #ifndef TEST
 	#if defined(_MSC_VER)

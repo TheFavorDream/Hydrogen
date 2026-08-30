@@ -7,121 +7,162 @@
 #include "../../Common.h"
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_core.h>
+#include "VkEnumReDefs.h"
 #include "FrameBuffer.h"
 #include "Commands.h"
-#include "Structs.h"
 #include "../../VecMath/Vector/Vectors.h"
 
 namespace Hydrogen
 {
+
+
+	struct AttachmentReference
+	{
+		uint32 	    Index  = 0;
+		ImageLayout Layout = HYD_IMAGE_LAYOUT_UNDEFINED;
+	};
+
+	struct RenderpassAttachment
+	{
+		ImageFormat      Format          = HYD_FORMAT_UNDEFINED;
+		LoadOperation    LoadOp          = HYD_ATTACHMENT_LOAD_OP_LOAD;
+		StoreOperation   StoreOp         = HYD_ATTACHMENT_STORE_OP_STORE;
+		LoadOperation    StencilLoadOp   = HYD_ATTACHMENT_LOAD_OP_DONT_CARE;
+		StoreOperation   StencilStoreOp  = HYD_ATTACHMENT_STORE_OP_DONT_CARE;
+		ImageSampleCount SampleCount     = HYD_SAMPLE_COUNT_1_BIT;
+		ImageLayout      InitLayout      = HYD_IMAGE_LAYOUT_UNDEFINED;
+		ImageLayout      FinalLayout     = HYD_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+	};
+	
+	struct SubpassConfiguration
+	{
+	public:
+		void AddInputAttachment       (AttachmentReference pInput) 	      noexcept;
+		void AddColorAttachment       (AttachmentReference pColor) 	      noexcept;
+		void AddDepthStencilAttachment(AttachmentReference pDepthStencil) noexcept;
+		void AddResolveAttachment     (AttachmentReference pResolve)      noexcept;
+		void AddIPreservedAttachment  (uint32 pPreserved) 			      noexcept;
+
+	private:
+		std::vector<AttachmentReference> m_Input;
+		std::vector<AttachmentReference> m_Color;
+		std::vector<AttachmentReference> m_DepthStencil;
+		std::vector<AttachmentReference> m_Resolve;
+		std::vector<uint32> 			 m_Preserved;
+
+
+	private:
+		friend class Internal::Vulkan::Renderpass;
+	};
+	
+	struct SubpassDependencyConfiguration
+	{
+		uint32 				 SourceSubpass;
+		uint32 				 DestinationSubpass;
+		uint32               SrcStageMask;
+		uint32               DstStageMask;
+		uint32	             SrcAccessMask;
+		uint32	             DstAccessMask;
+	};
+
+	//Used to Create Renderpasses
+	struct RenderpassConfiguration
+	{
+	public:
+	
+		void AddAttachment(RenderpassAttachment pAttachment)  			   noexcept;
+		void AddSubpass   (SubpassConfiguration pSubpassConf) 			   noexcept;
+		void AddDependency(SubpassDependencyConfiguration pDependencyConf) noexcept;
+
+	private:
+		std::vector<RenderpassAttachment>           m_Attachments;
+		std::vector<SubpassConfiguration>           m_Subpasses;
+		std::vector<SubpassDependencyConfiguration> m_Dependencies;
+
+	private:
+		friend class Internal::Vulkan::Renderpass;
+	};
+
+
+namespace Internal
+{
 namespace Vulkan
 {
 
-	struct SubpassRefs
+	struct SubpassRef
 	{
-		//Attachment References
-		HYD_VEC<VkAttachmentReference> Colors       = {};
-		HYD_VEC<VkAttachmentReference> Inputs       = {};
-		HYD_VEC<VkAttachmentReference> Resolved     = {};
-		HYD_VEC<uint32>				   Preserved    = {};
-		VkAttachmentReference          DepthStencil = { UINT32_MAX, VK_IMAGE_LAYOUT_UNDEFINED};
+		std::vector<VkAttachmentReference> Inputs;
+		std::vector<VkAttachmentReference> Colors;
+		std::vector<VkAttachmentReference> DepthStencil;
+		std::vector<VkAttachmentReference> Resolved;
+		std::vector<uint32> 			   Presereved;
 	};
 
 
-	class RenderPass final
+	class Renderpass final
 	{
 	public:
 
-		 RenderPass()  = default;
-		~RenderPass() noexcept;
+		 Renderpass() noexcept;
+		~Renderpass() noexcept;
 
 
-		RenderPass(const RenderPass& pOther) = delete;
+		Renderpass(const Renderpass& pOther) 			= delete;
+		Renderpass& operator=(const Renderpass& pOther) = delete;
+
 
 		//move
-		RenderPass(RenderPass&& pOther) noexcept;
-		RenderPass& operator=(RenderPass&& pOther) noexcept;
+		Renderpass(Renderpass&& pOther) 		   noexcept;
+		Renderpass& operator=(Renderpass&& pOther) noexcept;
 
-
-
-		//Attachment info
-		/*
-			Adds an attachment to the renderpass
-			returns the index of the attachment reference in the array, used to attach resources to the subpasses
-		*/
-		VkAttachmentReference AddAttachment(
-			VkImageLayout		    pImageLayout,
-			VkAttachmentDescription pDescription
+		//Renderpass Creation:
+		uint32 CreateRenderPass  (
+			RenderpassConfiguration pConfiguration,
+			bool 				    pKeepCache=false
 		) noexcept;
 
-		VkAttachmentReference AddAttachment(
-			VkImageLayout		         pImageLayout,
-			VkFormat					 pFormat,
-			VkImageLayout				 pFinalLayout,
-			VkImageLayout				 pInitialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
-			VkSampleCountFlagBits		 pSamples		 = VK_SAMPLE_COUNT_1_BIT,
-			VkAttachmentLoadOp			 pLoadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,   
-			VkAttachmentStoreOp			 pStoreOp        = VK_ATTACHMENT_STORE_OP_STORE,
-			VkAttachmentLoadOp			 pStencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-			VkAttachmentStoreOp			 pStencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-			VkAttachmentDescriptionFlags pFlags			 = 0
-		) noexcept;
 
-		//Subpass Info
-
-		uint32 AddSubpass(
-			VkPipelineBindPoint						 pPipelineBindPoint,
-			const HYD_VEC<VkAttachmentReference>&	 pColorAttachments       = {},
-			const HYD_VEC<VkAttachmentReference>&    pInputAttachments		 = {},
-			VkAttachmentReference				     pDepthStencilAttachment = {UINT32_MAX, VK_IMAGE_LAYOUT_UNDEFINED},
-			const HYD_VEC<VkAttachmentReference>&    pResolveAttachments     = {},
-			const HYD_VEC<uint32>&					 pPreservedAttachments   = {},
-			VkSubpassDescriptionFlags pFlags								 = 0
-		) noexcept;
-
-		uint32 AddSubpassDependency(
-			uint32 				 pSrcSubpass,
-			uint32 				 pDstSubpass,
-			VkPipelineStageFlags pSrcStageMask,
-			VkPipelineStageFlags pDstStageMask,
-			VkAccessFlags 		 pSrcAccessMask,
-			VkAccessFlags 		 pDstAccessMask,
-			uint32 	             pDependencyFlags = 0
-		) noexcept;
-
-		uint32 BeginRenderPass(
-			const CommandBuffer& pCommandBuffer,
-			const FrameBuffer& 	 pFrameBuffer,
-			VkRect2D 			 pRenderArea ,
-			VecF4 				 pClearColor = VecF4(0.0f, 0.0f, 0.0f, 1.0f)
-		) noexcept;
-
-		uint32 EndRenderPass(
-			const CommandBuffer& pCommandBuffer
-		) noexcept;
-
-		uint32 CreateRenderPass  (VkRenderPassCreateFlags pFlags=0) noexcept;
 		uint32 RecreateRenderPass() noexcept;
 
-		uint32 DestroyRenderPass (bool pKeepData=false) noexcept;
-		void   FreeCache();
+		inline uint32 SubpassCount() const {return m_SubpassCount;}
 
-		inline const VkRenderPass					   GetHandle()		      const { return m_Handle; }
-		inline const HYD_VEC<VkAttachmentDescription>& GetAttachments()       const { return m_Attachments; }
-		inline const HYD_VEC<SubpassRefs>&			   GetSubpassReferences() const { return m_SubpassRefs; }
-		inline const HYD_VEC<VkSubpassDescription>&    GetSubpasses()		  const { return m_Subpasses; }
+	private: //Accessable by friends only
+
+		void BeginRenderPass(
+			const FrameBuffer& 	 pFrameBuffer,
+			VkRect2D 			 pRenderArea ,
+			VecF4 				 pClearColor = VecF4(0.1f, 0.1f, 0.0f, 1.0f)
+		) noexcept;
+
+		void EndRenderPass() noexcept;
+
+		//A Renderpass must be destroyed by the engine itself, not by the user
+		uint32 DestroyRenderPass () noexcept;
+
+
+	private: //Accessable by members only
+
+		uint32 CreateRenderpassObject() noexcept;
+		
+		void   CleanUp() noexcept;
 
 	private:
 
+		VkRenderPass m_Handle 		= VK_NULL_HANDLE;
+		uint32 		 m_SubpassCount = 0;
+		//Stores the configuration for current Renderpass object
+		std::vector<VkAttachmentDescription> m_AttachmentDescriptions;
+		std::vector<SubpassRef>    			 m_SubpassRefs;
+		std::vector<VkSubpassDescription>    m_Subpasses;
+		std::vector<VkSubpassDependency>     m_SubpassDependencies;
+		
+
 	private:
-		VkRenderPass m_Handle = VK_NULL_HANDLE;
-
-		HYD_VEC<VkAttachmentDescription> m_Attachments;
-		HYD_VEC<SubpassRefs>			 m_SubpassRefs;
-		HYD_VEC<VkSubpassDescription>	 m_Subpasses;
-		HYD_VEC<VkSubpassDependency>     m_Dependencies;
-
+		friend class Hydrogen::Renderer;
+		friend class FrameBuffer;
+		friend class GraphicsPipeline;
 	};
 	
 };
+}
 };

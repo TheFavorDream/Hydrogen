@@ -8,203 +8,277 @@
 #include "Renderpass.h"
 #include "Commands.h"
 #include "Shader.h"
+#include "Descriptors.h"
+#include "VertexAttribute.h"
+#include <cstdint>
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_core.h>
 #include "../../VecMath/Vector/Vectors.h"
+#include "VkEnumReDefs.h"
+#include "../../Core/ResourcePool.h"
 
 namespace Hydrogen{
-namespace Vulkan{
+    
+    
+    typedef VkPipelineColorBlendAttachmentState ColorBlendState;
+    typedef VkStencilOpState                    StencilOpState;
+    
 
 
 
-    class Pipeline
+    struct PipelineLayoutConfiguration
+    {
+    public:
+        HYD void AttachDescriptorLayout(
+            HYD_ID_SPACE pDescSetLayoutID
+        ) noexcept;
+    
+        HYD void SetPushConstant(
+            uint32       pOffset,
+            uint32       pSize,
+            ShaderStages pShaderStage
+        ) noexcept;
+
+    private:
+        std::vector<VkPushConstantRange>       m_PushConstants;
+        std::vector<HYD_ID_SPACE>              m_Layouts;
+
+    private:
+        friend class Renderer;
+        friend class Internal::Vulkan::PipelineLayout;
+    };
+
+    struct GraphicsPipelineConfiguration
     {
     public:
 
-         Pipeline() noexcept;
-        ~Pipeline() noexcept;
-
-        Pipeline(const Pipeline& pOther) = delete;
-
-        //Move
-        Pipeline(Pipeline&& pOther) noexcept;
-        Pipeline& operator=(Pipeline&& pOther) noexcept;
-
-
-        //Vertex Input:
-
-        void SetVertexInput(
-            //empty for now
+        HYD void AddVertexBufferLayout(
+            Hydrogen::Internal::Vulkan::VertexAttribute pAttribs
         ) noexcept;
 
-        //Input Assembly:
-        void SetInputAssembler(
-            VkPrimitiveTopology pTopology,
-            VkBool32            pPrimitiveRestart=VK_FALSE
+        //Shaders:
+        HYD void AttachShader(
+            const ShaderConfiguration& pShader
         ) noexcept;
 
-        inline VkPrimitiveTopology GetPrimitiveTopology() const {return m_PrimitiveTopology; } 
-        inline VkBool32            GetPrimitiveRestart()  const {return m_PrimitiveRestart;}
+        HYD void AttachShaders(
+            const std::vector<ShaderConfiguration>& pShaders
+        ) noexcept;
 
-
-        //Viewport & Scissors:
-
-        void SetViewport(
-            uint32 pWidth,
-            uint32 pHeight,
-            uint32 pX         = 0,
-            uint32 pY         = 0,
-            float  pMinDepth  = 0.0f,
-            float  pMaxDepth  = 0.0f
+        //Subpass :
+        HYD void SetSubpass(
+            uint32 pSubpassIndex
         ) noexcept;
 
 
-        void SetScissor(
-            uint32 pWidth,
-            uint32 pHeight,
-            int32 pX         = 0,
-            int32 pY         = 0
+        //Viewport/Scissoring:
+
+        HYD void SetViewport(
+            Vec4<uint32> pViewport,
+            Vec4<uint32> pScissor = Vec4<uint32>(uint32(UINT32_MAX))
+        ) noexcept;
+
+        //Primitive Assembly:
+        HYD void SetPrimitiveTogology(
+            PrimitiveTopology pTogology=HYD_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST
+        ) noexcept;
+
+        //Rasterizer:
+        HYD void SetRasterizer(
+            PolygonMode pPolyMode    = HYD_POLYGON_MODE_FILL,
+            CullModes   pCullingMode = HYD_CULL_MODE_BACK,
+            FrontFace   pFrontFace   = HYD_FRONT_FACE_CLOCKWISE,
+            float       pLineWidth   = 1.0f,
+            bool        pDepthClamp  = false
         ) noexcept;
 
 
-        inline VecI4 GetViewportSize()     const {
-            return VecI4(m_Viewport.width, m_Viewport.height, m_Viewport.x, m_Viewport.y);
-        }
-
-        inline float GetViewportMaxDepth() const {return m_Viewport.maxDepth;}
-        inline float GetViewportMinDepth() const {return m_Viewport.minDepth;}
-
-        inline VecI4 GetViewportScissor()     const {
-            return VecI4(m_Scissor.extent.width, m_Scissor.extent.height, m_Scissor.offset.x, m_Scissor.offset.y);
-        }
-
-
-        //Rasterizer State:
-
-        void SetRasterizer(
-            VkPolygonMode   pPolyMode                = VK_POLYGON_MODE_FILL,
-            VkCullModeFlags pCullMode                = VK_CULL_MODE_BACK_BIT,
-            VkFrontFace     pFrontFace               = VK_FRONT_FACE_CLOCKWISE,
-            VkBool32        pDepthClamp              = VK_FALSE,
-            VkBool32        pPrimitiveDiscard        = VK_FALSE,
-            float           pLineWidth               = 1.0f,
-            VkBool32        pDepthBiasEnable         = VK_FALSE,
-            float           pDepthBiasConstantFactor = 0.0f,
-            float           pDepthBiasClamp          = 0.0f,
-            float           pDepthBiasSlopeFactor    = 0.0f
+        //Depth & Stencil:
+        HYD void SetDepthStencil(
+            bool             pEnableDepthWrite = false,
+            bool             pEnableDepthTest  = false,
+            CompareOperation pCompOp           = HYD_COMPARE_OP_LESS,
+            bool             pStencilTest      = false,
+            bool             pEnableBoundTest  = false,
+            VecF2            pBounds           = VecF2(0.0f, 1.0f)
         ) noexcept;
-
-
-        inline VkPipelineRasterizationStateCreateInfo GetRasterizerState() const {return m_Rasterizer;}
-
-
-
-        //Dynamic States:
-
-        void SetDynamicStates(
-            const std::vector<VkDynamicState>& pStates,
-            VkPipelineDynamicStateCreateFlags  pFlags  = 0
-        ) noexcept;
-
-        //Multisample:
-        //TODO: Implement Multisampling
 
         //Color Blending:
-
-        void SetColorBlend(
-            std::vector<VkPipelineColorBlendAttachmentState> pAttachments,
-            VkBool32                                         pLogicEnable     = VK_FALSE,
-            VkLogicOp                                        pLogicOp         = VK_LOGIC_OP_COPY,
-            std::array<float, 4>                             pBlendConstants  = {0.0f, 0.0f, 0.0f, 0.0f},
-            VkPipelineColorBlendStateCreateFlags             pFlags           = 0
+        HYD void ColorBlending(
+            std::vector<ColorBlendState> pBlendStates   = {},
+            bool                         pEnableLogicOp = false,
+            LogicOperations              pOperation     = HYD_LOGIC_OP_COPY
         ) noexcept;
 
 
-        //Depth & Stencil State
-
-        void SetDepthStencil(
-            VkBool32            pEnableTest,
-            VkBool32            pEnableWrite,
-            VkCompareOp         pCompareOperator = VK_COMPARE_OP_LESS,
-            VkBool32            pDepthBoundTest  = VK_FALSE,
-            float               pMinDepthBounds  = 0.0f,
-            float               pMaxDepthBounds  = 1.0f,
-            VkBool32            pStencilTest     = VK_FALSE,
-            VkStencilOpState    pStencilFront    = {},
-            VkStencilOpState    pStencilBack     = {}
+        HYD void SetPipelineLayout(
+            HYD_ID_SPACE pLayoutID
         ) noexcept;
 
-        inline VkPipelineDepthStencilStateCreateInfo GetDepthStencilState() const {return m_DepthStencil;}
+    private:
 
+        HYD_ID_SPACE                          m_LayoutID;
 
-        //Pipeline layout:
+        std::vector<ShaderConfiguration>      m_Shaders;
+        uint32                                m_Subpass;
+        Internal::Vulkan::VertexAttribute     m_BufferLayout;
+        std::vector<DynamicState>             m_States;
+
+        Vec4<uint32>                          m_Viewport;
+        Vec4<uint32>                          m_Scissor;
         
-        void CreatePipelineLayout(
+        PrimitiveTopology                     m_Topology;
+        
+        PolygonMode                           m_PolyMode        = HYD_POLYGON_MODE_FILL;
+        CullModes                             m_CullMode        = HYD_CULL_MODE_BACK;
+        FrontFace                             m_FrontFace       = HYD_FRONT_FACE_CLOCKWISE;
+        bool                                  m_DepthClamp      = false;
+        float                                 m_LineWidth       = 1.0f;
+        
+        bool                                  m_EnableDepthTest = false;
+        bool                                  m_EnableDepthWrite= false;
+        CompareOperation                      m_CompareOperator = HYD_COMPARE_OP_LESS;
+        bool                                  m_DepthBoundTest  = false;
+        float                                 m_MinDepthBounds  = 0.0f;
+        float                                 m_MaxDepthBounds  = 1.0f;
+        bool                                  m_StencilTest     = false;
+        StencilOpState                        m_StencilFront    = {};
+        StencilOpState                        m_StencilBack     = {};
+        
+        std::vector<ColorBlendState>          m_AttachmentStates;
+        bool                                  m_BlendLogicEnable       = false;
+        LogicOperations                       m_ColorBlendLogicOp = HYD_LOGIC_OP_COPY;
+        std::array<float, 4>                  m_BlendConstants    = {0.0f, 0.0f, 0.0,0.0f};
+    
+    
+    private:
+        friend class Internal::Vulkan::GraphicsPipeline;
+    };
+    
+    
 
+
+namespace Internal
+{
+namespace Vulkan{
+
+
+    class PipelineLayout final
+    {
+    public:
+
+         PipelineLayout() noexcept;
+        ~PipelineLayout() noexcept;
+
+
+        //Copy
+        PipelineLayout(const PipelineLayout& pOther)            = delete;
+        PipelineLayout& operator=(const PipelineLayout& pOther) = delete;
+
+        //Move
+        PipelineLayout(PipelineLayout&&)            noexcept;
+        PipelineLayout& operator=(PipelineLayout&&) noexcept;
+
+    private:
+
+        uint32 CreateLayout(
+            const PipelineLayoutConfiguration& pConf
         ) noexcept;
 
+
+        void UpdatePushConstant(
+            VkShaderStageFlags pStageFlags,
+            uint32             pOffset,
+            uint32             pSize,
+            const void*        pValue
+        ) const noexcept;
+
+        void DestroyLayout() noexcept;
+
+
+
+
+    private:
+        VkPipelineLayout                  m_Handle         = VK_NULL_HANDLE;
+        std::vector<VkPushConstantRange>  m_PushConstants;
+        std::vector<HYD_ID_SPACE>         m_DescSetLayoutIDs;
+    
+    private:
+        friend class Hydrogen::Renderer;
+        friend class DescriptorSetLayout;
+        friend class DescriptorSet;
+        friend class GraphicsPipeline;
+        friend class UniformBuffer;
+    };
+
+
+
+    class GraphicsPipeline final
+    {
+    public:
+
+         GraphicsPipeline() noexcept;
+        ~GraphicsPipeline() noexcept;
+
+        GraphicsPipeline(const GraphicsPipeline& pOther) = delete;
+
+        //Move
+        GraphicsPipeline(GraphicsPipeline&&            pOther) noexcept;
+        GraphicsPipeline& operator=(GraphicsPipeline&& pOther) noexcept;
+
+    private: //friend accessable 
+        //inline const VkPipelineLayout GetLayoutHandle() const {return m_PipelineLayout;};
 
         uint32 CreatePipeline(
-            const std::vector<Ptr<Vulkan::Shader>>& pShaders,
-            VkRenderPass                            pRenderPass,
-            uint32                                  pSubpass
+            const GraphicsPipelineConfiguration& pConfig
         )   noexcept;
 
-
-        //Bind this pipeline
-        uint32 BindPipeline(
-            const CommandBuffer& pCommandBuffer,
-            VkPipelineBindPoint  pBindPoint      = VK_PIPELINE_BIND_POINT_GRAPHICS 
-        ) noexcept;
-
-
-        uint32 RecreatePipeline() noexcept;
         uint32 DestroyPipeline()  noexcept;
+        
+        //Bind this pipeline
+        void BindPipeline() noexcept;
+
+
+    private: //Member Accessable
+        uint32 CreatePipelineObject() noexcept;
 
     private:
 
-        void Reset() noexcept;
-
-    private:
         VkPipeline m_Handle = VK_NULL_HANDLE;
-      
 
-        VkPipelineDynamicStateCreateInfo m_DynamicStatesInfo;
-        std::vector<VkDynamicState>      m_DynamicStates;
+        HYD_ID_SPACE m_PipelineLayout;
 
+        uint32 m_Subpass;
+        std::vector<VkPipelineShaderStageCreateInfo> m_Stages;
+        //Dynamic States:
+        VkPipelineDynamicStateCreateInfo     m_DynamicStatesInfo;
+        std::vector<VkDynamicState>          m_DynamicStates;
         //Vertex Input State
         VkPipelineVertexInputStateCreateInfo m_VertexInput{};
 
         //Input Assembler States:
-        VkPrimitiveTopology m_PrimitiveTopology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-        VkBool32            m_PrimitiveRestart  = VK_FALSE;
+        VkPipelineInputAssemblyStateCreateInfo m_InputAssemblyCInfo;
 
         //Viewport & Scissor:
-        VkViewport m_Viewport;
-        VkRect2D   m_Scissor;
+        VkPipelineViewportStateCreateInfo m_ViewportStateCInfo;
 
         //Rasterizer State:
-        VkPipelineRasterizationStateCreateInfo   m_Rasterizer;
-
-
+        VkPipelineRasterizationStateCreateInfo  m_Rasterizer;
         //Tessellation Control:
-
         VkPipelineTessellationStateCreateInfo   m_TesselationControl;
-        
         //Multisampling State:
         VkPipelineMultisampleStateCreateInfo    m_MultiSampleState;
-
-
         //Color Blending:
         std::vector<VkPipelineColorBlendAttachmentState> m_Attachments;
         VkPipelineColorBlendStateCreateInfo              m_ColorBlendState;
-
         //Depth & Stencil State:
         VkPipelineDepthStencilStateCreateInfo   m_DepthStencil;
 
-        //Pipeline Layout:
-        VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;
+    private:
+        friend class Hydrogen::Renderer;
     };
 
 };
+};
+
 };

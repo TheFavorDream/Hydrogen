@@ -1,25 +1,106 @@
 #include "Xenon/include/Xenon.h"
 #include "Material.h"
 #include "HydPch.h"
-#include "Render/Renderer.h"
-#include "Image.h"
+#include "../Renderer.h"
+#include <vulkan/vulkan_core.h>
 
 namespace Hydrogen
 {
 
-	Material Material::CreateMaterialGLTF(const Xenon::Material& pMaterial, std::unordered_map<uint64, Instance<Texture2D>>& pTextureTable)
+	
+	Material Material::CreateMaterialGLTF(
+		const Xenon::Material& 							 pMaterial,
+		std::unordered_map<uint64, Instance<Texture2D>>& pTextureTable,
+		HYD_ID_SPACE 		     						 pDescSetLayout,
+		MaterialBinding	 								 pBindings
+	) noexcept
 	{
 		Material NewMaterial;
 
+		NewMaterial.m_BaseColorFactor    = pMaterial.GetBaseColorFactor();
+		NewMaterial.m_RoughnessFactor    = pMaterial.GetRoughnessFactor();
+		NewMaterial.m_MatallicnessFactor = pMaterial.GetMetallicFactor();
+
+		NewMaterial.m_SetID = Renderer::Self().AllocateDescriptorSet(pDescSetLayout);
+		auto& Set 	 	    = Renderer::Self().m_DescriptorSets.at(NewMaterial.m_SetID);
+		
 		if (pMaterial.HasBaseColor())
 		{
 			NewMaterial.m_BaseColor = pTextureTable[pMaterial.GetBaseColor().value()];
+
+			for (auto& set : Set)
+			{
+				set.AttachTextureSampler(
+				 	pBindings.BaseColorBinding,
+					NewMaterial.m_BaseColor->m_Sampler,
+				   	NewMaterial.m_BaseColor->m_View,
+					HYD_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+				);
+			}
 		}
 
 		if (pMaterial.HasNormalMap())
 		{
 			NewMaterial.m_NormalMap = pTextureTable[pMaterial.GetNormalMap().value()];
+			for (auto& set : Set)
+			{
+				set.AttachTextureSampler(
+				 pBindings.NormalMapBinding,
+				NewMaterial.m_NormalMap->m_Sampler,
+				   NewMaterial.m_NormalMap->m_View,
+				  HYD_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+				);
+			}
 		}
+		
+
+		if (pMaterial.HasMetallicMap())
+		{
+			NewMaterial.m_MetallicMap = pTextureTable[pMaterial.GetMetallicMap().value()];
+			
+			for (auto& set : Set)
+			{
+				set.AttachTextureSampler(
+				 	pBindings.MettallicRoughnessBinding,
+					NewMaterial.m_MetallicMap->m_Sampler,
+				    NewMaterial.m_MetallicMap->m_View,
+				    HYD_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+				);
+			}
+		}
+
+		if (pMaterial.HasEmissiveMap())
+		{
+			NewMaterial.m_EmissiveMap = pTextureTable[pMaterial.GetEmissiveMap().value()];
+
+			for (auto& set : Set)
+			{
+				set.AttachTextureSampler(
+				 	pBindings.EmissiveBinding,
+					NewMaterial.m_EmissiveMap->m_Sampler,
+					NewMaterial.m_EmissiveMap->m_View,
+				  	HYD_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+				);
+			}
+		}
+
+		if (pMaterial.HasOclusionMap())
+		{
+			NewMaterial.m_OcclusionMap = pTextureTable[pMaterial.GetOclusionMap().value()];
+
+			for (auto& set : Set)
+			{
+				set.AttachTextureSampler(
+				 	pBindings.OcolusionBinding,
+					NewMaterial.m_OcclusionMap->m_Sampler,
+				    NewMaterial.m_OcclusionMap->m_View,
+				  	HYD_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+				);
+			}
+		}
+
+		for (auto& set : Set)
+			set.UpdateDescriptorSet();
 
 		return std::move(NewMaterial);
 	}
@@ -41,11 +122,14 @@ namespace Hydrogen
 
 	Material::Material(Material&& pOther)
 	{
-		m_BaseColor    = std::move(pOther.m_BaseColor);
-		m_MetallicMap  = std::move(pOther.m_MetallicMap);
-		m_NormalMap    = std::move(pOther.m_NormalMap);
+		m_BaseColor    	     = std::move(pOther.m_BaseColor);
+		m_MetallicMap  	     = std::move(pOther.m_MetallicMap);
+		m_NormalMap    	     = std::move(pOther.m_NormalMap);
 		m_MatallicnessFactor = pOther.m_MatallicnessFactor;
-		
+    	m_RoughnessFactor    = pOther.m_RoughnessFactor;
+    	m_BaseColorFactor    = pOther.m_BaseColorFactor;
+
+		m_SetID 			 = pOther.m_SetID;
 	}
 
 	Material& Material::operator=(Material&& pOther)
@@ -53,55 +137,25 @@ namespace Hydrogen
 		if (this == &pOther)
 			return *this;
 
-		m_BaseColor   = std::move(pOther.m_BaseColor);
-		m_MetallicMap = std::move(pOther.m_MetallicMap);
-		m_NormalMap   = std::move(pOther.m_NormalMap);
-	
+		m_BaseColor    	     = std::move(pOther.m_BaseColor);
+		m_MetallicMap  	     = std::move(pOther.m_MetallicMap);
+		m_NormalMap    	     = std::move(pOther.m_NormalMap);
+		m_MatallicnessFactor = pOther.m_MatallicnessFactor;
+    	m_RoughnessFactor    = pOther.m_RoughnessFactor;
+    	m_BaseColorFactor    = pOther.m_BaseColorFactor;
+		
+		m_SetID = pOther.m_SetID;
 		return *this;
 	}
 
-
-
-	uint32 Material::SetMetallicnessFactor(float pMetalicnessFactor)
+	
+	void Material::Bind(
+		const Internal::Vulkan::PipelineLayout& pLayout
+	) noexcept
 	{
-		m_MatallicnessFactor = pMetalicnessFactor;
-		return HYD_OK;
-	}
-
-	uint32 Material::SetRoughnessFactor(float pRoughnessFactor)
-	{
-		m_RoughnessFactor = pRoughnessFactor;
-		return HYD_OK;
-	}
-
-	/*
-	uint32 Material::Bind(Instance<Program>  pShader)
-	{
-		//pShader.SetUniformInt1("material.BaseColor", 0);
-		//pShader.SetUniformInt1("material.NormalMap", 1);
-		//pShader.SetUniformInt1("material.Metalic",   2);
-		//
-		//pShader.SetUniformFloat1("material.Metallicness", m_MatallicnessFactor);
-		//pShader.SetUniformFloat1("material.Roughness",   m_RoughnessFactor);
-		//pShader.SetUniformFloat3("material.BaseColorFactor", m_BaseColorFactor.X, m_BaseColorFactor.Y, m_BaseColorFactor.Z);
-
-		if (!m_BaseColor.IsNull())
-			m_BaseColor->Bind(0);
-		if (!m_NormalMap.IsNull())
-			m_NormalMap->Bind(1);
-		//m_MetallicMap->Bind(2);
-
-		return HYD_OK;
-	}
-*/
-	uint32 Material::Unbind()
-	{
-		if (!m_BaseColor.IsNull())
-			m_BaseColor->Unbind(0);
-		if (!m_NormalMap.IsNull())
-			m_NormalMap->Unbind(1);
-		//m_MetallicMap->Unbind(2);
-		return HYD_OK;
+		if (!m_SetID)
+			return;
+		Renderer::Self().AccessDescriptorSet(m_SetID).Bind(pLayout, 1);
 	}
 
 };

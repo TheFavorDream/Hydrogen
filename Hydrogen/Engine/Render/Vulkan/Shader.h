@@ -7,9 +7,21 @@
 #include "../../Common.h"
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_core.h>
-#include "../Shader.h"
+#include "VkEnumReDefs.h"
 
 namespace Hydrogen
+{
+
+
+    struct ShaderConfiguration
+    {
+        ShaderType  Type;
+        std::string Path;
+        std::string EntryName = "main";
+    };
+
+
+namespace Internal
 {
 namespace Vulkan
 {
@@ -19,18 +31,18 @@ namespace Vulkan
     {
     public:
 
-         Shader() = default;
+        Shader() noexcept;
         ~Shader() noexcept;
 
         //Copy 
-        Shader(const Shader& pOther);
+        Shader(const Shader& pOther) = delete;
         
         //Move
         Shader(Shader&& pOther)             noexcept;
         Shader& operator=(Shader&& pOther)  noexcept;
         
         
-
+    private:
         //Create shader module from SpirV code
         uint32 CreateShaderFromSpirV(
             ShaderType        pShaderType,
@@ -39,28 +51,29 @@ namespace Vulkan
         ) noexcept; 
 
         //Load a SpirV binary, then create the shader
-        uint32 CreateShaderFromFile(
-            ShaderType         pShaderType,
-            const std::string& pPath,
-            const char*        pEntryPoint = "main"
+        uint32 CreateShader(
+            const ShaderConfiguration& pConf
         ) noexcept; 
  
 
         //Destroys the shader
         uint32 DestroyShader() noexcept;
-
-
-        inline VkShaderModule        GetHandle()            const {return m_Handle;}
-        inline const char*           GetEntryName()         const {return m_EntryPoint;}
-        inline VkShaderStageFlagBits GetShaderType()        const {return VkShaderStageFlagBits(m_Stage);}
         
 
     private:
-        VkShaderModule m_Handle     = VK_NULL_HANDLE;
-        ShaderType     m_Stage      = HYD_STAGE_UNSPECIFIED;
+        VkShaderModule             m_Handle     = VK_NULL_HANDLE;
+        VkShaderStageFlagBits      m_Stage;
         const char*    m_EntryPoint = "main"; //Default
+
+
+    private:
+        friend class Hydrogen::Renderer;
+        friend class GraphicsPipeline; 
     };
 
 
 };
+};
+
+    typedef Internal::Vulkan::Shader Shader;
 };

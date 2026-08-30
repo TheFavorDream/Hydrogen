@@ -6,7 +6,8 @@
 
 namespace Hydrogen
 {
-
+namespace Internal
+{
     Vulkan::CommandPool::CommandPool() noexcept
     {
         m_Handle           = VK_NULL_HANDLE;
@@ -21,7 +22,7 @@ namespace Hydrogen
 
 
     //Move
-    Vulkan::CommandPool::CommandPool(Vulkan::CommandPool&& pOther) noexcept
+    Vulkan::CommandPool::CommandPool(CommandPool&& pOther) noexcept
     {
         m_Handle           = pOther.m_Handle;
         m_AllocatedBuffers = pOther.m_AllocatedBuffers;
@@ -31,7 +32,7 @@ namespace Hydrogen
         
     }
 
-    Vulkan::CommandPool& Vulkan::CommandPool::operator=(Vulkan::CommandPool&& pOther) noexcept
+    Vulkan::CommandPool& Vulkan::CommandPool::operator=(CommandPool&& pOther) noexcept
     {
         m_Handle           = pOther.m_Handle;
         m_AllocatedBuffers = pOther.m_AllocatedBuffers;
@@ -44,8 +45,8 @@ namespace Hydrogen
 
 
     uint32 Vulkan::CommandPool::CreatePool(
-        uint32                      pQueueFamily,
-        VkCommandPoolCreateFlagBits pFlags
+        uint32                   pQueueFamily,
+        VkCommandPoolCreateFlags pFlags
     )  noexcept
     {
         VkCommandPoolCreateInfo CInfo{};
@@ -133,13 +134,13 @@ namespace Hydrogen
         
 
     //Move
-    Vulkan::CommandBuffer::CommandBuffer(Vulkan::CommandBuffer&& pOther)  noexcept
+    Vulkan::CommandBuffer::CommandBuffer(CommandBuffer&& pOther)  noexcept
     {
         m_Handle        = pOther.m_Handle;
         pOther.m_Handle = VK_NULL_HANDLE;
     }
 
-    Vulkan::CommandBuffer& Vulkan::CommandBuffer::operator=(Vulkan::CommandBuffer&& pOther) noexcept
+    Vulkan::CommandBuffer& Internal::Vulkan::CommandBuffer::operator=(CommandBuffer&& pOther) noexcept
     {
         m_Handle        = pOther.m_Handle;
         pOther.m_Handle = VK_NULL_HANDLE;
@@ -179,13 +180,13 @@ namespace Hydrogen
 
 
     uint32 Vulkan::CommandBuffer::RecordCommandBuffer(
-
+            VkCommandBufferUsageFlags pFlags
     ) noexcept
     {
         VkCommandBufferBeginInfo BeginInfo{};
 
         BeginInfo.sType            = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        BeginInfo.flags            = 0;
+        BeginInfo.flags            = pFlags;
         BeginInfo.pNext            = nullptr;
         BeginInfo.pInheritanceInfo = nullptr;
 
@@ -199,9 +200,7 @@ namespace Hydrogen
         return HYD_OK;
     }
 
-    uint32 Vulkan::CommandBuffer::EndRecordingCommandBuffer(
-
-    ) noexcept
+    uint32 Vulkan::CommandBuffer::EndRecordingCommandBuffer() noexcept
     {
         vkEndCommandBuffer(m_Handle);
         return HYD_OK;
@@ -218,4 +217,5 @@ namespace Hydrogen
         return HYD_OK;
     }
 
+};
 };

@@ -1,11 +1,14 @@
 #include "Swapchain.h"
 #include "../Renderer.h"
+#include "Image.h"
+#include "VkEnumReDefs.h"
 #include <cstddef>
 #include <vulkan/vulkan_core.h>
 
 namespace Hydrogen
 {
-
+namespace Internal
+{
 	Vulkan::Swapchain::Swapchain() noexcept
 	{
 		m_PresentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -30,96 +33,95 @@ namespace Hydrogen
 	}
 
 	uint32 Vulkan::Swapchain::CreateSwapchain(
-		const SurfaceInfo&            pSurfaceInfo,
-		VkDevice	                  pDevice,
-		VkSurfaceKHR                  pSurface,
-		uint32		                  pImageCount,
-		VkExtent2D			          pExtent,
-		VkSurfaceFormatKHR            pSurfaceFormat,
-		VkPresentModeKHR			  pPresentMode
+		const SwapchainConfiguration& pConf
 	)  noexcept
 	{
 
-		m_ImageCount    = pImageCount;
-		m_Device        = pDevice;
-		m_ImageExtent   = pExtent;
-		m_SurfaceFormat = pSurfaceFormat;
 
-		VkSwapchainCreateInfoKHR ScCInfo{};
-		ScCInfo.sType		     = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-		ScCInfo.pNext		     = nullptr;
-		ScCInfo.flags		     = 0;
-		ScCInfo.oldSwapchain     = VK_NULL_HANDLE;
-		ScCInfo.surface          = pSurface;
-		ScCInfo.minImageCount    = m_ImageCount;
-		ScCInfo.imageFormat      = m_SurfaceFormat.format;
-		ScCInfo.imageColorSpace  = m_SurfaceFormat.colorSpace;
-		ScCInfo.presentMode      = pPresentMode;
-		ScCInfo.imageArrayLayers = 1;
-		ScCInfo.clipped			 = VK_TRUE;
-		ScCInfo.imageExtent		 = m_ImageExtent;
-		ScCInfo.imageUsage		 = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-		ScCInfo.compositeAlpha	 = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-		ScCInfo.preTransform	 = pSurfaceInfo.Capabilities.currentTransform;
+		m_SurfaceFormat = SelectSurfaceFormat(pConf.SurfaceCapabilities, pConf.DesiredFormats);
+		m_ImageExtent   = pConf.ImageSize;
+		m_ImageCount    = pConf.ImageCount;
+		VkPresentModeKHR PresentMode = SelectPresentationMode(pConf.SurfaceCapabilities, pConf.DesiredPresentMode);
+
+		m_SwapchainCInfo.sType		     = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+		m_SwapchainCInfo.pNext		     = nullptr;
+		m_SwapchainCInfo.flags		     = 0;
+		m_SwapchainCInfo.oldSwapchain     = VK_NULL_HANDLE;
+		m_SwapchainCInfo.surface          = pConf.Surface;
+		m_SwapchainCInfo.minImageCount    = m_ImageCount;
+		m_SwapchainCInfo.imageFormat      = m_SurfaceFormat.format;
+		m_SwapchainCInfo.imageColorSpace  = m_SurfaceFormat.colorSpace;
+		m_SwapchainCInfo.presentMode      = PresentMode;
+		m_SwapchainCInfo.imageArrayLayers = 1;
+		m_SwapchainCInfo.clipped		  = VK_TRUE;
+		m_SwapchainCInfo.imageExtent	  = m_ImageExtent;
+		m_SwapchainCInfo.imageUsage		  = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		m_SwapchainCInfo.compositeAlpha	  = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+		m_SwapchainCInfo.preTransform	  = pConf.SurfaceCapabilities.Capabilities.currentTransform;
 
 		if (Renderer::Self().GetQueues().Graphics == Renderer::Self().GetQueues().Present)
 		{
-			ScCInfo.imageSharingMode      = VK_SHARING_MODE_EXCLUSIVE;
-			ScCInfo.queueFamilyIndexCount = 0;
-			ScCInfo.pQueueFamilyIndices   = nullptr;
+			m_SwapchainCInfo.imageSharingMode      = VK_SHARING_MODE_EXCLUSIVE;
+			m_SwapchainCInfo.queueFamilyIndexCount = 0;
+			m_SwapchainCInfo.pQueueFamilyIndices   = nullptr;
 		}
 
 		else
 		{
-			std::array<uint32, 2> Indices = { Renderer::Self().GetGPUInfo().Queues.Graphics.value(), Renderer::Self().GetGPUInfo().Queues.Present.value() };
-			ScCInfo.imageSharingMode      = VK_SHARING_MODE_CONCURRENT;
-			ScCInfo.queueFamilyIndexCount = 2;
-			ScCInfo.pQueueFamilyIndices   = Indices.data();
+			std::array<uint32, 2> Indices = { Renderer::Self().m_Device.m_QueueFamily.Graphics.value(), Renderer::Self().m_Device.m_QueueFamily.Present.value() };
+			m_SwapchainCInfo.imageSharingMode      = VK_SHARING_MODE_CONCURRENT;
+			m_SwapchainCInfo.queueFamilyIndexCount = 2;
+			m_SwapchainCInfo.pQueueFamilyIndices   = Indices.data();
 		}
 
 
-		VkResult Result = vkCreateSwapchainKHR(m_Device, &ScCInfo, VULKAN_ALLOCATION_CALLBACK, &m_Handle);
+		VkResult Result = vkCreateSwapchainKHR(
+			Renderer::Self().GetDevice()
+			, &m_SwapchainCInfo, VULKAN_ALLOCATION_CALLBACK, &m_Handle);
 
-
+		
 		//Retriving the images:
-		vkGetSwapchainImagesKHR(m_Device, m_Handle, &m_ImageCount, nullptr);
-		m_Images.resize(m_ImageCount);
+		vkGetSwapchainImagesKHR(
+			Renderer::Self().GetDevice(), m_Handle, &m_ImageCount, nullptr);
+		std::vector<VkImage> Handles;Handles.resize(m_ImageCount);
+		vkGetSwapchainImagesKHR(Renderer::Self().GetDevice(), m_Handle, &m_ImageCount, Handles.data());
+		
 		m_ImageViews.resize(m_ImageCount);
-		vkGetSwapchainImagesKHR(m_Device, m_Handle, &m_ImageCount, m_Images.data());
+		m_Images.resize(m_ImageCount);
 
 		for (size_t Iter = 0; Iter < m_ImageCount; ++Iter)
 		{
-			VkImageViewCreateInfo ViewCInfo{};
+			//Image
+			Image& image = m_Images[Iter];
 
-			ViewCInfo.sType						      = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-			ViewCInfo.pNext						      = nullptr;
-			ViewCInfo.flags						      = 0;
-			ViewCInfo.image						      = m_Images[Iter];
-			ViewCInfo.format					      = m_SurfaceFormat.format;
-			ViewCInfo.viewType					      = VK_IMAGE_VIEW_TYPE_2D;
-			ViewCInfo.components.r				      = VK_COMPONENT_SWIZZLE_IDENTITY;
-			ViewCInfo.components.g				      = VK_COMPONENT_SWIZZLE_IDENTITY;
-			ViewCInfo.components.b				      = VK_COMPONENT_SWIZZLE_IDENTITY;
-			ViewCInfo.components.a				      = VK_COMPONENT_SWIZZLE_IDENTITY;
-			ViewCInfo.subresourceRange.layerCount     = 1;
-			ViewCInfo.subresourceRange.levelCount     = 1;
-			ViewCInfo.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
-			ViewCInfo.subresourceRange.baseArrayLayer = 0;
-			ViewCInfo.subresourceRange.baseMipLevel	  = 0;
-			if (vkCreateImageView(m_Device, &ViewCInfo, VULKAN_ALLOCATION_CALLBACK, &m_ImageViews[Iter]) != VK_SUCCESS)
-			{
-				Log::SetError("Unable to Create Imageview");
-				return HYD_FAILED;
-			}
+			image.m_Handle  = Handles[Iter];
+			image.m_Width   = m_ImageExtent.width;
+			image.m_Heihgt  = m_ImageExtent.height;
+			image.m_Format  = m_SurfaceFormat.format;
+			image.m_Depth   = 1;
+			image.m_Layer   = 1;
+			image.m_Level   = 1;
+
+			//Image Views:
+			ImageViewConfiguration ViewConf;
+			ViewConf.Image    = &image,
+			ViewConf.ViewType = HYD_IMAGE_VIEW_TYPE_2D,
+			ViewConf.Format   = (ImageFormat)m_SurfaceFormat.format;
+
+			CHECK_ERROR(m_ImageViews[Iter].CreateImageView(
+				ViewConf
+			));
+
 		}
 
 
 		Log::SetInfo(
 			Log::FmtStr("Swapchain Created with %i Images.(Width:%i, Height%i)",
-		 pImageCount, m_ImageExtent.width, m_ImageExtent.height));
+		 m_ImageCount, m_ImageExtent.width, m_ImageExtent.height));
 
 		return HYD_OK;
 	}
+
 
 	uint32 Vulkan::Swapchain::AcquireImage(
 		VkSemaphore pWaitSemaphore ,//= VK_NULL_HANDLE,
@@ -160,9 +162,9 @@ namespace Hydrogen
 			return HYD_OK;
 
 		for (auto& imageview : m_ImageViews)
-			vkDestroyImageView(m_Device, imageview, VULKAN_ALLOCATION_CALLBACK);
+			imageview.DestroyImageView();
 
-		vkDestroySwapchainKHR(m_Device, m_Handle, VULKAN_ALLOCATION_CALLBACK);
+		vkDestroySwapchainKHR(Renderer::Self().GetDevice(), m_Handle, VULKAN_ALLOCATION_CALLBACK);
 
 		m_Handle	               = VK_NULL_HANDLE;
 		m_SurfaceFormat.format     = VK_FORMAT_UNDEFINED;
@@ -170,36 +172,86 @@ namespace Hydrogen
 		m_ImageCount			   = 0;
 		m_ImageExtent.height	   = 0;
 		m_ImageExtent.width		   = 0;
-		
+		m_Images.clear();
+		m_ImageViews.clear();		
 		return HYD_OK;
 	}
 
-	SurfaceInfo Vulkan::Swapchain::QuarrySurfaceInfo(
-		VkPhysicalDevice pDevice,
-		VkSurfaceKHR	 pSurface
+	uint32 Vulkan::Swapchain::RecreateSwapchain(
+		Vulkan::SwapchainRecreateConfiguration pConf
 	) noexcept
-	{
-		SurfaceInfo surfaceDetail;
-		//Capabilities:
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(pDevice, pSurface, &surfaceDetail.Capabilities);
+	{	
+ 
+		VkSwapchainKHR OldSwapchain = m_Handle;
+		m_Handle = VK_NULL_HANDLE;
+		
+		m_SwapchainCInfo.oldSwapchain 	  = OldSwapchain;
+		m_SwapchainCInfo.imageExtent      = pConf.NewExtent;
+		m_ImageExtent 				      = pConf.NewExtent;
+		
+		VkResult Res = vkCreateSwapchainKHR(
+			Renderer::Self().GetDevice(),
+			&m_SwapchainCInfo, VULKAN_ALLOCATION_CALLBACK, &m_Handle);
+			
+		if (Res != VK_SUCCESS)
+		{
+			Log::SetError(
+				Log::FmtStr("Unable to Recreate Swapchain. VkError:%i", int32(Res))
+			);
+			return HYD_FAILED;
+		}
 
-		//Surface formats:
-		uint32_t FormatCount = 0;
-		vkGetPhysicalDeviceSurfaceFormatsKHR(pDevice, pSurface, &FormatCount, nullptr);
-		surfaceDetail.Formats.resize(FormatCount);
-		vkGetPhysicalDeviceSurfaceFormatsKHR(pDevice, pSurface, &FormatCount, surfaceDetail.Formats.data());
+		vkDestroySwapchainKHR(
+			Renderer::Self().GetDevice(), OldSwapchain, VULKAN_ALLOCATION_CALLBACK);
 
 
-		//Presentation Modes:
+		for (auto& imageview : m_ImageViews)
+			imageview.DestroyImageView();
+		
+		m_ImageViews.clear();
+		m_Images.clear();
 
-		uint32_t PresentModeCount = 0;
-		vkGetPhysicalDeviceSurfacePresentModesKHR(pDevice, pSurface, &PresentModeCount, nullptr);
-		surfaceDetail.PresentModes.resize(PresentModeCount);
-		vkGetPhysicalDeviceSurfacePresentModesKHR(pDevice, pSurface, &PresentModeCount, surfaceDetail.PresentModes.data());
+		//Retriving the images:
+		vkGetSwapchainImagesKHR(
+			Renderer::Self().GetDevice(), m_Handle, &m_ImageCount, nullptr);
+		std::vector<VkImage> Handles;Handles.resize(m_ImageCount);
+		vkGetSwapchainImagesKHR(Renderer::Self().GetDevice(), m_Handle, &m_ImageCount, Handles.data());
+		
+		m_ImageViews.resize(m_ImageCount);
+		m_Images.resize(m_ImageCount);
 
-		return surfaceDetail;
+		for (size_t Iter = 0; Iter < m_ImageCount; ++Iter)
+		{
+			//Image
+			Image& image = m_Images[Iter];
+
+			image.m_Handle  = Handles[Iter];
+			image.m_Width   = m_ImageExtent.width;
+			image.m_Heihgt  = m_ImageExtent.height;
+			image.m_Format  = m_SurfaceFormat.format;
+			image.m_Depth   = 1;
+			image.m_Layer   = 1;
+			image.m_Level   = 1;
+
+			//Image Views:
+			ImageViewConfiguration ViewConf;
+			ViewConf.Image    = &image,
+			ViewConf.ViewType = HYD_IMAGE_VIEW_TYPE_2D,
+			ViewConf.Format   = (ImageFormat)m_SurfaceFormat.format;
+
+			CHECK_ERROR(m_ImageViews[Iter].CreateImageView(
+				ViewConf
+			));
+
+		}
+
+
+		Log::SetInfo(
+			Log::FmtStr("Swapchain Recreated with %i Images.(Width:%i, Height%i)",
+		 m_ImageCount, m_ImageExtent.width, m_ImageExtent.height));
+
+		return HYD_OK;
 	}
-
 
 	VkSurfaceFormatKHR Vulkan::Swapchain::SelectSurfaceFormat(
 		const SurfaceInfo&		 pSurfaceInfo,
@@ -234,8 +286,7 @@ namespace Hydrogen
 					return desired;
 			}
 		}
-		
-
+	
 		return VK_PRESENT_MODE_FIFO_KHR;
 	}
 
@@ -250,7 +301,7 @@ namespace Hydrogen
 
 
 		uint32 Width, Height;
-		glfwGetFramebufferSize(pWindow.GetWindow(), (int32*)&Width, (int32*)&Height);
+		glfwGetFramebufferSize(pWindow.GetHandle(), (int32*)&Width, (int32*)&Height);
 
 		VkExtent2D extend;
 
@@ -261,12 +312,13 @@ namespace Hydrogen
 	}
 
 
-	const VkImageView Vulkan::Swapchain::GetImage(uint32 pIndex) const noexcept
+	Vulkan::ImageView Vulkan::Swapchain::GetImage(uint32 pIndex) const noexcept
 	{
 		XE_ASSERT(pIndex < m_ImageViews.size(), "Out of imageView bound");
 		return m_ImageViews[pIndex];
 	}
 
+};
 };
 
 

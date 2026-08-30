@@ -10,13 +10,32 @@
 #include "../../Common.h"
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_core.h>
-#include "Structs.h"
-#include "../Window/Window.h"	
+#include "../Window/Window.h"
+#include "Image.h"	
 
 namespace Hydrogen
+{	
+namespace Internal
 {
 namespace Vulkan
 {
+			
+	struct SwapchainConfiguration
+	{
+		VkSurfaceKHR 				  Surface = VK_NULL_HANDLE;
+		SurfaceInfo					  SurfaceCapabilities;
+		uint32 						  ImageCount;
+		std::vector<VkFormat>  		  DesiredFormats;
+		std::vector<VkPresentModeKHR> DesiredPresentMode;
+		VkExtent2D 					  ImageSize;
+	};
+	
+
+	struct SwapchainRecreateConfiguration
+	{
+		VkExtent2D        NewExtent;
+		VkFormat          NewFormat = VK_FORMAT_UNDEFINED; // use the old format
+	};
 
 	class Swapchain final
 	{
@@ -30,14 +49,12 @@ namespace Vulkan
 		Swapchain(Swapchain&& pOther)	   noexcept;
 
 		uint32 CreateSwapchain(
-			const SurfaceInfo&			  pSurfaceInfo,
-			VkDevice				      pDevice,
-			VkSurfaceKHR			      pSurface,
-			uint32					      pImageCount,
-			VkExtent2D				      pExtent,
-			VkSurfaceFormatKHR		      pSurfaceFormat,
-			VkPresentModeKHR			  pPresentMode    = VK_PRESENT_MODE_FIFO_KHR
+			const SwapchainConfiguration& pConf
 		)  noexcept;
+
+		uint32 RecreateSwapchain(
+			SwapchainRecreateConfiguration pConf
+		) noexcept;
 
 
 		uint32 AcquireImage(
@@ -56,10 +73,27 @@ namespace Vulkan
 
 
 
-		SurfaceInfo QuarrySurfaceInfo(
-			VkPhysicalDevice pDevice,
-			VkSurfaceKHR	 pSurface
+		//Selects the optimal image extent for swapchain images
+		VkExtent2D SelectExtent(
+			const SurfaceInfo& pSurfaceInfo,
+			const Window&	   pWindow
 		) noexcept;
+
+		ImageView 	   		 GetImage(uint32 pIndex) const noexcept;
+
+		inline VkSwapchainKHR  GetHandle()	          const { return m_Handle; }
+		inline VkSwapchainKHR* GetHandlePtr()               { return &m_Handle;}
+		inline ImageFormat	   GetImageFormat()       const { return (ImageFormat)m_SurfaceFormat.format; }
+		inline VkColorSpaceKHR GetImageColorSpace()   const { return m_SurfaceFormat.colorSpace; }
+		inline VkExtent2D	   GetImageExtent()       const { return m_ImageExtent; }
+		inline uint32	       GetImageExtentWidth()  const { return m_ImageExtent.width; }
+		inline uint32	       GetImageExtentHeight() const { return m_ImageExtent.height; }
+
+		inline uint32		   ImageCount()	        const { return m_ImageCount; }
+
+		
+	private:
+
 
 		//Selects the best available Surface format among pDesiredFormats, if failed, defaults to the first available format
 		VkSurfaceFormatKHR SelectSurfaceFormat(
@@ -73,38 +107,20 @@ namespace Vulkan
 			const HYD_VEC<VkPresentModeKHR>& pDesiredModes
 		) noexcept;
 
-		//Selects the optimal image extent for swapchain images
-		VkExtent2D SelectExtent(
-			const SurfaceInfo& pSurfaceInfo,
-			const Window&	   pWindow
-		) noexcept;
-
-
-		const VkImageView 	   GetImage(uint32 pIndex) const noexcept;
-
-		inline VkSwapchainKHR  GetHandle()	        const { return m_Handle; }
-		inline VkSwapchainKHR* GetHandlePtr()             { return &m_Handle;}
-		inline VkFormat		   GetImageFormat()     const { return m_SurfaceFormat.format; }
-		inline VkColorSpaceKHR GetImageColorSpace() const { return m_SurfaceFormat.colorSpace; }
-		inline VkExtent2D	   GetImageExtent()     const { return m_ImageExtent; }
-		inline uint32		   ImageCount()	        const { return m_ImageCount; }
-
-		
-
 	private:
-		VkDevice	       m_Device		 = VK_NULL_HANDLE;
 		VkSwapchainKHR     m_Handle      = VK_NULL_HANDLE;
 		VkSurfaceFormatKHR m_SurfaceFormat;
 		VkExtent2D	       m_ImageExtent;
 		uint32		       m_ImageCount = 0;
-
 		VkPresentInfoKHR   m_PresentInfo;
 
-		//Temp: These will be removed from here once i implemented Image Pool.
-		std::vector<VkImage>     m_Images;
-		std::vector<VkImageView> m_ImageViews;
+		VkSwapchainCreateInfoKHR m_SwapchainCInfo;
+
+		std::vector<Image>        m_Images;
+		std::vector<ImageView>    m_ImageViews;
 
 	};
 
+};
 };
 };

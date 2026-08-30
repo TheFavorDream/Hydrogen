@@ -26,6 +26,7 @@
 #include <optional>
 #include <cstdint>
 #include <cstring>
+#include <vulkan/vulkan_core.h>
 #include "Config.h"
 
 #ifndef DIST
@@ -174,6 +175,7 @@ namespace Xenon
 		XE_FLOAT          = 5126
 	};
 
+	
 
 	enum Attributes
 	{
@@ -394,6 +396,7 @@ namespace Xenon
 	{
 		static ArrayType RetriveArrayTypeFromString(const std::string_view& pType);
 		static uint32_t  RetriveTypeSize(DataType pEnum);
+		static uint32    GetVulkanIndexTypeEnum(DataType ComponentType) noexcept;
 
 
 		BinaryData RetriveData() const; 
@@ -424,6 +427,12 @@ namespace Xenon
 
 		TextureFilter Mag = LINEAR;
 		TextureFilter Min = LINEAR;
+
+
+
+		static uint32 VulkanFilterEnum      (TextureFilter pFilter)   noexcept;
+		static uint32 VulkanMipmapFilterEnum(TextureFilter pFilter)   noexcept;
+		static uint32 VulkanWrapEnum        (TextureWrap   pWrapMdoe) noexcept;
 	};
 
 
@@ -766,8 +775,8 @@ namespace Xenon
 		//Return a refrence to a node
 		const Node&  operator[](size_t pIndex) const;
 
-		inline std::string GetName()   { return m_Name; }
-		inline size_t      NodeCount() { return m_Nodes.size(); }
+		inline std::string GetName()   const { return m_Name; }
+		inline size_t      NodeCount() const { return m_Nodes.size(); }
 
 		inline Mesh& GetMesh(uint64_t pMeshIndex);
 		inline const XE_VECTOR<Mesh>&           GetMeshes()   const { return m_Meshes; }

@@ -3,6 +3,7 @@
 
 #include "../Renderer.h"
 #include <GLFW/glfw3.h>
+#include <vulkan/vulkan_core.h>
 namespace Hydrogen
 {
 
@@ -11,7 +12,13 @@ namespace Hydrogen
 
 	void Window::ResizeCallback(GLFWwindow* pWindow, int32 pWidth, int32 pHeight)
 	{
-		Renderer::Self().ReCreateSwapchain();
+
+		// glfwGetFramebufferSize(pWindow,
+		// 	 &Renderer::Self().GetWindow().m_ViewportSize.X,
+		// 	&Renderer::Self().GetWindow().m_ViewportSize.Y
+		// );
+
+		Renderer::Self().RecreateSwapchain();
 	}
 
 	void Window::MaximizeCallback(GLFWwindow* pWindow, int32 pMaximized)
@@ -46,7 +53,7 @@ namespace Hydrogen
 
 	Window::~Window()
 	{
-		DestroyWindow();
+		//DestroyWindow(VK_NULL_HANDLE);
 	}
 	
 	uint32 Window::MakeWindow(int32 pWidth, int32 pHeight, const char* pTitle)
@@ -90,11 +97,43 @@ namespace Hydrogen
 		return HYD_OK;
 	}
 	
-	bool Window::DestroyWindow()
+	uint32 Window::CreateVulkanSurface(VkInstance pVkInstance) noexcept
 	{
+		glfwCreateWindowSurface(pVkInstance, m_Window, VULKAN_ALLOCATION_CALLBACK, &m_Surface);
+		
+		if (m_Surface == VK_NULL_HANDLE)
+		{
+			const char* LogMessage;
+			glfwGetError(&LogMessage);
+			Log::SetError(Log::FmtStr("Cannot Create Surface. glfw Says:%s", LogMessage));
+			return HYD_FAILED;
+		}
+		return HYD_OK;
+	}
+
+
+	void Window::DestroyWindow(VkInstance pVkInstance) noexcept
+	{
+		vkDestroySurfaceKHR  (pVkInstance, m_Surface, VULKAN_ALLOCATION_CALLBACK);
 		glfwDestroyWindow(m_Window);
 		m_Window = NULL;
-		return HYD_OK;
+	}
+
+
+	void Window::UpdateViewport() noexcept
+	{
+		glfwGetFramebufferSize(m_Window, &m_ViewportSize.X, &m_ViewportSize.Y);
+
+		VkViewport CurrantViewport{
+			.x=0.0f,
+			.y=0.0f,
+			.width = (float)m_ViewportSize.X,
+			.height = (float)m_ViewportSize.Y,
+			.minDepth = 0.0f,
+			.maxDepth = 1.0f
+		};
+
+		vkCmdSetViewport(Renderer::Self().GlobalRenderCommandBuffer().GetHandle(), 0, 1, &CurrantViewport);
 	}
 
 	int Window::SetViewportSize(int32 pWidth, int32 pHeight, int32 pStartX, int32 pStartY)
@@ -103,19 +142,9 @@ namespace Hydrogen
 		return HYD_OK;
 	}
 
-	void Window::ProcessWindow(bool& pRunningFlag)
+	bool Window::ShouldWindowClose()
 	{
-		glfwGetWindowSize(m_Window, &m_Width, &m_Height);
-
-		//Calculate Viewport Size based on Ratio:
-		m_ViewportSize.X = (m_ViewportRatios.X/100.0f)*float(m_Width);
-		m_ViewportSize.Y = (m_ViewportRatios.Y/100.0f)*float(m_Height);
-		m_ViewportSize.Z = 0.0f;
-		m_ViewportSize.W = (m_Height - m_ViewportSize.Y);
-
-		pRunningFlag = !glfwWindowShouldClose(m_Window);
-		SetViewportSize((int32)m_ViewportSize.X, (int32)m_ViewportSize.Y, (int32)m_ViewportSize.Z, (int32)m_ViewportSize.W);
-		glfwSwapBuffers(m_Window);
+		return glfwWindowShouldClose(m_Window);
 	}
 
 	int Window::SetViewportRatio(float pWidth, float pHeight)
@@ -153,6 +182,32 @@ namespace Hydrogen
 	Window* const Window::GetCurrentWindow()
 	{
 		return s_CurrentWindow;
+	}
+
+
+	SurfaceInfo Window::QuarrySurfaceInfo(
+		VkPhysicalDevice pDevice
+	) noexcept
+	{
+		SurfaceInfo surfaceDetail;
+		//Capabilities:
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(pDevice, m_Surface, &surfaceDetail.Capabilities);
+
+		//Surface formats:
+		uint32_t FormatCount = 0;
+		vkGetPhysicalDeviceSurfaceFormatsKHR(pDevice, m_Surface, &FormatCount, nullptr);
+		surfaceDetail.Formats.resize(FormatCount);
+		vkGetPhysicalDeviceSurfaceFormatsKHR(pDevice, m_Surface, &FormatCount, surfaceDetail.Formats.data());
+
+
+		//Presentation Modes:
+
+		uint32_t PresentModeCount = 0;
+		vkGetPhysicalDeviceSurfacePresentModesKHR(pDevice, m_Surface, &PresentModeCount, nullptr);
+		surfaceDetail.PresentModes.resize(PresentModeCount);
+		vkGetPhysicalDeviceSurfacePresentModesKHR(pDevice, m_Surface, &PresentModeCount, surfaceDetail.PresentModes.data());
+
+		return surfaceDetail;
 	}
 
 };

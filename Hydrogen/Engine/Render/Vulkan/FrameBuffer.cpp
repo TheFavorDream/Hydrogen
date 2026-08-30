@@ -4,20 +4,21 @@
 
 namespace Hydrogen
 {
-
+namespace Internal
+{
     Vulkan::FrameBuffer::~FrameBuffer() noexcept
     {
         if (m_Handle != VK_NULL_HANDLE)
             DestroyFrameBuffer();
     }
 
-    Vulkan::FrameBuffer::FrameBuffer(Vulkan::FrameBuffer&& pOther)  noexcept
+    Vulkan::FrameBuffer::FrameBuffer(FrameBuffer&& pOther)  noexcept
         : m_Handle(pOther.m_Handle)
     {
         pOther.m_Handle = VK_NULL_HANDLE;
     }
     
-    Vulkan::FrameBuffer& Vulkan::FrameBuffer::operator=(Vulkan::FrameBuffer&& pOther) noexcept
+    Vulkan::FrameBuffer& Vulkan::FrameBuffer::operator=(FrameBuffer&& pOther) noexcept
     {
         m_Handle        = pOther.m_Handle;
         pOther.m_Handle = VK_NULL_HANDLE;
@@ -27,8 +28,8 @@ namespace Hydrogen
 
     //Creates the framebuffer 
     uint32 Vulkan::FrameBuffer::CreateFrameBuffer(
-        VkRenderPass                pRenderPass,
-        HYD_VEC<VkImageView>&       pImageViews,
+        VkRenderPass&               pRenderPass,
+        const std::vector<VkImageView>&   pImageViews,
         uint32                      pWidth, 
         uint32                      pHeight,
         uint32                      pLayers,
@@ -110,4 +111,5 @@ namespace Hydrogen
         m_Handle = VK_NULL_HANDLE;
         return HYD_OK;
     }
+};
 };

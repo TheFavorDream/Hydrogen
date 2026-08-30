@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Common.h"
+
+#include "../Common.h"
 #include "glm/matrix.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -14,15 +15,19 @@ namespace Hydrogen
 	{
 	public:
 
+		
 
-		HYD void SetupCamera(float pFOV, glm::vec3 pPosition, float pAspectRatio = 2.0f, float pNearPlane = 0.1, float pFarPlane = 1000.0f);
+		HYD void SetupCamera(float pFOV, glm::vec3 pPosition, float pAspectRatio = 2.0f, float pNearPlane = 0.1, float pFarPlane = 100.0f);
 		HYD void HandleCameraMovement();
 		HYD void HandleCameraLooking();
 		 
 		HYD void DisableCameraMovement(bool pDisableCamera);
 		 
-		HYD float* GetView();
-		HYD float* GetProjection();
+		HYD float* GetViewPtr();
+		HYD float* GetProjectionPtr();
+
+		HYD glm::mat4& GetView();
+		HYD glm::mat4& GetProjection();
 
 		HYD inline glm::vec3& GetCameraPos() { return m_Position; }
 	private:
@@ -35,7 +40,7 @@ namespace Hydrogen
 		float m_NearPlane = 0.1f;
 		float m_FarPlane = 1000.0f;
 		float m_AspectRatio = 0.0f;
-		float m_Speed = 0.5f;
+		float m_Speed = 0.05f;
 
 		float m_Sensitivity = 0.1f;
 

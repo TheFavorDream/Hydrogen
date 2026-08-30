@@ -68,10 +68,13 @@ typedef char				   int8;
 #define VULKAN_ALLOCATION_CALLBACK nullptr
 
 
-
 #define HYD_VERSION_MAJOR 0
 #define HYD_VERSION_MINOR 3
 #define HYD_VERSION_PATCH 0
+
+
+#define HYD_TRUE  1U
+#define HYD_FALSE 0U
 
 
 
@@ -88,7 +91,7 @@ enum DataType {
 
 
 
-
+#define HYD_ID_SPACE uint32
 
 #define HYD_VEC    std::vector
 #define HYD_STRING std::string
@@ -97,15 +100,11 @@ enum DataType {
 namespace Hydrogen
 {
 
-
-	class  FileSys;
-	class  Memeory;
-	struct Buffer;
-
-	struct Primitive;
-
-	class MaterialPool;
-	class ShaderPool;
+	template <typename Type>
+	class ResourcePool;
+	
+	template <typename Type>
+	struct Instance;
 
 	class  MeshGenerator;
 	class  Scene;
@@ -113,27 +112,54 @@ namespace Hydrogen
 	class  Renderer;
 	class  Mesh;
 	struct Primitive;
-	class  Shader;
 	class  Material;
 	class  Texture;
-
-
+	
+	class Framebuffer;
+	class Attachment;
+	class Texture2D;
+	class Texture3D;
+	class CubeMap;
+	
 	class Mouse;
 	class Keyboard;
 	
-
-	//Vulkan:
-	namespace Vulkan
+	namespace Internal
 	{
-		class FrameBuffer;
-		class Shader;
-		class RenderPass;
-		class Swapchain;
-		class CommandBuffer;
-		class CommandPool;
-		class Pipeline;
-	}; 
+		class  FileSys;
+		class  Memeory;
 
+		//Vulkan:
+		namespace Vulkan
+		{
+			class FrameBuffer;
+			class Shader;
+			class Renderpass;
+			class Swapchain;
+			class CommandBuffer;
+			class CommandPool;
+			class GraphicsPipeline;
+			class PipelineLayout;
+			class BasicBuffer;
+			class VertexBuffer;
+			class IndexBuffer;
+			class StagingBuffer;
+			class UniformBuffer;
+			class DescriptorPool;
+			class DescriptorSet; 
+			class DescriptorSetLayout;
+			class Image;
+			class ImageView;
+			class Sampler;
+			class Device;
+		}; 
+
+	};
+
+	    //typedef Instance<Internal::Vulkan::PipelineLayout>   PipelineLayout;
+	typedef Instance<Internal::Vulkan::Image>            ImageRef;
+    typedef Instance<Internal::Vulkan::GraphicsPipeline> GraphicsPipelineRef;
+	typedef Internal::Vulkan::DescriptorSetLayout        UniformLayoutRef;
 };
 
 

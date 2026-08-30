@@ -17,7 +17,7 @@ namespace Hydrogen
 	public:
 
 		//Creates a mesh obhect from given xenon::mesh
-		static Mesh CreateGLTFMesh(const Xenon::Mesh& pMesh);
+		static Mesh CreateGLTFMesh(const Xenon::Mesh& pMesh, GraphicsPipelineRef pPipeline);
 
 	public:
 

@@ -30,6 +30,8 @@ namespace Hydrogen
 		HYD uint32 PushLayer(Ptr<Layer> pLayer);
 
 
+		static Xenon::Model Load(const std::string& pPath, uint32 pFlags=Xenon::LF_DEFAULT);
+
 
 	protected:
 		HYD void Loop();
@@ -39,10 +41,8 @@ namespace Hydrogen
 		HYD void Update();
 
 	public:
-		HYD static Instance<Scene>   GetCurrentScene();
 		HYD inline static float		 GetDeltaTime() { return s_DeltaTime; }
-
-		HYD static Instance<Scene> LoadSceneGLTF(const std::string& pPath);
+		HYD static Instance<Scene>   CreateScene() noexcept;
 
 	private:
 		HYD static void SetDeltaTime(float pDelta);
@@ -53,10 +53,10 @@ namespace Hydrogen
 		
 		bool  m_Running = false;
 
-	private:
+	public:
 		static float		       s_DeltaTime;
 		static ResourcePool<Scene> s_Scenes;
-		static Instance<Scene>	   s_CurrentScene;
+		static Ptr<Core>		   s_Self;
 
 		friend class Renderer;
 	};

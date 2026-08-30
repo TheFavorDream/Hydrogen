@@ -3,7 +3,8 @@
 
 namespace Hydrogen
 {
-
+namespace Internal
+{
 
 
 	Buffer FileSys::ReadFile(const std::string & pPath)
@@ -12,7 +13,7 @@ namespace Hydrogen
 		std::ifstream File(pPath, std::ios::binary);
 		if (!File.is_open())
 		{
-			Log::SetError(Log::FmtStr("Unable to Open File: %s", pPath));
+			Log::SetError(Log::FmtStr("Unable to Open File: %s", pPath.c_str()));
 			return Buffer();
 		}
 
@@ -42,5 +43,6 @@ namespace Hydrogen
 		pFileHandle.seekg(0, pFileHandle.beg);
 		return SizeInBytes;
 	}
-
+	
+};
 };

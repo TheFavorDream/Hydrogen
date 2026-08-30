@@ -1,87 +1,91 @@
 #pragma once
 
 #include "../../Common.h"
-#include "Image.h"
-
-/*
-	Texture API-independent interface:
-*/
+#include "../Vulkan/Image.h"
+#include "../Vulkan/Descriptors.h"
 
 namespace Hydrogen
 {
 
-	class Texture2D
+
+
+	enum Channels {CH_RED=1, CH_RG, CH_RGB, CH_RGBA};
+
+	// Image Object
+	struct ImageData
 	{
-	public:
-
-		//Constructors
-		HYD Texture2D();
-
-		HYD ~Texture2D();
-
-		HYD Texture2D(const Texture2D& pOther) = delete;
-		HYD Texture2D(Texture2D&& pOther);
-
-		HYD Texture2D& operator=(const Texture2D& pOther) = delete;
-		HYD Texture2D& operator=(Texture2D&& pOther);
+		uint8*	 Data    = nullptr;
+		int32	 Width   = 0;
+		int32	 Height  = 0;
+		Channels ImageChannel = CH_RGBA;
 
 
-		//Creators:
-		HYD uint32 CreateTexture(const Image& pImage, Sampler pSampler = Sampler());
-		HYD uint32 DestroyTexture();
+		 ImageData() {};
+		 ImageData(void* pData, int32 pWidth, int32 pHeight);
+		~ImageData();
 
-		//Read & Copy Texture:
+		ImageData(ImageData&& pOther);
+		ImageData(const ImageData& pOther);
+
+		uint32 LoadImageFromDisk(const char* pSource);
+		uint32 LoadImageFromMemory(Buffer pImageData, int32 pDesiredChannels=0);
+		uint32 FreeImage();
 
 
-		//Bind & Unbind:
-		HYD void Bind(uint32 pSlot = 0) const;
-		HYD void Unbind(uint32 pSlot)   const;
 
-		//Getters:
-		HYD uint32 GetTextureID() noexcept; 
-		HYD uint32 GetWidth()	  noexcept;
-		HYD uint32 GetHeight()	  noexcept;
-		HYD uint32 GetChannels()  noexcept;
 
-	private:
-		void* m_TexObject = nullptr;
 	};
 
 
-	class CubeMap
+
+	struct TextureConfiguration
+	{
+
+		TextureConfiguration() = default;
+
+		TextureConfiguration(TextureConfiguration&& pOther) 		   noexcept;
+		TextureConfiguration& operator=(TextureConfiguration&& pOther) noexcept;
+
+
+		Buffer 	         	 Data;
+		SamplerConfiguration ImageSampler;
+		uint32 				 TexCoordSet = 0;
+		ShaderUniformBinding BindingLocation;
+	};
+
+	
+	class Texture2D final
 	{
 	public:
+	
+		HYD  Texture2D() noexcept;
+		HYD ~Texture2D() noexcept;
 
-		HYD  CubeMap();
-		HYD ~CubeMap();
+		//Copy Constructor
+		HYD Texture2D(const Texture2D& pOther) noexcept;
+		HYD Texture2D(Texture2D&& pOther) 	   noexcept;
 
-		HYD CubeMap(const CubeMap& pOther) = delete;
-		HYD CubeMap(CubeMap&& pOther);
-
-		HYD CubeMap& operator=(const CubeMap& pOther) = delete;
-		HYD CubeMap& operator=(CubeMap&& pOther);
-
-		//Creators:
-
-		//Creates an cube map with images and samplers
-		HYD uint32 CreateCubeMap(const std::array<Image, 6>& pImages, const std::array<Sampler, 6>& pSamplers = {Sampler()});
-		HYD uint32 DestroyTexture();
-
-		//Read & Copy Texture:
+		HYD Texture2D& operator=(const Texture2D& pOther)  noexcept;
+		HYD Texture2D& operator=(Texture2D&& pOther) 	   noexcept;
 
 
-		//Bind & Unbind:
-		HYD void Bind(uint32 pSlot = 0) const;
-		HYD void Unbind(uint32 pSlot)   const;
+		HYD uint32 CreateTexture(
+			TextureConfiguration pConf
+		)  noexcept;
 
-		//Getters:
-		HYD uint32 GetTextureID() noexcept;
-		HYD uint32 GetWidth()	  noexcept;
-		HYD uint32 GetHeight()	  noexcept;
-		HYD uint32 GetChannels()  noexcept;
+		HYD void   DestroyTexture() noexcept;
+
+		HYD void Bind();
 
 	private:
-		void* m_TexObject = nullptr;
+		Internal::Vulkan::Image     m_ImageHandle;
+		Internal::Vulkan::ImageView m_View;
+		Internal::Vulkan::Sampler   m_Sampler;
+		uint32 				        m_TexCoordSet = 0;
+		ShaderUniformBinding        m_BindingLocation;
+
+	private:
+		friend class Material;
 	};
 
 };

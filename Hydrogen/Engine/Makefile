@@ -44,7 +44,7 @@ ifeq ($(config),debug_x64)
 TARGETDIR = ../../bin/Debug-linux-x86_64/Hydrogen
 TARGET = $(TARGETDIR)/libHydrogen.so
 OBJDIR = ../../bin-obj/Debug-linux-x86_64/Hydrogen
-DEFINES += -DDEBUG -DHYD_DLL_BUILD -DGLFW_INCLUDE_VULKAN -DHYD_DEBUG -DHYD_LINUX
+DEFINES += -DDEBUG -DHYD_DLL_BUILD -DGLFW_INCLUDE_VULKAN -DGLM_FORCE_DEPTH_ZERO_TO_ONE -DHYD_DEBUG -DHYD_LINUX
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -O0 -fPIC -g
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -O0 -fPIC -g -std=c++17
 LIBS += ../../bin/Debug-linux-x86_64/glfw/libGLFW.a ../../bin/Debug-linux-x86_64/Imgui/libImGui.a ../../bin/Debug-linux-x86_64/stb_image/libStb_image.a ../../bin/Debug-linux-x86_64/SimdJson/libSimdJson.a ../../bin/Debug-linux-x86_64/Xenon/libXenon.a -lvulkan
@@ -55,7 +55,7 @@ else ifeq ($(config),release_x64)
 TARGETDIR = ../../bin/Release-linux-x86_64/Hydrogen
 TARGET = $(TARGETDIR)/libHydrogen.so
 OBJDIR = ../../bin-obj/Release-linux-x86_64/Hydrogen
-DEFINES += -DRELEASE -DHYD_DLL_BUILD -DGLFW_INCLUDE_VULKAN -DHYD_RELEASE -DHYD_LINUX
+DEFINES += -DRELEASE -DHYD_DLL_BUILD -DGLFW_INCLUDE_VULKAN -DGLM_FORCE_DEPTH_ZERO_TO_ONE -DHYD_RELEASE -DHYD_LINUX
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -O2 -fPIC
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -O2 -fPIC -std=c++17
 LIBS += ../../bin/Release-linux-x86_64/glfw/libGLFW.a ../../bin/Release-linux-x86_64/Imgui/libImGui.a ../../bin/Release-linux-x86_64/stb_image/libStb_image.a ../../bin/Release-linux-x86_64/SimdJson/libSimdJson.a ../../bin/Release-linux-x86_64/Xenon/libXenon.a -lvulkan
@@ -66,7 +66,7 @@ else ifeq ($(config),distrib_x64)
 TARGETDIR = ../../bin/Distrib-linux-x86_64/Hydrogen
 TARGET = $(TARGETDIR)/libHydrogen.so
 OBJDIR = ../../bin-obj/Distrib-linux-x86_64/Hydrogen
-DEFINES += -DDIST -DHYD_DLL_BUILD -DGLFW_INCLUDE_VULKAN -DHYD_LINUX
+DEFINES += -DDIST -DHYD_DLL_BUILD -DGLFW_INCLUDE_VULKAN -DGLM_FORCE_DEPTH_ZERO_TO_ONE -DHYD_LINUX
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -O2 -fPIC /MD
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -O2 -fPIC -std=c++17 /MD
 LIBS += ../../bin/Distrib-linux-x86_64/glfw/libGLFW.a ../../bin/Distrib-linux-x86_64/Imgui/libImGui.a ../../bin/Distrib-linux-x86_64/stb_image/libStb_image.a ../../bin/Distrib-linux-x86_64/SimdJson/libSimdJson.a ../../bin/Distrib-linux-x86_64/Xenon/libXenon.a -lvulkan
@@ -85,9 +85,12 @@ endif
 GENERATED :=
 OBJECTS :=
 
+GENERATED += $(OBJDIR)/Buffer.o
 GENERATED += $(OBJDIR)/Camera.o
 GENERATED += $(OBJDIR)/Commands.o
 GENERATED += $(OBJDIR)/Core.o
+GENERATED += $(OBJDIR)/Descriptors.o
+GENERATED += $(OBJDIR)/Device.o
 GENERATED += $(OBJDIR)/FileSystem.o
 GENERATED += $(OBJDIR)/FrameBuffer.o
 GENERATED += $(OBJDIR)/HydPch.o
@@ -102,21 +105,25 @@ GENERATED += $(OBJDIR)/Mesh.o
 GENERATED += $(OBJDIR)/MeshGenerator.o
 GENERATED += $(OBJDIR)/Mouse.o
 GENERATED += $(OBJDIR)/Pipeline.o
+GENERATED += $(OBJDIR)/Primitive.o
 GENERATED += $(OBJDIR)/Quaternion.o
 GENERATED += $(OBJDIR)/Renderer.o
 GENERATED += $(OBJDIR)/Renderpass.o
 GENERATED += $(OBJDIR)/Scene.o
 GENERATED += $(OBJDIR)/Shader.o
-GENERATED += $(OBJDIR)/Shader1.o
 GENERATED += $(OBJDIR)/Swapchain.o
 GENERATED += $(OBJDIR)/Texture.o
 GENERATED += $(OBJDIR)/Timer.o
 GENERATED += $(OBJDIR)/Transformation.o
+GENERATED += $(OBJDIR)/UniformBuffer.o
 GENERATED += $(OBJDIR)/VecMath.o
 GENERATED += $(OBJDIR)/Window.o
+OBJECTS += $(OBJDIR)/Buffer.o
 OBJECTS += $(OBJDIR)/Camera.o
 OBJECTS += $(OBJDIR)/Commands.o
 OBJECTS += $(OBJDIR)/Core.o
+OBJECTS += $(OBJDIR)/Descriptors.o
+OBJECTS += $(OBJDIR)/Device.o
 OBJECTS += $(OBJDIR)/FileSystem.o
 OBJECTS += $(OBJDIR)/FrameBuffer.o
 OBJECTS += $(OBJDIR)/HydPch.o
@@ -131,16 +138,17 @@ OBJECTS += $(OBJDIR)/Mesh.o
 OBJECTS += $(OBJDIR)/MeshGenerator.o
 OBJECTS += $(OBJDIR)/Mouse.o
 OBJECTS += $(OBJDIR)/Pipeline.o
+OBJECTS += $(OBJDIR)/Primitive.o
 OBJECTS += $(OBJDIR)/Quaternion.o
 OBJECTS += $(OBJDIR)/Renderer.o
 OBJECTS += $(OBJDIR)/Renderpass.o
 OBJECTS += $(OBJDIR)/Scene.o
 OBJECTS += $(OBJDIR)/Shader.o
-OBJECTS += $(OBJDIR)/Shader1.o
 OBJECTS += $(OBJDIR)/Swapchain.o
 OBJECTS += $(OBJDIR)/Texture.o
 OBJECTS += $(OBJDIR)/Timer.o
 OBJECTS += $(OBJDIR)/Transformation.o
+OBJECTS += $(OBJDIR)/UniformBuffer.o
 OBJECTS += $(OBJDIR)/VecMath.o
 OBJECTS += $(OBJDIR)/Window.o
 
@@ -236,13 +244,13 @@ $(OBJDIR)/Mesh.o: Geometry/Mesh.cpp
 $(OBJDIR)/MeshGenerator.o: Geometry/MeshGenerator/MeshGenerator.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/Primitive.o: Geometry/Primitive.cpp
+	@echo "$(notdir $<)"
+	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/HydPch.o: HydPch.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/Log.o: Log/Log.cpp
-	@echo "$(notdir $<)"
-	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/Image.o: Render/Material/Image.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/Material.o: Render/Material/Material.cpp
@@ -254,13 +262,22 @@ $(OBJDIR)/Texture.o: Render/Material/Texture.cpp
 $(OBJDIR)/Renderer.o: Render/Renderer.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/Shader.o: Render/Shader.cpp
+$(OBJDIR)/Buffer.o: Render/Vulkan/Buffer.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/Commands.o: Render/Vulkan/Commands.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/Descriptors.o: Render/Vulkan/Descriptors.cpp
+	@echo "$(notdir $<)"
+	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/Device.o: Render/Vulkan/Device.cpp
+	@echo "$(notdir $<)"
+	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/FrameBuffer.o: Render/Vulkan/FrameBuffer.cpp
+	@echo "$(notdir $<)"
+	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/Image.o: Render/Vulkan/Image.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/Pipeline.o: Render/Vulkan/Pipeline.cpp
@@ -269,10 +286,13 @@ $(OBJDIR)/Pipeline.o: Render/Vulkan/Pipeline.cpp
 $(OBJDIR)/Renderpass.o: Render/Vulkan/Renderpass.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/Shader1.o: Render/Vulkan/Shader.cpp
+$(OBJDIR)/Shader.o: Render/Vulkan/Shader.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/Swapchain.o: Render/Vulkan/Swapchain.cpp
+	@echo "$(notdir $<)"
+	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/UniformBuffer.o: Render/Vulkan/UniformBuffer.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/Window.o: Render/Window/Window.cpp

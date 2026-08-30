@@ -357,6 +357,22 @@ namespace Xenon
 		return XE_TYPE_SCALER;
 	}
 
+	uint32 Accessor::GetVulkanIndexTypeEnum(DataType ComponentType) noexcept
+	{
+		switch (ComponentType)
+		{
+			case XE_UNSIGNED_BYTE:
+			 return 1000265000;
+			case XE_UNSIGNED_SHORT:
+				return 0;
+			case XE_UNSIGNED_INT:
+				return 1;
+			default:
+				return 0x7FFFFFFF;
+		}
+		return 0x7FFFFFFF;
+	}
+
 
 	/*
 		Material:
@@ -658,6 +674,65 @@ namespace Xenon
 	{
 		return BinaryData(ImageData.Buffer->ByteLength, ImageData.Buffer->Ptr);
 	}
+
+	uint32 Sampler::VulkanFilterEnum(TextureFilter pFilter) noexcept
+	{
+
+		switch (pFilter)
+		{
+		case NEAREST:
+			return 0;
+		case LINEAR:
+			return 1;
+		case NEAREST_MIPMAP_NEAREST: 
+			return 0;
+		case LINEAR_MIPMAP_NEAREST:
+			return 1;
+		case NEAREST_MIPMAP_LINEAR:
+			return 0;
+		case LINEAR_MIPMAP_LINEAR:  
+			return 1;
+		}
+
+		return 0x7FFFFFFF; //No Valid filter
+	}
+
+	uint32 Sampler::VulkanMipmapFilterEnum(TextureFilter pFilter)   noexcept
+	{
+		switch (pFilter)
+		{
+		case NEAREST:
+			return 0x7FFFFFFF;
+		case LINEAR:
+			return 0x7FFFFFFF;
+		case NEAREST_MIPMAP_NEAREST: 
+			return 0;
+		case LINEAR_MIPMAP_NEAREST:
+			return 0;
+		case NEAREST_MIPMAP_LINEAR:
+			return 1;
+		case LINEAR_MIPMAP_LINEAR:  
+			return 1;
+		}
+		return 0x7FFFFFFF;
+	}
+
+
+	uint32 Sampler::VulkanWrapEnum(TextureWrap pWrapMdoe) noexcept
+	{
+
+		switch(pWrapMdoe)
+		{
+			case REPEAT:	
+				return 0;
+			case MIRRORED_REPEAT: 
+				return 1;
+			case CLAMP_TO_EDGE: 
+				return 2;
+		}
+
+		return 0x7FFFFFFF;
+	};
 
 };
 

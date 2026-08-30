@@ -23,10 +23,6 @@ namespace Hydrogen
 	template <typename Type>
 	struct Block;
 
-	template <typename Type>
-	class ResourcePool;
-
-
 
 
 	template <typename Type>
@@ -444,17 +440,17 @@ namespace Hydrogen
 	{
 	public:
 		
-		Instance()
+		Instance() noexcept
 		{
 
 		}
 
-	   ~Instance()
+	   ~Instance() noexcept
 	    {
 		   Reset();
 	    }
 
-	    Instance(const Instance& pOther)
+	    Instance(const Instance& pOther) noexcept
 	    {
 			if (pOther.m_Bucket != nullptr)
 			{
@@ -467,7 +463,7 @@ namespace Hydrogen
 			}
 		}
 
-		Instance(Instance&& pOther)
+		Instance(Instance&& pOther) noexcept
 		{
 			m_Bucket = pOther.m_Bucket;
 			m_Index  = pOther.m_Index;
@@ -478,7 +474,7 @@ namespace Hydrogen
 			pOther.m_Obj    = nullptr; 
 		}
 
-		Instance& operator=(const Instance& pOther)
+		Instance& operator=(const Instance& pOther) noexcept
 		{
 
 			if (&pOther == this)
@@ -495,7 +491,7 @@ namespace Hydrogen
 			return *this;
 		}
 
-		Instance& operator=(Instance&& pOther)
+		Instance& operator=(Instance&& pOther) noexcept
 		{
 			if (&pOther == this)
 				return *this;
@@ -524,12 +520,12 @@ namespace Hydrogen
 		Type&	  Get() { return   *m_Obj; }
 		Ptr<Type> GetPtr() { return m_Obj; }
 
-		inline bool IsNull()
+		inline bool IsNull() 
 		{
 			return (m_Obj == nullptr);
 		}
 
-		void Reinstance()
+		void Reinstance() noexcept
 		{
 
 			m_Bucket->DropRefCount(m_Index);
@@ -549,7 +545,7 @@ namespace Hydrogen
 			
 		}
 
-		void Reset()
+		void Reset() noexcept
 		{
 			if (m_Bucket)
 			{
@@ -561,6 +557,13 @@ namespace Hydrogen
 				m_Bucket = nullptr;
 				m_Obj	 = nullptr;
 			}
+		}
+
+		//Dengerous
+		void ResetWithoutRefDrop() noexcept
+		{
+			m_Bucket = nullptr;
+			m_Obj    = nullptr;
 		}
 
 		inline uint64 Index() { return m_Index; }

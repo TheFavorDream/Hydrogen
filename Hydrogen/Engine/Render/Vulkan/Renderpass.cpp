@@ -1,10 +1,62 @@
 #include "Renderpass.h"
 #include "../Renderer.h" //for logical device
 #include <vulkan/vulkan_core.h>
+
+
+
 namespace Hydrogen
 {
 
-	Vulkan::RenderPass::~RenderPass() noexcept
+	//Config Interface Implementation:
+
+
+	void SubpassConfiguration::AddInputAttachment       (AttachmentReference pInput) 	      noexcept
+	{
+		m_Input.push_back(pInput);
+	}
+
+	void SubpassConfiguration::AddColorAttachment       (AttachmentReference pColor) 	      noexcept
+	{
+		m_Color.push_back(pColor);
+	}
+
+	void SubpassConfiguration::AddDepthStencilAttachment(AttachmentReference pDepthStencil)   noexcept
+	{
+		m_DepthStencil.push_back(pDepthStencil);
+	}
+	void SubpassConfiguration::AddResolveAttachment     (AttachmentReference pResolve)        noexcept
+	{
+		m_Resolve.push_back(pResolve);
+	}
+	void SubpassConfiguration::AddIPreservedAttachment  (uint32 pPreserved) 			      noexcept
+	{
+		m_Preserved.push_back(pPreserved);
+	}
+
+
+
+	void RenderpassConfiguration::AddAttachment(RenderpassAttachment pAttachment)  			   noexcept 
+	{
+		m_Attachments.push_back(pAttachment);
+	}
+	void RenderpassConfiguration::AddSubpass(SubpassConfiguration pSubpassConf) 			   noexcept
+	{
+		m_Subpasses.push_back(pSubpassConf);
+	}
+	void RenderpassConfiguration::AddDependency(SubpassDependencyConfiguration pDependencyConf) noexcept
+	{
+		m_Dependencies.push_back(pDependencyConf);
+	}
+
+namespace Internal
+{
+	//Renderpass Implementation:
+	Vulkan::Renderpass::Renderpass() noexcept
+	{
+
+	}
+
+	Vulkan::Renderpass::~Renderpass() noexcept
 	{
 		if (m_Handle != VK_NULL_HANDLE)
 			DestroyRenderPass();
@@ -12,264 +64,229 @@ namespace Hydrogen
 
 
 	//move
-	Vulkan::RenderPass::RenderPass(Vulkan::RenderPass&& pOther) noexcept
+	Vulkan::Renderpass::Renderpass(Vulkan::Renderpass&& pOther) noexcept
 	{
-		m_Handle	  = pOther.m_Handle;
-		m_Attachments = std::move(pOther.m_Attachments);
-		m_Subpasses   = std::move(pOther.m_Subpasses);
+		m_Handle	    = pOther.m_Handle;
+		m_SubpassCount  = pOther.m_SubpassCount;
 
-		pOther.m_Handle = nullptr;
+		pOther.m_Handle 	  = nullptr;
+		pOther.m_SubpassCount = 0;
+
+		m_AttachmentDescriptions = std::move(m_AttachmentDescriptions);
+		m_SubpassRefs 			 = std::move(m_SubpassRefs);
+		m_Subpasses   			 = std::move(m_Subpasses);
+		m_SubpassDependencies 	 = std::move(m_SubpassDependencies);
 	}
 
-	Vulkan::RenderPass& Vulkan::RenderPass::operator=(Vulkan::RenderPass&& pOther) noexcept
+	Vulkan::Renderpass& Vulkan::Renderpass::operator=(Vulkan::Renderpass&& pOther) noexcept
 	{
-		m_Handle	  = pOther.m_Handle;
-		m_Attachments = std::move(pOther.m_Attachments);
-		m_Subpasses	  = std::move(pOther.m_Subpasses);
+		m_Handle	    = pOther.m_Handle;
+		m_SubpassCount  = pOther.m_SubpassCount;
 
-		pOther.m_Handle = nullptr;
+		pOther.m_Handle 	  = nullptr;
+		pOther.m_SubpassCount = 0;
+
+		m_AttachmentDescriptions = std::move(m_AttachmentDescriptions);
+		m_SubpassRefs 			 = std::move(m_SubpassRefs);
+		m_Subpasses   			 = std::move(m_Subpasses);
+		m_SubpassDependencies 	 = std::move(m_SubpassDependencies);
 
 		return *this;
 	}
 
 
 
-	//Attachment info
-
-	VkAttachmentReference Vulkan::RenderPass::AddAttachment(
-		VkImageLayout		    pImageLayout,
-		VkAttachmentDescription pDescription
-	) noexcept
-	{
-		m_Attachments.push_back( pDescription );
-
-		VkAttachmentReference Reference{};
-		Reference.attachment = m_Attachments.size() - 1;
-		Reference.layout	 = pImageLayout;
-
-		return Reference;
-	}
-
-	VkAttachmentReference Vulkan::RenderPass::AddAttachment(
-		VkImageLayout		         pImageLayout,
-		VkFormat					 pFormat,
-		VkImageLayout				 pFinalLayout,
-		VkImageLayout				 pInitialLayout,
-		VkSampleCountFlagBits		 pSamples,
-		VkAttachmentLoadOp			 pLoadOp,
-		VkAttachmentStoreOp			 pStoreOp,
-		VkAttachmentLoadOp			 pStencilLoadOp,
-		VkAttachmentStoreOp			 pStencilStoreOp,
-		VkAttachmentDescriptionFlags pFlags
+	uint32 Vulkan::Renderpass::CreateRenderPass(
+		RenderpassConfiguration pConfiguration,
+		bool 				    pKeepCache//=false
 	) noexcept
 	{
 
-		VkAttachmentDescription Description{};
 
-		Description.flags			= pFlags;
-		Description.format			= pFormat;
-		Description.initialLayout	= pInitialLayout;
-		Description.finalLayout		= pFinalLayout;
-		Description.samples			= pSamples;
-		Description.loadOp			= pLoadOp;
-		Description.storeOp			= pStoreOp;
-		Description.stencilLoadOp	= pStencilLoadOp;
-		Description.stencilStoreOp	= pStencilStoreOp;
-
-		m_Attachments.push_back( Description );
-
-		VkAttachmentReference Reference{};
-		Reference.attachment = m_Attachments.size() - 1;
-		Reference.layout	 = pImageLayout;
-
-		return Reference;
-	}
-
-
-
-
-	uint32 Vulkan::RenderPass::AddSubpass(
-		VkPipelineBindPoint						  pPipelineBindPoint,
-		const HYD_VEC<VkAttachmentReference>&     pColorAttachments,
-		const HYD_VEC<VkAttachmentReference>&     pInputAttachments,
-		VkAttachmentReference					  pDepthStencilAttachment,
-		const HYD_VEC<VkAttachmentReference>&     pResolveAttachments,
-		const HYD_VEC<uint32>&					  pPreservedAttachments,
-		VkSubpassDescriptionFlags				  pFlags
-	) noexcept	
-	{
-
-		SubpassRefs Refs;
-
-		VkSubpassDescription Description{};
-		Description.flags					= pFlags;
-		Description.pipelineBindPoint		= pPipelineBindPoint;
-		
-		if (pInputAttachments.size())
-			Refs.Inputs = pInputAttachments;
-		
-
-		if (pColorAttachments.size())
-			Refs.Colors = pColorAttachments;
-
-
-
-		if (pPreservedAttachments.size())
-			Refs.Preserved = pPreservedAttachments;
-
-
-		if (pResolveAttachments.size())
-			Refs.Resolved = pResolveAttachments;
-
-		
-		
-		Refs.DepthStencil = pDepthStencilAttachment;
-
-
-
-		m_Subpasses.push_back(Description);
-		m_SubpassRefs.push_back(Refs);
-
-		return m_Subpasses.size() - 1; //return the index of the subpass.
-	}
-
-
-
-	uint32 Vulkan::RenderPass::AddSubpassDependency(
-		uint32 				 pSrcSubpass,
-		uint32 				 pDstSubpass,
-		VkPipelineStageFlags pSrcStageMask,
-		VkPipelineStageFlags pDstStageMask,
-		VkAccessFlags 		 pSrcAccessMask,
-		VkAccessFlags 		 pDstAccessMask,
-		uint32 	             pDependencyFlags// = 0
-	) noexcept
-	{
-		VkSubpassDependency DInfo{};
-		DInfo.dependencyFlags = pDependencyFlags;
-		DInfo.srcSubpass 	  = pSrcSubpass;
-		DInfo.dstSubpass 	  = pDstSubpass;
-		DInfo.srcAccessMask   = pSrcAccessMask;
-		DInfo.dstAccessMask   = pDstStageMask;
-		DInfo.srcStageMask    = pSrcStageMask;
-		DInfo.dstStageMask    = pDstStageMask;
-		
-		m_Dependencies.push_back(DInfo);
-		return HYD_OK;
-	}
-
-
-
-	uint32 Vulkan::RenderPass::CreateRenderPass(VkRenderPassCreateFlags pFlags) noexcept
-	{
-		VkRenderPassCreateInfo CInfo{};
-		CInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		CInfo.pNext = nullptr;
-		CInfo.flags = pFlags;
-
-		CInfo.attachmentCount = m_Attachments.size();
-		CInfo.pAttachments    = (m_Attachments.size()) ? m_Attachments.data() : nullptr;
-	
-
-
-		CInfo.subpassCount = m_Subpasses.size();
-		for (uint64 Iter = 0; Iter < CInfo.subpassCount; ++Iter)
+		//Attachments
+		m_AttachmentDescriptions.resize(pConfiguration.m_Attachments.size());
+		for (uint32 Iter = 0  ; Iter < pConfiguration.m_Attachments.size() ; ++Iter)
 		{
-			VkSubpassDescription& Subpass   = m_Subpasses.at(Iter);
-			SubpassRefs&		  Refs      = m_SubpassRefs.at(Iter);
+			VkAttachmentDescription& VkDesc = m_AttachmentDescriptions.at(Iter);
+			RenderpassAttachment&    AttachmentInfo = pConfiguration.m_Attachments.at(Iter);
 
-			Subpass.colorAttachmentCount    = Refs.Colors.size();
-			Subpass.pColorAttachments	    = Refs.Colors.data();
-
-			Subpass.inputAttachmentCount    = Refs.Inputs.size();
-			Subpass.pInputAttachments       = Refs.Inputs.data();
-
-			Subpass.preserveAttachmentCount = Refs.Preserved.size();
-			Subpass.pPreserveAttachments    = Refs.Preserved.data();
-
-			Subpass.pResolveAttachments     = Refs.Resolved.data();
-
-			if (Refs.DepthStencil.attachment != UINT32_MAX)
-				Subpass.pDepthStencilAttachment = &Refs.DepthStencil;
+			VkDesc.format  		    = VkFormat(AttachmentInfo.Format);
+			VkDesc.loadOp  		    = VkAttachmentLoadOp(AttachmentInfo.LoadOp);
+			VkDesc.storeOp 		    = VkAttachmentStoreOp(AttachmentInfo.StoreOp);
+			VkDesc.samples		    = VkSampleCountFlagBits(AttachmentInfo.SampleCount);
+			VkDesc.stencilLoadOp    = VkAttachmentLoadOp(AttachmentInfo.StencilLoadOp);
+			VkDesc.stencilStoreOp   = VkAttachmentStoreOp(AttachmentInfo.StencilStoreOp);
+			VkDesc.initialLayout    = VkImageLayout(AttachmentInfo.InitLayout);
+			VkDesc.finalLayout      = VkImageLayout(AttachmentInfo.FinalLayout);
+			VkDesc.flags 			  = 0;
 		}
 
-		CInfo.pSubpasses   = m_Subpasses.data();
-	
-		CInfo.dependencyCount = m_Dependencies.size();
-		CInfo.pDependencies   = (m_Dependencies.size()) ? m_Dependencies.data() : nullptr;
+		//Subpass Dependencies:
+		m_SubpassDependencies.resize(pConfiguration.m_Dependencies.size());
+		for (uint32 Iter = 0  ; Iter < pConfiguration.m_Dependencies.size() ; ++Iter)
+		{
+			VkSubpassDependency&   			  VkRef = m_SubpassDependencies.at(Iter);
+			SubpassDependencyConfiguration    Ref   = pConfiguration.m_Dependencies.at(Iter); 
+			
+			VkRef.srcSubpass    = (Ref.SourceSubpass != UINT32_MAX)?      Ref.SourceSubpass      : VK_SUBPASS_EXTERNAL;
+			VkRef.dstSubpass    = (Ref.DestinationSubpass != UINT32_MAX)? Ref.DestinationSubpass : VK_SUBPASS_EXTERNAL;
+			VkRef.srcAccessMask = VkAccessFlags(Ref.SrcAccessMask);
+			VkRef.dstAccessMask = VkAccessFlags(Ref.DstAccessMask);
+			VkRef.srcStageMask  = VkPipelineStageFlags(Ref.SrcStageMask);
+			VkRef.dstStageMask  = VkPipelineStageFlags(Ref.DstStageMask);
+			VkRef.dependencyFlags = 0;
+		}
 
-		VkResult Result = vkCreateRenderPass(Renderer::Self().GetDevice(), &CInfo, VULKAN_ALLOCATION_CALLBACK, &m_Handle);
-		if (Result != VK_SUCCESS)
-			return HYD_FAILED;
-		
 
-		return HYD_OK;
+
+		auto VkAttachmentRefs=[](const std::vector<AttachmentReference>& Refs)->std::vector<VkAttachmentReference>{
+			std::vector<VkAttachmentReference> VkRefs;
+			VkRefs.resize(Refs.size());
+
+			for (uint32 Iter = 0 ; Iter < Refs.size() ; ++Iter)
+			{
+				VkAttachmentReference& VkRef = VkRefs.at(Iter);
+				VkRef.attachment = Refs[Iter].Index;
+				VkRef.layout     = VkImageLayout(Refs[Iter].Layout);
+			}
+
+			return VkRefs;
+		};
+
+		//Subpasses:
+		m_SubpassRefs.resize(pConfiguration.m_Subpasses.size());
+		m_Subpasses.resize(pConfiguration.m_Subpasses.size());
+
+		for (uint32 Iter = 0 ; Iter < pConfiguration.m_Subpasses.size() ; ++Iter)
+		{
+			SubpassRef&           VkSubpassRef  = m_SubpassRefs.at(Iter);
+			VkSubpassDescription& VkSubpassDesc = m_Subpasses.at(Iter);
+			SubpassConfiguration& Ref   		= pConfiguration.m_Subpasses.at(Iter);
+
+			VkSubpassRef.Inputs       = VkAttachmentRefs(Ref.m_Input);
+			VkSubpassRef.Colors       = VkAttachmentRefs(Ref.m_Color);
+			VkSubpassRef.DepthStencil = VkAttachmentRefs(Ref.m_DepthStencil);
+			VkSubpassRef.Resolved     = VkAttachmentRefs(Ref.m_Resolve);
+			VkSubpassRef.Presereved   = Ref.m_Preserved;
+			
+			VkSubpassDesc.colorAttachmentCount    = VkSubpassRef.Colors.size();
+			VkSubpassDesc.pColorAttachments       = VkSubpassRef.Colors.data();
+			VkSubpassDesc.inputAttachmentCount    = VkSubpassRef.Inputs.size();
+			VkSubpassDesc.pInputAttachments       = VkSubpassRef.Inputs.data();
+			VkSubpassDesc.pDepthStencilAttachment = VkSubpassRef.DepthStencil.data();
+			VkSubpassDesc.pResolveAttachments     = VkSubpassRef.Resolved.data();
+			VkSubpassDesc.preserveAttachmentCount = VkSubpassRef.Presereved.size();
+			VkSubpassDesc.pPreserveAttachments    = VkSubpassRef.Presereved.data();
+			VkSubpassDesc.pipelineBindPoint 	  = VK_PIPELINE_BIND_POINT_GRAPHICS;
+
+			m_SubpassCount += 1;
+		}
+
+
+		uint32 Res = CreateRenderpassObject();
+
+		//Clean Up 
+		if (!pKeepCache)
+			CleanUp();
+
+		return Res; 
 	}
 
-	uint32 Vulkan::RenderPass::RecreateRenderPass() noexcept
+	uint32 Vulkan::Renderpass::RecreateRenderPass() noexcept
 	{
-		DestroyRenderPass(true);
-		return CreateRenderPass();
+
+		if (!m_Subpasses.size())
+			return HYD_FAILED; //Resources has been cleaned up
+
+		DestroyRenderPass();
+		return CreateRenderpassObject();
 	}
 
-	uint32 Vulkan::RenderPass::DestroyRenderPass(bool pKeepData) noexcept
+	uint32 Vulkan::Renderpass::DestroyRenderPass() noexcept
 	{
 		vkDestroyRenderPass(Renderer::Self().GetDevice(), m_Handle, VULKAN_ALLOCATION_CALLBACK);
-
-		if (pKeepData)
-			return HYD_OK;
-
-		m_Attachments.clear();
-		m_SubpassRefs.clear();
-		m_Subpasses.clear();
 		m_Handle = VK_NULL_HANDLE;
-
+		CleanUp();
 		return HYD_OK;
 	}
 
 
 
 
-	uint32 Vulkan::RenderPass::BeginRenderPass(
-		const Vulkan::CommandBuffer& pCommandBuffer,
+	void Vulkan::Renderpass::BeginRenderPass(
 		const Vulkan::FrameBuffer& 	 pFrameBuffer,
 		VkRect2D 					 pRenderArea ,
 		VecF4 						 pClearColor //= VecF4(0.0f, 0.0f, 0.0f, 1.0f)
 	) noexcept
 	{
 
-		VkClearValue ClearVal{{pClearColor.R, pClearColor.G, pClearColor.B, pClearColor.A}};
+		VkClearValue ClearVals[] = {
+			{pClearColor.R, pClearColor.G, pClearColor.B, pClearColor.A},
+			{0.0f}
+		};
 
 		VkRenderPassBeginInfo BeginInfo{};
 		BeginInfo.sType 	  	  = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		BeginInfo.pNext 	  	  = nullptr;
 		BeginInfo.renderPass  	  = m_Handle;
 		BeginInfo.framebuffer 	  = pFrameBuffer.GetHandle();
-		BeginInfo.clearValueCount = 1;
-		BeginInfo.pClearValues    = &ClearVal;
+		BeginInfo.clearValueCount = 2;
+		BeginInfo.pClearValues    = ClearVals;
 		BeginInfo.renderArea 	  = pRenderArea;
 
 
-		vkCmdBeginRenderPass(pCommandBuffer.GetHandle(), &BeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+		vkCmdBeginRenderPass(Renderer::Self().GlobalRenderCommandBuffer().GetHandle(), &BeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+	}
 
+
+	void Vulkan::Renderpass::EndRenderPass() noexcept
+	{
+		vkCmdEndRenderPass(Renderer::Self().GlobalRenderCommandBuffer().GetHandle());
+	}
+
+	
+
+	uint32 Vulkan::Renderpass::CreateRenderpassObject() noexcept
+	{
+		//Actual Renderpass Create Info:
+
+		VkRenderPassCreateInfo CInfo{};
+		CInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+		CInfo.pNext = nullptr;
+		CInfo.attachmentCount = m_AttachmentDescriptions.size();
+		CInfo.pAttachments    = m_AttachmentDescriptions.data();
+
+		CInfo.dependencyCount = m_SubpassDependencies.size();
+		CInfo.pDependencies   = m_SubpassDependencies.data();
+
+		CInfo.subpassCount    = m_Subpasses.size();
+		CInfo.pSubpasses      = m_Subpasses.data();
+
+		CInfo.flags = 0;
+
+		VkResult Res = vkCreateRenderPass(
+			Renderer::Self().GetDevice(),
+			&CInfo,
+			VULKAN_ALLOCATION_CALLBACK, &m_Handle);
+		
+		if (Res != VK_SUCCESS)
+		{
+			Log::SetError(
+				Log::FmtStr("Unable to Create Render Pass. VkError:%i", int32(Res))
+			);
+			return HYD_FAILED;
+		}
 		return HYD_OK;
 	}
 
 
-		uint32 Vulkan::RenderPass::EndRenderPass(
-			const Vulkan::CommandBuffer& pCommandBuffer
-		) noexcept
-		{
-			vkCmdEndRenderPass(pCommandBuffer.GetHandle());
-			return HYD_OK;
-		}
-
-	void Vulkan::RenderPass::FreeCache()
+	void   Vulkan::Renderpass::CleanUp() noexcept
 	{
-		m_Attachments.clear();
+		m_AttachmentDescriptions.clear();
+		m_SubpassDependencies.clear();
 		m_SubpassRefs.clear();
 		m_Subpasses.clear();
 	}
-	
 
+};
 }; 

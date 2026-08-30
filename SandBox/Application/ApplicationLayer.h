@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Hydrogen.h"
+#include "../../Hydrogen/Hydrogen.h"
 #include <iostream>
 
 using namespace Hydrogen;
@@ -19,7 +19,10 @@ public:
 	void Event() override;
 	void Update() override;
 
+private:
+
+	Hydrogen::GraphicsPipelineConfiguration ConfigPipeline() noexcept;
 
 private:
-	Hydrogen::Instance<Hydrogen::Scene> m_Scene;
+	Hydrogen::Instance<Hydrogen::Scene>  m_Scene;
 };

@@ -10,6 +10,7 @@
 #pragma once
 
 #include "../../Common.h"
+#include <cstddef>
 
 
 #ifdef TEST 
@@ -30,7 +31,11 @@ namespace Hydrogen
 	template <typename Type>
 	using Ptr = Type * ;
 	template <typename Type>
-	using Ref = Type & ;
+	using Ref = Type&;
+
+
+
+
 
 	/*
 		Wraper holds and manages a heap allocated Object and makes sure it doesn't leak

@@ -2,16 +2,27 @@
 #include "HydPch.h"
 
 
+#include "Primitive.h"
 #include "Render/Renderer.h"
+#include <vulkan/vulkan_core.h>
 
 namespace Hydrogen 
 {
 
 
-	Mesh Mesh::CreateGLTFMesh(const Xenon::Mesh & pMesh)
+	Mesh Mesh::CreateGLTFMesh(const Xenon::Mesh& pMesh, GraphicsPipelineRef pPipeline)
 	{
-		Mesh NewMesh;
+		//return Mesh();
 
+		Mesh NewMesh;
+		NewMesh.m_Name = pMesh.GetName();
+		
+		for (auto& pri : pMesh)
+		{
+			Primitive primitive = Primitive::CreatePrimitive(pri);	
+			primitive.m_Pipeline = pPipeline;
+			NewMesh.m_Primitives.push_back(std::move(primitive));
+		}
 
 		return std::move(NewMesh);
 	}
@@ -83,35 +94,6 @@ namespace Hydrogen
 			Renderer::Self().PushPrimitive(&pri);
 		}
 		return HYD_OK;
-	}
-
-
-
-
-
-
-
-	Primitive::Primitive()
-	{
-		//Asign the Shader to primitves:
-		//m_Shader   = Renderer::GetDefaultShader();
-		//m_Material = Renderer::GetDefaultMaterial();
-	}
-
-	Primitive::Primitive(const Primitive& pOther)
-	{
-
-	}
-
-	Primitive::Primitive(Primitive&& pOther)
-	{
-
-		m_Transform     = std::move(pOther.m_Transform);
-		m_Material		= std::move(pOther.m_Material);
-		//m_Shader		= std::move(pOther.m_Shader);
-
-		m_RenderingMode = pOther.m_RenderingMode;
-
 	}
 
 

@@ -1,6 +1,8 @@
 #include "Core/Core.h"
 #include "Camera.h"
 #include "HydPch.h"
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace Hydrogen
 {
@@ -111,16 +113,29 @@ namespace Hydrogen
 		m_CameraLocked = pDisableCamera;
 	}
 
-	float* Camera::GetView()
+	float* Camera::GetViewPtr()
 	{
-		m_View = glm::lookAt(m_Position, m_Position + m_Front, m_Up);
-		return glm::value_ptr( m_View);
+		GetView();
+		return glm::value_ptr(m_View);
 	}
 
-	float* Camera::GetProjection()
+	float* Camera::GetProjectionPtr()
+	{
+		GetProjection();
+		return glm::value_ptr(m_Projection);
+	}
+
+	glm::mat4& Camera::GetView()
+	{
+		m_View = glm::lookAt(m_Position, m_Position + m_Front, m_Up);
+		return m_View;	
+	}
+
+	glm::mat4& Camera::GetProjection()
 	{
 		m_Projection = glm::perspective(glm::radians(m_FOV), m_AspectRatio, m_NearPlane, m_FarPlane);
-		return glm::value_ptr(m_Projection);
+		m_Projection[1][1] *= -1; // y-flip for vulkan
+		return m_Projection;	
 	}
 
 	void Camera::CalculateCameraAngle()

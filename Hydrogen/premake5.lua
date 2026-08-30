@@ -13,7 +13,7 @@ project "Hydrogen"
         "Hydrogen.h"
     }
      
-    defines {"HYD_DLL_BUILD", "GLFW_INCLUDE_VULKAN"}
+    defines {"HYD_DLL_BUILD", "GLFW_INCLUDE_VULKAN", "GLM_FORCE_DEPTH_ZERO_TO_ONE"}
 
     filter {"configurations:Debug"}
         defines {"HYD_DEBUG"}

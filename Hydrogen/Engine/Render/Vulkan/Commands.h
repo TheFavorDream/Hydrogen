@@ -12,6 +12,9 @@
 
 namespace Hydrogen
 {
+
+namespace Internal
+{
 namespace Vulkan
 {
 
@@ -40,7 +43,7 @@ namespace Vulkan
 
         //Start Recording Commands:
         uint32 RecordCommandBuffer(
-
+            VkCommandBufferUsageFlags pFlags=0
         ) noexcept;
 
         uint32 EndRecordingCommandBuffer(
@@ -82,7 +85,7 @@ namespace Vulkan
 
         uint32 CreatePool(
             uint32                      pQueueFamily,
-            VkCommandPoolCreateFlagBits pFlags       = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT
+            VkCommandPoolCreateFlags    pFlags       = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT
         )  noexcept;
 
         uint32 DestroyPool() noexcept;
@@ -111,5 +114,6 @@ namespace Vulkan
 
 
 
+};
 };
 };

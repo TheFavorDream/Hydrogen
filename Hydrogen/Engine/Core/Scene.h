@@ -7,15 +7,28 @@
 
 #pragma once
 
-#include "Common.h"
-#include "Geometry/Mesh.h"
+#include "../Common.h"
+#include "../Geometry/Mesh.h"
 #include "Render/Material/Material.h"
-#include "Camera/Camera.h"
+#include "../Render/Vulkan/Pipeline.h"
+#include "../VecMath/Transform/Transformation.h"
+#include "../Camera/Camera.h"
 #include "Xenon/include/Xenon.h"
 
 
 namespace Hydrogen
 {
+
+
+	struct SceneShaderLayout
+	{
+		ShaderUniformBinding MVP = ShaderUniformBinding{
+			.ShaderStage = HYD_SHADER_STAGE_VERTEX_BIT,
+			.Type        = HYD_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+		};
+
+		MaterialBinding Material;
+	};
 
 
 
@@ -45,13 +58,12 @@ namespace Hydrogen
 	private:
 		Instance<Mesh>	m_Mesh;
 		Ptr<Node>	    m_PointerToParent;
-		friend class Core;
-
+		friend class Scene;
+	
 	protected:
 		mutable HYD_VEC<Node>   m_Children;
 		HYD_STRING				m_Name;
 		Transformation		    m_Transform;
-		friend class Core;
 	};
 
 
@@ -80,13 +92,35 @@ namespace Hydrogen
 		//Renders the Scene
 		HYD uint32 Render();
 
-		HYD Camera& GetCamera() { return m_Camera; }
+		//Load Models
+		HYD uint32 LoadScene(
+			const Xenon::Scene& pSourceScene
+		) noexcept;
+
+
+		HYD uint32 ConfigurePipeline(
+			const GraphicsPipelineConfiguration& pConf,
+			const SceneShaderLayout&			 pShaderLayout
+		) noexcept;
+
+		HYD inline Camera& 		   GetCamera()    { return m_Camera; }
+		HYD inline Transformation& GetTransform() { return m_Transform;}
 
 	private:
 
-		ResourcePool<Mesh>		    m_Meshes;
-		Camera					    m_Camera;
+		ResourcePool<Mesh>		      m_Meshes;
+		Camera					      m_Camera;
 
+		GraphicsPipelineConfiguration m_PipelineConf;
+		GraphicsPipelineRef 		  m_Pipeline;
+		HYD_ID_SPACE 				  m_PipelineLayoutID = 0;
+		HYD_ID_SPACE			      m_MVPLayoutID 	 = 0;
+		HYD_ID_SPACE			      m_MaterialLayoutID = 0;
+		SceneShaderLayout   	      m_ShaderBinding;
+
+		std::vector<Internal::Vulkan::UniformBuffer> m_UniformBuffers;
+		
+	private:
 		friend class Renderer;
 		friend class MeshGenerator;
 		friend class Core;

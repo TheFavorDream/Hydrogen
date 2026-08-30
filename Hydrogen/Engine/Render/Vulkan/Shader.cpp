@@ -5,6 +5,15 @@
 
 namespace Hydrogen
 {
+namespace Internal
+{
+
+
+    Vulkan::Shader::Shader() noexcept
+    {
+        
+    }
+
 
 
     Vulkan::Shader::~Shader() noexcept
@@ -13,7 +22,7 @@ namespace Hydrogen
             DestroyShader();
     
         m_EntryPoint = "main";
-        m_Stage      = HYD_STAGE_UNSPECIFIED;
+
     }
 
     //Move
@@ -24,7 +33,6 @@ namespace Hydrogen
         m_Stage         = pOther.m_Stage;
         
         pOther.m_Handle = VK_NULL_HANDLE;
-        pOther.m_Stage  = HYD_STAGE_UNSPECIFIED;
     }
 
     Vulkan::Shader& Vulkan::Shader::operator=(Shader&& pOther) noexcept
@@ -32,10 +40,7 @@ namespace Hydrogen
         m_Handle        = pOther.m_Handle;
         m_EntryPoint    = pOther.m_EntryPoint;
         m_Stage         = pOther.m_Stage;
-        
-        pOther.m_Handle = VK_NULL_HANDLE;
-        pOther.m_Stage  = HYD_STAGE_UNSPECIFIED;
-
+    
         return *this;
     }
 
@@ -69,24 +74,22 @@ namespace Hydrogen
             return HYD_FAILED;
         }
 
-        m_Stage = pShaderType;
+        m_Stage = VkShaderStageFlagBits(pShaderType);
 
         return HYD_OK;
     }
 
     //Load a SpirV binary, then create the shader
-    uint32 Vulkan::Shader::CreateShaderFromFile(
-        ShaderType         pShaderType,
-        const std::string& pPath,
-        const char*        pEntryPoint
+    uint32 Vulkan::Shader::CreateShader(
+        const ShaderConfiguration& pConf
     ) noexcept
     {
-        Buffer Code = FileSys::ReadFile(pPath);
+        Buffer Code = Hydrogen::Internal::FileSys::ReadFile(pConf.Path);
 
         if (!Code.GetPtr())
             return HYD_FAILED;
 
-        return CreateShaderFromSpirV(pShaderType, Code, pEntryPoint);
+        return CreateShaderFromSpirV(pConf.Type, Code, pConf.EntryName.c_str());
     }
 
     //Destroys the shader
@@ -102,4 +105,5 @@ namespace Hydrogen
         return HYD_OK;
     }
 
+};
 };
