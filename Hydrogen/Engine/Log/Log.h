@@ -70,7 +70,21 @@ namespace Hydrogen
 		
 		HYD static void SetOutputColor(OutColor pColor);
 		
-		//API specific:
+		//VULKAN specific:
+
+		static VkBool32 VKAPI_PTR VulkanInfoWarningCallback(
+			VkDebugUtilsMessageSeverityFlagBitsEXT      messageSeverity,
+    		VkDebugUtilsMessageTypeFlagsEXT             messageTypes,
+    		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+    		void*                                       pUserData
+		) noexcept;
+
+		static VkBool32 VKAPI_PTR VulkanErrorCallback(
+			VkDebugUtilsMessageSeverityFlagBitsEXT      messageSeverity,
+    		VkDebugUtilsMessageTypeFlagsEXT             messageTypes,
+    		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+    		void*                                       pUserData
+		) noexcept;
 
 
 		//Xenon Call Back:

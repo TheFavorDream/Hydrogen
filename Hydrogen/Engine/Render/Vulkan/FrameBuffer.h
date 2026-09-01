@@ -4,6 +4,8 @@
 #include "../../Common.h"
 #include <vulkan/vulkan.h>
 
+#include "../Attachment.h"
+
 namespace Hydrogen
 {
 
@@ -25,8 +27,8 @@ namespace Vulkan
         
         //Creates the framebuffer 
         uint32 CreateFrameBuffer(
-            VkRenderPass&                     pRenderPass,
-            const std::vector<VkImageView>&   pImageViews,
+            Renderpass&                       pRenderPass,
+            std::vector<Attachment*>          pAttachments,
             uint32                            pWidth, 
             uint32                            pHeight,
             uint32                            pLayers=1,
@@ -35,8 +37,8 @@ namespace Vulkan
         
         //Creates the framebuffer using a single image
         uint32 CreateFrameBuffer(
-            VkRenderPass                pRenderPass,
-            VkImageView                 pImageView,
+            Renderpass&                 pRenderPass,
+            Attachment&                 pAttachment,
             uint32                      pWidth, 
             uint32                      pHeight,
             uint32                      pLayers=1,
@@ -45,6 +47,7 @@ namespace Vulkan
         
         uint32 DestroyFrameBuffer() noexcept;
         inline const VkFramebuffer GetHandle() const {return m_Handle;}
+
     private:
         VkFramebuffer m_Handle = VK_NULL_HANDLE;
     };

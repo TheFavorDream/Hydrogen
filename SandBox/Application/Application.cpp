@@ -51,7 +51,7 @@ uint32 Application::CreateRenderPass() noexcept
 	Hydrogen::SubpassConfiguration SubpassConf;
 	SubpassConf.AddColorAttachment({.Index=0, .Layout=HYD_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL}); 
 	SubpassConf.AddDepthStencilAttachment({.Index=1, .Layout=HYD_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL});
-
+	
 
 	//Subpass Dependencies Configurations:
 	Hydrogen::SubpassDependencyConfiguration DependencyConf;

@@ -1,5 +1,7 @@
 #include "Log.h"
 #include "HydPch.h"
+#include <iostream>
+#include <vulkan/vulkan_core.h>
 
 namespace Hydrogen
 {
@@ -222,6 +224,51 @@ namespace Hydrogen
 		SetOutputColor(RED);
 		Output(OutputStr);
 	}
+
+
+
+	VkBool32 VKAPI_PTR Log::VulkanInfoWarningCallback(
+		VkDebugUtilsMessageSeverityFlagBitsEXT      messageSeverity,
+    	VkDebugUtilsMessageTypeFlagsEXT             messageTypes,
+    	const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+    	void*                                       pUserData
+	) noexcept
+	{
+
+		if (messageSeverity == VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
+		{
+			Log::SetInfo(
+				Log::FmtStr("[VULKAN INFO] Message:%s", pCallbackData->pMessage)
+			);
+		}
+
+
+		else if (messageSeverity == VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+		{
+			Log::SetWarning(
+				Log::FmtStr("[VULKAN WARNING] Message:%s", pCallbackData->pMessage)
+			);
+		}
+
+		return VK_FALSE;
+
+	}
+
+	VkBool32 VKAPI_PTR Log::VulkanErrorCallback(
+		VkDebugUtilsMessageSeverityFlagBitsEXT      messageSeverity,
+    	VkDebugUtilsMessageTypeFlagsEXT             messageTypes,
+    	const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+    	void*                                       pUserData
+	) noexcept
+	{
+		Log::SetError(
+			Log::FmtStr("[VULKAN ERROR] Message:%s", pCallbackData->pMessage)
+		);
+		assert(false);
+		return VK_FALSE;
+	}
+
+
 
 
 	void Log::DebugPrint(const std::string & pContent)

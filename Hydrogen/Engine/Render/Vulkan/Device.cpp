@@ -129,6 +129,15 @@ namespace Internal
 
     void Vulkan::Device::DestroyDevice() noexcept
     {
+
+        if (m_AllocationCount)
+        {
+            Log::SetError(
+                Log::FmtStr("Not All Allocated memory are destroyed. Remaining:%i", m_AllocationCount)
+            );
+        }
+
+
         vkDestroyDevice(
             m_Handle, VULKAN_ALLOCATION_CALLBACK
         );
@@ -169,6 +178,7 @@ namespace Internal
             return VK_NULL_HANDLE;
         }
 
+        m_AllocationCount += 1;
         return MemAddress;
     }
 
@@ -178,6 +188,7 @@ namespace Internal
     {
         vkFreeMemory(m_Handle, *pMemory, VULKAN_ALLOCATION_CALLBACK);
         *pMemory = VK_NULL_HANDLE;
+        m_AllocationCount -= 1;
     }
 
     VkPhysicalDevice Vulkan::Device::SelectPhysicalDevice(
@@ -298,6 +309,167 @@ namespace Internal
         }
         return -1; //Failed to find memory 
     }
+
+
+/*
+
+    Instance Implementation
+
+*/
+
+
+    Vulkan::Instance:: Instance() noexcept
+    {
+
+    }
+    Vulkan::Instance::~Instance() noexcept
+    {
+       // DestroyInstance();
+    }
+    
+
+    bool Vulkan::Instance::IsExtensionAvailable(const char* pExtName) noexcept
+    {
+        if (!m_Extensions.size())
+        {
+            uint32 ExtensionCount = 0;
+            vkEnumerateInstanceExtensionProperties(nullptr, &ExtensionCount, nullptr);
+            m_Extensions.resize(ExtensionCount);
+            vkEnumerateInstanceExtensionProperties(nullptr, &ExtensionCount, m_Extensions.data());
+        }
+
+        for (auto& ext : m_Extensions)
+        {
+            if (strcmp(ext.extensionName, pExtName) == 0)
+                return true;
+        }
+
+        return false;
+    }
+    
+    void Vulkan::Instance::PushExtension(const char* pExtName)        noexcept
+    {
+        if (!IsExtensionAvailable(pExtName))
+            return;
+
+        m_EnabledExtensions.push_back(pExtName);
+    }
+
+    uint32 Vulkan::Instance::CreateVkInstance(
+        VkApplicationInfo pAppInfo,
+        bool              pValidationLayers
+    ) noexcept
+    {
+        const char* LayerNames[1] = {"VK_LAYER_KHRONOS_validation"};
+
+
+
+        VkInstanceCreateInfo CInfo{};
+        CInfo.sType                   = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+        CInfo.pNext                   = nullptr;
+        CInfo.flags                   = 0;
+        CInfo.pApplicationInfo        = &pAppInfo;
+        CInfo.enabledLayerCount       = 0;
+        CInfo.ppEnabledLayerNames     = nullptr;
+
+        if (pValidationLayers)
+        {
+            CInfo.enabledLayerCount   = 1;
+            CInfo.ppEnabledLayerNames = LayerNames;
+            PushExtension(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);            
+        }
+        
+        CInfo.enabledExtensionCount   = m_EnabledExtensions.size();
+        CInfo.ppEnabledExtensionNames = m_EnabledExtensions.data();
+
+        VkResult Res = vkCreateInstance(
+            &CInfo,
+             VULKAN_ALLOCATION_CALLBACK,
+              &m_Handle
+            );
+
+
+        if (Res != VK_SUCCESS)
+        {
+            Log::SetError(
+                Log::FmtStr("Failed to Create the Vulkan Instance. VkError:%i", int32(Res))
+            );
+            return HYD_FAILED;
+        }
+
+
+
+        if (!pValidationLayers)
+            return HYD_OK;
+
+
+
+        //Load the extension functions, because they aren't loaded by default:
+
+        LD_vkCreateDebugUtilsMessengerEXT  = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(m_Handle, "vkCreateDebugUtilsMessengerEXT"));
+        LD_vkDestroyDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(m_Handle, "vkDestroyDebugUtilsMessengerEXT"));
+
+
+        if (LD_vkCreateDebugUtilsMessengerEXT == nullptr || LD_vkDestroyDebugUtilsMessengerEXT == nullptr)
+            return HYD_FAILED;
+
+        //Enable Message Callbacks
+        VkDebugUtilsMessengerCreateInfoEXT MessengerCInfo{
+            .sType           = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
+            .pNext           = nullptr,
+            .flags           = 0,
+            .messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT   | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT,
+            .messageType     = VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT,
+            .pfnUserCallback = Log::VulkanInfoWarningCallback, 
+            .pUserData       = nullptr
+        };
+
+        LD_vkCreateDebugUtilsMessengerEXT(
+            m_Handle, &MessengerCInfo, VULKAN_ALLOCATION_CALLBACK, &m_DebugCB1
+        );
+
+        MessengerCInfo = VkDebugUtilsMessengerCreateInfoEXT{
+            .sType           = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
+            .pNext           = nullptr,
+            .flags           = 0,
+            .messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
+            .messageType     = VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT,
+            .pfnUserCallback = Log::VulkanErrorCallback, 
+            .pUserData       = nullptr
+        };
+
+        LD_vkCreateDebugUtilsMessengerEXT(
+            m_Handle, &MessengerCInfo, VULKAN_ALLOCATION_CALLBACK, &m_DebugCB2
+        );
+
+        return HYD_OK;
+    }
+
+    void   Vulkan::Instance::DestroyInstance()  noexcept
+    {
+        if (m_Handle == VK_NULL_HANDLE)
+            return;
+
+
+        if (m_DebugCB1 != VK_NULL_HANDLE)
+        {
+            LD_vkDestroyDebugUtilsMessengerEXT(m_Handle, m_DebugCB1, VULKAN_ALLOCATION_CALLBACK);
+            LD_vkDestroyDebugUtilsMessengerEXT(m_Handle, m_DebugCB2, VULKAN_ALLOCATION_CALLBACK);
+        }
+
+
+        vkDestroyInstance(
+            m_Handle, VULKAN_ALLOCATION_CALLBACK
+        );
+
+        m_Handle  = VK_NULL_HANDLE;
+        m_Extensions.clear();
+        m_EnabledExtensions.clear();
+
+
+    }
+
+
 
 
 };

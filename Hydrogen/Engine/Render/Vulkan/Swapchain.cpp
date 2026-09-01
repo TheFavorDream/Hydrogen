@@ -1,9 +1,6 @@
 #include "Swapchain.h"
 #include "../Renderer.h"
 #include "Image.h"
-#include "VkEnumReDefs.h"
-#include <cstddef>
-#include <vulkan/vulkan_core.h>
 
 namespace Hydrogen
 {
@@ -22,7 +19,11 @@ namespace Internal
 	}
 
 	Vulkan::Swapchain::Swapchain(Vulkan::Swapchain&& pOther) noexcept
-		: m_Handle(pOther.m_Handle), m_ImageCount(pOther.m_ImageCount), m_SurfaceFormat(pOther.m_SurfaceFormat), m_ImageExtent(pOther.m_ImageExtent), m_Images(std::move(pOther.m_Images)), m_ImageViews(pOther.m_ImageViews)
+		: m_Handle(pOther.m_Handle),
+		  m_ImageCount(pOther.m_ImageCount),
+		  m_SurfaceFormat(pOther.m_SurfaceFormat),
+		  m_ImageExtent(pOther.m_ImageExtent),
+		  m_Attachments(std::move(pOther.m_Attachments))
 	{
 		pOther.m_Handle                   = VK_NULL_HANDLE;
 		pOther.m_SurfaceFormat.format     = VK_FORMAT_UNDEFINED;
@@ -86,13 +87,14 @@ namespace Internal
 		std::vector<VkImage> Handles;Handles.resize(m_ImageCount);
 		vkGetSwapchainImagesKHR(Renderer::Self().GetDevice(), m_Handle, &m_ImageCount, Handles.data());
 		
-		m_ImageViews.resize(m_ImageCount);
-		m_Images.resize(m_ImageCount);
+		m_Attachments.resize(m_ImageCount);
+
 
 		for (size_t Iter = 0; Iter < m_ImageCount; ++Iter)
 		{
+			Hydrogen::Attachment& attachment = m_Attachments.at(Iter);
 			//Image
-			Image& image = m_Images[Iter];
+			Image& image = attachment.m_Image;
 
 			image.m_Handle  = Handles[Iter];
 			image.m_Width   = m_ImageExtent.width;
@@ -108,7 +110,7 @@ namespace Internal
 			ViewConf.ViewType = HYD_IMAGE_VIEW_TYPE_2D,
 			ViewConf.Format   = (ImageFormat)m_SurfaceFormat.format;
 
-			CHECK_ERROR(m_ImageViews[Iter].CreateImageView(
+			CHECK_ERROR(attachment.m_View.CreateImageView(
 				ViewConf
 			));
 
@@ -161,8 +163,8 @@ namespace Internal
 		if (m_Handle == VK_NULL_HANDLE)
 			return HYD_OK;
 
-		for (auto& imageview : m_ImageViews)
-			imageview.DestroyImageView();
+		for (auto& attachment : m_Attachments)
+			attachment.m_View.DestroyImageView();
 
 		vkDestroySwapchainKHR(Renderer::Self().GetDevice(), m_Handle, VULKAN_ALLOCATION_CALLBACK);
 
@@ -172,8 +174,7 @@ namespace Internal
 		m_ImageCount			   = 0;
 		m_ImageExtent.height	   = 0;
 		m_ImageExtent.width		   = 0;
-		m_Images.clear();
-		m_ImageViews.clear();		
+	
 		return HYD_OK;
 	}
 
@@ -205,11 +206,10 @@ namespace Internal
 			Renderer::Self().GetDevice(), OldSwapchain, VULKAN_ALLOCATION_CALLBACK);
 
 
-		for (auto& imageview : m_ImageViews)
-			imageview.DestroyImageView();
-		
-		m_ImageViews.clear();
-		m_Images.clear();
+		for (auto& attachment : m_Attachments)
+			attachment.m_View.DestroyImageView();
+
+		m_Attachments.clear();
 
 		//Retriving the images:
 		vkGetSwapchainImagesKHR(
@@ -217,13 +217,14 @@ namespace Internal
 		std::vector<VkImage> Handles;Handles.resize(m_ImageCount);
 		vkGetSwapchainImagesKHR(Renderer::Self().GetDevice(), m_Handle, &m_ImageCount, Handles.data());
 		
-		m_ImageViews.resize(m_ImageCount);
-		m_Images.resize(m_ImageCount);
+		m_Attachments.resize(m_ImageCount);
+
 
 		for (size_t Iter = 0; Iter < m_ImageCount; ++Iter)
 		{
+			Hydrogen::Attachment& attachment = m_Attachments.at(Iter);
 			//Image
-			Image& image = m_Images[Iter];
+			Image& image = attachment.m_Image;
 
 			image.m_Handle  = Handles[Iter];
 			image.m_Width   = m_ImageExtent.width;
@@ -239,9 +240,10 @@ namespace Internal
 			ViewConf.ViewType = HYD_IMAGE_VIEW_TYPE_2D,
 			ViewConf.Format   = (ImageFormat)m_SurfaceFormat.format;
 
-			CHECK_ERROR(m_ImageViews[Iter].CreateImageView(
+			CHECK_ERROR(attachment.m_View.CreateImageView(
 				ViewConf
 			));
+
 
 		}
 
@@ -312,10 +314,10 @@ namespace Internal
 	}
 
 
-	Vulkan::ImageView Vulkan::Swapchain::GetImage(uint32 pIndex) const noexcept
+	Ptr<Hydrogen::Attachment> Vulkan::Swapchain::GetAttachment(uint32 pIndex) noexcept
 	{
-		XE_ASSERT(pIndex < m_ImageViews.size(), "Out of imageView bound");
-		return m_ImageViews[pIndex];
+		XE_ASSERT(pIndex < m_Attachments.size(), "Out of imageView bound");
+		return &m_Attachments.at(pIndex);
 	}
 
 };

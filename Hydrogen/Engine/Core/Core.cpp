@@ -56,6 +56,12 @@ namespace Hydrogen
 	Core::~Core()
 	{
 
+		//Scene Shutdown:
+		for (auto& scene : s_Scenes)
+		{
+			scene.Object.FreeScene();
+		}
+		s_Scenes.Shutdown();
 
 		Renderer::s_Self->Shutdown();
 		delete Renderer::s_Self;
@@ -68,12 +74,6 @@ namespace Hydrogen
 		}
 
 		
-		//Scene Shutdown:
-		for (auto& scene : s_Scenes)
-		{
-			scene.Object.FreeScene();
-		}
-		s_Scenes.Shutdown();
 
 		//delete ShaderPool::s_Self;
 

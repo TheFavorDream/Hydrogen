@@ -1,19 +1,6 @@
-#include "Material/Texture.h"
-#include "Vulkan/Buffer.h"
-#include "Vulkan/Descriptors.h"
-#include "Vulkan/Image.h"
-#include "Vulkan/Pipeline.h"
-#include "Vulkan/Swapchain.h"
-#include "Vulkan/UniformBuffer.h"
+#include "Attachment.h"
 #include "Vulkan/VkEnumReDefs.h"
-#include "Window/Window.h"
-#include <glm/ext/matrix_float4x4.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/matrix.hpp>
-#include <unordered_map>
-#include <utility>
-#include <vector>
-#include <vulkan/vulkan_core.h>
+#include <GLFW/glfw3.h>
 #define RENDERER_H
 #include "Renderer.h"
 #include "../Core/Core.h"
@@ -27,6 +14,7 @@ namespace Hydrogen
 
 
 	uint32 Renderer::Init(WindowInfo pWindow) noexcept
+
 	{
 		Log::SetInfo("Renderer:Init");
 
@@ -37,27 +25,38 @@ namespace Hydrogen
 			return HYD_FAILED;
 		}
 
-		//Vulkan Init
-		m_VkInstance = CreateVkInstance();
-		if (m_VkInstance == VK_NULL_HANDLE)
-		{
-			Log::SetError("Unable to Create Vulkan Instance");
-			return HYD_FAILED;
-		}
 		
+		//Vulkan Init
 
+
+		VkApplicationInfo AppInfo{
+			.sType            = VK_STRUCTURE_TYPE_APPLICATION_INFO,
+			.pNext            = nullptr,
+			.pApplicationName = m_Window.GetTitle(),
+			.pEngineName      = "Hydrogen",
+			.engineVersion    = VK_MAKE_VERSION(HYD_VERSION_MAJOR, HYD_VERSION_MINOR, HYD_VERSION_PATCH),
+			.apiVersion       = VK_MAKE_VERSION(1, 0, 0),
+		};
+
+		uint32 ReqCount   = 0;
+		const char** exts = glfwGetRequiredInstanceExtensions(&ReqCount);
 	
+		for (uint32 Iter = 0 ; Iter < ReqCount; ++Iter)
+			m_Instance.PushExtension(exts[Iter]);
+
+		CHECK_ERROR(m_Instance.CreateVkInstance(AppInfo, true));
 
 	
 	
 		//Create Rendering Surface
-		m_Window.CreateVulkanSurface(m_VkInstance);
+		m_Window.CreateVulkanSurface(m_Instance.GetInstance());
 		
 		//Creating Logical device and queues
 		CHECK_ERROR(m_Device.CreateDevice(
-			m_VkInstance,
+			m_Instance.GetInstance(),
 			m_DeviceLevelExtensions
 		));
+
 
 		//Swapchain creation:
 
@@ -76,35 +75,21 @@ namespace Hydrogen
 
 
 		//Creating the Depth Buffer:
-		ImageConfiguration ImageConf{};
 
-		ImageConf.ImageSize     = Vec3<uint32>(SwapchainConf.ImageSize.width, SwapchainConf.ImageSize.height, 1);
-		ImageConf.Type     	    = HYD_IMAGE_TYPE_2D;
-		ImageConf.Format        = HYD_FORMAT_D32_SFLOAT;
-		ImageConf.InitialLayout = HYD_IMAGE_LAYOUT_UNDEFINED;
-		ImageConf.MipMapLevels  = 1; 
-		ImageConf.SampleCount   = HYD_SAMPLE_COUNT_1_BIT;
-		ImageConf.Usage  	    = HYD_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-		ImageConf.SharingMode   = QueueSharingMode{
-			.SharingMode = VK_SHARING_MODE_EXCLUSIVE
-		};
-		
-		DepthAttachment.CreateImage(ImageConf);
+		DepthAttachment.CreateAttachment(
+			HYD_ATTACHMENT_TYPE_DEPTH,
+			SwapchainConf.ImageSize.width,
+			SwapchainConf.ImageSize.height,
+			HYD_SAMPLE_COUNT_1_BIT
+		);
 
-		ImageViewConfiguration ViewConf{};
-		ViewConf.Image    = &DepthAttachment;
-		ViewConf.ViewType = HYD_IMAGE_VIEW_TYPE_2D;
-		ViewConf.Format   = HYD_FORMAT_D32_SFLOAT;
-		ViewConf.SubResources.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;// | VK_IMAGE_ASPECT_STENCIL_BIT;
-
-		DepthAttachmentView.CreateImageView(ViewConf);
 
 		for (uint32 I = 0 ; I < m_Swapchain.ImageCount() ; ++I)
 		{
 			Internal::Vulkan::FrameBuffer framebuffer;
 			framebuffer.CreateFrameBuffer(
-				m_RenderPass.m_Handle,
-				{m_Swapchain.GetImage(I).m_Handle, DepthAttachmentView.m_Handle},
+				m_RenderPass,
+				{m_Swapchain.GetAttachment(I), &DepthAttachment},
 				m_Swapchain.GetImageExtent().width,
 				m_Swapchain.GetImageExtent().height
 			);
@@ -157,6 +142,8 @@ namespace Hydrogen
 			framebuffer.DestroyFrameBuffer();
 
 
+		for (auto& descSetPool : m_DescriptorPools)
+			descSetPool.DestroyDescriptorPool();
 
 		for (auto& descSetLayout : m_DescSetLayouts)
 			descSetLayout.second.DestroyDescriptorSetLayout();
@@ -165,10 +152,29 @@ namespace Hydrogen
 			pipelineLayout.second.DestroyLayout();
 
 
+
+		m_DescriptorSets.clear();
+		m_DescriptorPools.clear();
+		m_DescSetLayouts.clear();
+		m_PipelineLayouts.clear();
+
+
+		for (auto& vbo : m_VertexBuffers)
+			vbo.Object.DestroyBuffer();
+		for (auto& ebo : m_IndexBuffers)
+			ebo.Object.DestroyBuffer();
+		for (auto& tex : m_Textures)
+			tex.Object.DestroyTexture();
+		for (auto& pipeline : m_Pipelines)
+			pipeline.Object.DestroyPipeline();
+
+		DepthAttachment.DestroyAttachment();
+
 		CHECK_ERROR(m_VertexBuffers.Shutdown());
 		CHECK_ERROR(m_IndexBuffers.Shutdown());
+
 		CHECK_ERROR(m_Pipelines.Shutdown());
-		//CHECK_ERROR(m_Textures.Shutdown());
+		CHECK_ERROR(m_Textures.Shutdown());
 
 		CHECK_ERROR(m_TransferCommandPool.DestroyPool());
 		CHECK_ERROR(m_RenderCommandPool.DestroyPool());
@@ -185,9 +191,9 @@ namespace Hydrogen
 			vkDestroyFence(m_Device.m_Handle,     m_FrameFinishSignals[I],      VULKAN_ALLOCATION_CALLBACK);
 		}
 
-		m_Window.DestroyWindow(m_VkInstance);
 		m_Device.DestroyDevice();
-		vkDestroyInstance    (m_VkInstance,				 VULKAN_ALLOCATION_CALLBACK);
+		m_Window.DestroyWindow(m_Instance.GetInstance());
+		m_Instance.DestroyInstance();
 		
 		return HYD_OK;
 	}
@@ -305,8 +311,7 @@ namespace Hydrogen
 			framebuffer.DestroyFrameBuffer();
 
 
-		DepthAttachmentView.DestroyImageView();
-		DepthAttachment.DestroyImage();
+		DepthAttachment.DestroyAttachment();
 
 
 		m_FrameBuffers.clear();
@@ -325,39 +330,19 @@ namespace Hydrogen
 		);
 
 
-		ImageConfiguration ImageConf{};
-
-		ImageConf.ImageSize     = Vec3<uint32>(ReConf.NewExtent.width, ReConf.NewExtent.height, 1);
-		ImageConf.Type     	    = HYD_IMAGE_TYPE_2D;
-		ImageConf.Format        = HYD_FORMAT_D32_SFLOAT;
-		ImageConf.InitialLayout = HYD_IMAGE_LAYOUT_UNDEFINED;
-		ImageConf.MipMapLevels  = 1; 
-		ImageConf.SampleCount   = HYD_SAMPLE_COUNT_1_BIT;
-		ImageConf.Usage  	    = HYD_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-		ImageConf.SharingMode   = QueueSharingMode{
-			.SharingMode = VK_SHARING_MODE_EXCLUSIVE
-		};
-		
-		DepthAttachment.CreateImage(ImageConf);
-
-		ImageViewConfiguration ViewConf{};
-		ViewConf.Image    = &DepthAttachment;
-		ViewConf.ViewType = HYD_IMAGE_VIEW_TYPE_2D;
-		ViewConf.Format   = HYD_FORMAT_D32_SFLOAT;
-		ViewConf.SubResources.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;// | VK_IMAGE_ASPECT_STENCIL_BIT;
-		ViewConf.SubResources.baseMipLevel = 0;
-		ViewConf.SubResources.baseArrayLayer = 0;
-		ViewConf.SubResources.layerCount = 1;
-		ViewConf.SubResources.levelCount = 1;
-
-		DepthAttachmentView.CreateImageView(ViewConf);
+		DepthAttachment.CreateAttachment(
+			HYD_ATTACHMENT_TYPE_DEPTH,
+			m_Swapchain.GetImageExtent().width,
+			m_Swapchain.GetImageExtent().height,
+			HYD_SAMPLE_COUNT_1_BIT
+		);
 
 		for (uint32 I = 0 ; I < m_Swapchain.ImageCount() ; ++I)
 		{
 			Internal::Vulkan::FrameBuffer framebuffer;
 			framebuffer.CreateFrameBuffer(
-				m_RenderPass.m_Handle,
-				{m_Swapchain.GetImage(I).m_Handle, DepthAttachmentView.m_Handle},
+				m_RenderPass,
+				{m_Swapchain.GetAttachment(I), &DepthAttachment},
 				m_Swapchain.GetImageExtent().width,
 				m_Swapchain.GetImageExtent().height
 			);
@@ -375,92 +360,6 @@ namespace Hydrogen
 	) noexcept
 	{
 		m_DefCam = pCamera;
-	}
-
-	
-
-
-	/*
-	
-		Vulkan Stuff:
-	*/
-
-	std::vector<const char*> Renderer::CheckForInstanceExtensions(const std::vector<const char*>& pRequired) noexcept
-	{
-		
-		//Retrive all supported instance level extensions
-		uint32 Count = 0;
-		std::vector<VkExtensionProperties> SupportedExtensions;
-		vkEnumerateInstanceExtensionProperties(nullptr, &Count, nullptr);
-		SupportedExtensions.resize(Count);
-		vkEnumerateInstanceExtensionProperties(nullptr, &Count, SupportedExtensions.data());
-
-		std::vector<const char*> Available;
-
-		uint32 ReqSize = pRequired.size();
-
-		for (auto& ext : SupportedExtensions)
-		{
-			for (size_t Iter = 0; Iter < ReqSize; ++Iter)
-			{
-				if (strcmp(ext.extensionName, pRequired[Iter]) == 0)
-					Available.push_back(pRequired[Iter]);
-				
-				if (Available.size() == ReqSize)
-					return std::vector<const char*>(pRequired.begin(), pRequired.end());
-			}
-		}
-
-		
-		return Available;
-	}
-
-
-	VkInstance Renderer::CreateVkInstance(bool pValidationLayers) noexcept
-	{
-		VkInstance Instance = VK_NULL_HANDLE;
-
-		VkApplicationInfo AppInfo{};
-		AppInfo.sType            = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-		AppInfo.pNext            = nullptr;
-		AppInfo.apiVersion       = VK_MAKE_VERSION(1, 0, 0);
-		AppInfo.pApplicationName = m_Window.GetTitle();
-		AppInfo.pEngineName		 = "Hydrogen";
-		AppInfo.engineVersion    = VK_MAKE_VERSION(HYD_VERSION_MAJOR, HYD_VERSION_MINOR, HYD_VERSION_PATCH);
-		
-
-
-		VkInstanceCreateInfo InstanceCInfo{};
-		InstanceCInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-		InstanceCInfo.pNext = nullptr;
-		InstanceCInfo.pApplicationInfo      = &AppInfo;
-
-		//Validation Layers:
-		if (pValidationLayers)
-		{
-			//Enable Validation layers:
-			const char* Layers[1] = { "VK_LAYER_KHRONOS_validation" };
-			InstanceCInfo.enabledLayerCount   = 1;
-			InstanceCInfo.ppEnabledLayerNames = Layers;
-		}
-		
-
-		uint32 Count = 0;
-		const char** extensions = glfwGetRequiredInstanceExtensions(&Count);
-
-		for (uint32 I = 0 ; I < Count ; ++I)
-			m_InstanceLevelExtensions.push_back(extensions[I]);
-		
-
-		std::vector<const char*> AvailableExtensions = CheckForInstanceExtensions(m_InstanceLevelExtensions);
-
-		InstanceCInfo.enabledExtensionCount   = AvailableExtensions.size();
-		InstanceCInfo.ppEnabledExtensionNames = AvailableExtensions.data();
-
-		//Creating the actual instance
-		vkCreateInstance(&InstanceCInfo, VULKAN_ALLOCATION_CALLBACK, &Instance);
-
-		return Instance;
 	}
 
 

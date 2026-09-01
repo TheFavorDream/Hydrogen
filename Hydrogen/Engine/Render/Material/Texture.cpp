@@ -111,20 +111,23 @@ namespace Hydrogen
 	//Copy Constructor
 	Texture2D::Texture2D(const Texture2D& pOther)  noexcept
 	{
-
+		ASSERT(false, "Not Implemented");
 	}
 	Texture2D::Texture2D(Texture2D&& pOther) 	   noexcept
 	{
+		ASSERT(false, "Not Implemented");
 
 	}
 
 	Texture2D& Texture2D::operator=(const Texture2D& pOther)   noexcept
 	{
+		ASSERT(false, "Not Implemented");
 
 		return *this;
 	}
 	Texture2D& Texture2D::operator=(Texture2D&& pOther) 	   noexcept
 	{
+		ASSERT(false, "Not Implemented");
 
 		return *this;
 	}
@@ -203,6 +206,7 @@ namespace Hydrogen
 	{
 		m_ImageHandle.DestroyImage();
 		m_View.DestroyImageView();
+		m_Sampler.DestroySampler();
 	}
 
 };

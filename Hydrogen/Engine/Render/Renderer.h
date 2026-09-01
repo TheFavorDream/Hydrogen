@@ -135,15 +135,6 @@ namespace Hydrogen
 
 	private:
 
-		//Enumerates all available extensions and checks if the pRequired extensions are supported, if so they will be returned.
-		std::vector<const char*> CheckForInstanceExtensions(const std::vector<const char*>& pRequired) noexcept;
-		std::vector<const char*> CheckForDeviceExtensions(  const std::vector<const char*>& pRequired) noexcept;
-		//Vulkan Initialization:
-		VkInstance CreateVkInstance(bool pValidationLayers=true) noexcept;
-
-		//Physical Device Selection:
-		VkPhysicalDevice SelectPhysicalDevice() noexcept;
-
 		uint32 CreateSyncObjects() noexcept;
 
 
@@ -159,8 +150,8 @@ namespace Hydrogen
 		uint32       m_FrameIndex      = 0;
 
 
-		VkInstance       		 m_VkInstance       = VK_NULL_HANDLE;
-
+		
+		Internal::Vulkan::Instance					   m_Instance;
 		Internal::Vulkan::Device 					   m_Device;
 		Internal::Vulkan::Swapchain		         	   m_Swapchain;
 		Internal::Vulkan::Renderpass               	   m_RenderPass;
@@ -196,8 +187,7 @@ namespace Hydrogen
 		ResourcePool<Internal::Vulkan::VertexBuffer> 	   m_VertexBuffers;
 		ResourcePool<Internal::Vulkan::IndexBuffer>  	   m_IndexBuffers;
 
-		Internal::Vulkan::Image     DepthAttachment;
-		Internal::Vulkan::ImageView DepthAttachmentView;
+		Attachment DepthAttachment;
 
 		Ptr<Scene> m_RenderedScene;
 

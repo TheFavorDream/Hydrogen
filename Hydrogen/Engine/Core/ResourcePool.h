@@ -266,8 +266,8 @@ namespace Hydrogen
 			if (!m_BucketCount)
 				return HYD_OK;
 
-			if (m_Used > 0)
-				return HYD_FAILED; //cannot delete buckets when begin used by active instances
+			//if (m_Used > 0)
+			//	return HYD_FAILED; //cannot delete buckets when begin used by active instances
 
 			while (m_Tail != nullptr)
 			{

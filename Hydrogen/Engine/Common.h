@@ -115,7 +115,7 @@ namespace Hydrogen
 	class  Material;
 	class  Texture;
 	
-	class Framebuffer;
+
 	class Attachment;
 	class Texture2D;
 	class Texture3D;
@@ -152,6 +152,7 @@ namespace Hydrogen
 			class ImageView;
 			class Sampler;
 			class Device;
+			class Instance;
 		}; 
 
 	};

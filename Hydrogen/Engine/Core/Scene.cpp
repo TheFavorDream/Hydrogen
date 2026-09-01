@@ -371,6 +371,9 @@ namespace Hydrogen
 		m_PipelineConf   = pConf;
 		m_PipelineConf.SetPipelineLayout(m_PipelineLayoutID);
 
+
+
+		
 		return HYD_OK;
 	}
 

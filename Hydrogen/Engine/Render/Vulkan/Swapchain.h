@@ -12,6 +12,7 @@
 #include <vulkan/vulkan_core.h>
 #include "../Window/Window.h"
 #include "Image.h"	
+#include "../Attachment.h"
 
 namespace Hydrogen
 {	
@@ -79,8 +80,7 @@ namespace Vulkan
 			const Window&	   pWindow
 		) noexcept;
 
-		ImageView 	   		 GetImage(uint32 pIndex) const noexcept;
-
+		Ptr<Hydrogen::Attachment> 	   GetAttachment(uint32 pIndex) noexcept;
 		inline VkSwapchainKHR  GetHandle()	          const { return m_Handle; }
 		inline VkSwapchainKHR* GetHandlePtr()               { return &m_Handle;}
 		inline ImageFormat	   GetImageFormat()       const { return (ImageFormat)m_SurfaceFormat.format; }
@@ -116,8 +116,7 @@ namespace Vulkan
 
 		VkSwapchainCreateInfoKHR m_SwapchainCInfo;
 
-		std::vector<Image>        m_Images;
-		std::vector<ImageView>    m_ImageViews;
+		std::vector<Hydrogen::Attachment> m_Attachments;
 
 	};
 

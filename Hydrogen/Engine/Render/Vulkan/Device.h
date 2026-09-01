@@ -118,12 +118,55 @@ namespace Vulkan
         std::vector<const char*>         m_DeviceExtensions;
 		Queues				 		     m_Queues;
         Hydrogen::QueueFamily            m_QueueFamily;
-
+        uint32                           m_AllocationCount = 0;
 
     private: //Friend classes
         friend class Hydrogen::Renderer;
         friend class Swapchain;
     };
+
+
+    class Instance
+    {
+    public:
+
+
+         Instance() noexcept;
+        ~Instance() noexcept;
+
+        
+        bool IsExtensionAvailable(const char* pExtName) noexcept;
+        void PushExtension(const char* pExtName)        noexcept;
+
+        
+        uint32 CreateVkInstance(
+            VkApplicationInfo pAppInfo,
+            bool              pValidationLayers = false
+        ) noexcept;
+        void   DestroyInstance()  noexcept;
+
+        inline VkInstance GetInstance() const {return m_Handle;}
+
+    private:
+        VkInstance                         m_Handle = VK_NULL_HANDLE;
+        std::vector<VkExtensionProperties> m_Extensions;
+        std::vector<const char*>           m_EnabledExtensions;
+
+
+
+
+        PFN_vkCreateDebugUtilsMessengerEXT  LD_vkCreateDebugUtilsMessengerEXT  = nullptr;
+        PFN_vkDestroyDebugUtilsMessengerEXT LD_vkDestroyDebugUtilsMessengerEXT = nullptr;
+
+        VkDebugUtilsMessengerEXT m_DebugCB1 = VK_NULL_HANDLE;
+        VkDebugUtilsMessengerEXT m_DebugCB2 = VK_NULL_HANDLE;
+
+    private:
+        friend class Hydrogen::Renderer;
+    };
+
+
+
 };
 };
 };

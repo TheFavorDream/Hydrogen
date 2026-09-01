@@ -7,9 +7,20 @@
 
 #include "../Common.h"
 #include "Vulkan/Image.h"
+#include "Vulkan/VkEnumReDefs.h"
 
 namespace Hydrogen
 {
+
+
+    enum AttachmentType
+    {
+        HYD_ATTACHMENT_TYPE_COLOR   = 1,
+        HYD_ATTACHMENT_TYPE_DEPTH   = 2,
+        HYD_ATTACHMENT_TYPE_STENCIL = 3
+    };
+
+ 
 
     class Attachment final
     {
@@ -24,10 +35,23 @@ namespace Hydrogen
         HYD Attachment& operator=(const Attachment& pOther) noexcept;
         HYD Attachment& operator=(Attachment&& pOther)      noexcept;
 
-
+        HYD uint32 CreateAttachment(
+            AttachmentType   pType,
+            uint32           pWidth,
+            uint32           pHeight,
+            ImageSampleCount pSampleCount
+        ) noexcept;
         
 
+        HYD void DestroyAttachment() noexcept;
+
     private:
+        Internal::Vulkan::Image     m_Image;
+        Internal::Vulkan::ImageView m_View;
+
+    private: //friend classes
+        friend class Internal::Vulkan::FrameBuffer;
+        friend class Internal::Vulkan::Swapchain;
     };
 
 };

@@ -85,6 +85,7 @@ endif
 GENERATED :=
 OBJECTS :=
 
+GENERATED += $(OBJDIR)/Attachment.o
 GENERATED += $(OBJDIR)/Buffer.o
 GENERATED += $(OBJDIR)/Camera.o
 GENERATED += $(OBJDIR)/Commands.o
@@ -118,6 +119,7 @@ GENERATED += $(OBJDIR)/Transformation.o
 GENERATED += $(OBJDIR)/UniformBuffer.o
 GENERATED += $(OBJDIR)/VecMath.o
 GENERATED += $(OBJDIR)/Window.o
+OBJECTS += $(OBJDIR)/Attachment.o
 OBJECTS += $(OBJDIR)/Buffer.o
 OBJECTS += $(OBJDIR)/Camera.o
 OBJECTS += $(OBJDIR)/Commands.o
@@ -251,6 +253,9 @@ $(OBJDIR)/HydPch.o: HydPch.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/Log.o: Log/Log.cpp
+	@echo "$(notdir $<)"
+	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/Attachment.o: Render/Attachment.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/Material.o: Render/Material/Material.cpp
