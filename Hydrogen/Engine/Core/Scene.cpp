@@ -47,21 +47,12 @@ namespace Hydrogen
 
 	uint32 Scene::FreeScene()
 	{
-		m_Pipeline.ResetWithoutRefDrop(); //Should be freed by the renderer
-
-		for (auto& ubo : m_UniformBuffers)
-			ubo.DestroyBuffer();
-
 		m_Meshes.Shutdown();
 		return HYD_OK;
 	}
 
 	uint32 Scene::Render()
 	{
-
-
-		Renderer::Self().m_RenderedScene = this;
-
 		//Start the Travers:
 		std::stack<Node> Travers;
 
@@ -80,7 +71,11 @@ namespace Hydrogen
 
 			
 			if (!Current.GetMesh().IsNull())
-				Current.GetMesh()->Render(Current.GetTransform());
+				Current.GetMesh()->Render(
+					m_Camera,
+					m_Uniforms,
+					Current.GetTransform()
+				);
 
 			for (auto node : Current)
 			{
@@ -351,27 +346,18 @@ namespace Hydrogen
 
 		HYD_ID_SPACE UniformBufferSetID = Renderer::Self().AllocateDescriptorSet(MVPDescLayoutID);
 
-		m_UniformBuffers.resize(FramesInFlight);
-		for (uint32 Iter = 0 ; Iter < FramesInFlight ; ++Iter)
-		{
-			m_UniformBuffers[Iter].CreateUniformBuffer(sizeof(MatF4)*3);
-			Renderer::Self().m_DescriptorSets.at(UniformBufferSetID).at(Iter).AttachUniformBuffer(
-				pShaderLayout.MVP.Binding, m_UniformBuffers.at(Iter)
-			);
-
-			Renderer::Self().m_DescriptorSets.at(UniformBufferSetID).at(Iter).UpdateDescriptorSet();
-			m_UniformBuffers.at(Iter).SetDescriptorSet(UniformBufferSetID);
-		}
-
+		m_Uniforms = Renderer::Self().CreateUniformBuffer(
+			sizeof(MatF4)*3,
+			pShaderLayout.MVP.Binding,
+			UniformBufferSetID
+		);
 
 		
 		m_ShaderBinding = pShaderLayout;
-		//m_ShaderBinding.Material.DescriptorSetLayoutID = MaterialDescLayoutID;
+		m_ShaderBinding.Material.DescriptorSetLayoutID = MaterialDescLayoutID;
 		
 		m_PipelineConf   = pConf;
 		m_PipelineConf.SetPipelineLayout(m_PipelineLayoutID);
-
-
 
 		
 		return HYD_OK;

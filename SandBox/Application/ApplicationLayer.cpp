@@ -50,8 +50,9 @@ void AppLayer::Setup()
 		model[0] //first scene
 	);
 
-	//Hydrogen::Quaternion Rot;  Rot.Euler(180.0f, 0.0f, 0.0f);
-	m_Scene->GetTransform().t_Scale = Hydrogen::VecF3(0.2f);
+	//Hydrogen::Quaternion Rot;  Rot.Euler(0.0f, 180.0f, 0.0f);
+	//m_Scene->GetTransform().t_Rotate = Rot;
+	//m_Scene->GetTransform().t_Scale = Hydrogen::VecF3(0.1f);
 
 }
 
@@ -71,7 +72,7 @@ void AppLayer::Event()
 
 void AppLayer::Update()
 {
-	m_Scene->Render();
+	//m_Scene->Render();
 }
 
 

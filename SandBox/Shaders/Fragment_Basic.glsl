@@ -5,6 +5,8 @@ layout(location = 1) in  vec2 TexCoord0;
 layout(location = 2) in  vec2 TexCoord1;
 
 layout(location = 0) out vec4  OutColor;
+layout(location = 1) out vec4  OutNormal;
+
 
 
 
@@ -18,6 +20,7 @@ void main()
 {
 
   OutColor      = texture(BaseColor, TexCoord0);
+  OutNormal     = texture(NormalMap, TexCoord0);
   
   gl_FragDepth  = 1.0f - gl_FragCoord.z;
 }

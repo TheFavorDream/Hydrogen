@@ -3,6 +3,7 @@
 #include "../Common.h"
 #include "Primitive.h"
 #include "VecMath/Transform/Transformation.h"
+#include "../Camera/Camera.h"
 #include "Core/ResourcePool.h"
 #include "Xenon/include/Xenon.h"
 
@@ -40,7 +41,11 @@ namespace Hydrogen
 
 		HYD inline const std::string GetName() { return m_Name; }
 
-		HYD uint32 Render(const Transformation& m_Transform =Transformation());
+		HYD uint32 Render(
+			Camera& 			  pCamera,
+			UniformRef		      pUniform,
+			const Transformation& pTransform = Transformation()
+		) noexcept;
 
 
 	private:

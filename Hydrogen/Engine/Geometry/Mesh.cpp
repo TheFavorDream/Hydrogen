@@ -3,7 +3,7 @@
 
 
 #include "Primitive.h"
-#include "Render/Renderer.h"
+#include "../Render/Renderer.h"
 #include <vulkan/vulkan_core.h>
 
 namespace Hydrogen 
@@ -82,16 +82,28 @@ namespace Hydrogen
 
 
 
-	uint32 Mesh::Render(const Transformation& m_Transform)
+	uint32 Mesh::Render(
+		Camera& 			  pCamera,
+		UniformRef		      pUniform,
+		const Transformation& pTransform
+	) noexcept
 	{
 
 		//if (m_Transform.IsDirty)
-		MatF4 Matrix = Transformation::CalculateMatrix(m_Transform);
+		MatF4 Matrix = Transformation::CalculateMatrix(pTransform).Transpose();
 
 		for (auto& pri : m_Primitives)
 		{
-			pri.m_Transform = Matrix;
-			Renderer::Self().PushPrimitive(&pri);
+			pri.m_Transform = Matrix.Transpose();
+			Renderer::Self().PushInstruction(Instruction{
+				.Vertices    = pri.m_VertexBuffer,
+				.Indices     = pri.m_IndexBuffer,
+				.Pipeline    = pri.m_Pipeline,
+				.Uniform 	 = pUniform,
+				.CameraPtr   = &pCamera,
+				.MaterialPtr = &pri.m_Material,
+				.ModelMatrix = Matrix
+			});
 		}
 		return HYD_OK;
 	}

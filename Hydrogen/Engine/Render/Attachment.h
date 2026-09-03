@@ -8,6 +8,7 @@
 #include "../Common.h"
 #include "Vulkan/Image.h"
 #include "Vulkan/VkEnumReDefs.h"
+#include "Vulkan/Renderpass.h"
 
 namespace Hydrogen
 {
@@ -45,9 +46,16 @@ namespace Hydrogen
 
         HYD void DestroyAttachment() noexcept;
 
+        inline ImageFormat      GetAttachmentFormat()      noexcept {return m_Format;}
+        inline ImageSampleCount GetAttachmentSampleCount() noexcept {return m_SampleCount;}
+         
+
     private:
         Internal::Vulkan::Image     m_Image;
         Internal::Vulkan::ImageView m_View;
+
+        ImageFormat      m_Format        = HYD_FORMAT_UNDEFINED;
+        ImageSampleCount m_SampleCount   = HYD_SAMPLE_COUNT_1_BIT;
 
     private: //friend classes
         friend class Internal::Vulkan::FrameBuffer;

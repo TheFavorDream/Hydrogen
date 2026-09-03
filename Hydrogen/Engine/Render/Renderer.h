@@ -7,6 +7,7 @@
 
 #include "../Common.h"
 #include "../Log/Log.h"
+#include "Material/Material.h"
 #include "Material/Texture.h"
 #include <optional>
 #include <unordered_map>
@@ -35,6 +36,20 @@
 namespace Hydrogen
 {
 
+
+
+	struct Instruction
+	{
+		VertexBufferRef      Vertices;
+		IndexBufferRef       Indices;
+		GraphicsPipelineRef  Pipeline;
+		UniformRef			 Uniform;
+		Ptr<Camera>			 CameraPtr;
+		Ptr<Material>		 MaterialPtr;
+		MatF4				 ModelMatrix;
+	};
+
+
 	class Renderer final
 	{
 	public:
@@ -42,7 +57,7 @@ namespace Hydrogen
 	
 	public:
 		//Adds Renderable Primitive to the Rendering queue
-		HYD void PushPrimitive(Ptr<Primitive> pPrimitive) noexcept;
+		HYD void PushInstruction(Instruction pIns) noexcept;
 
 		HYD void SetCamera(Ptr<Camera> pCamera) noexcept;
 			
@@ -63,6 +78,52 @@ namespace Hydrogen
 		HYD inline  Internal::Vulkan::Renderpass&    RenderPass() {return m_RenderPass;}
 		HYD inline  Window& 						 GetWindow()  {return m_Window;}
 	
+		//Creates a Pipeline Layout and returns the handle
+		HYD_ID_SPACE CreatePipelineLayout(
+			PipelineLayoutConfiguration pConf
+		) noexcept;
+	
+		Internal::Vulkan::PipelineLayout& AccessPipelineLayout(HYD_ID_SPACE pID) noexcept;
+	
+		//Creates a Descriptor Set Layout and returns the handle
+		HYD_ID_SPACE CreateDescriptorSetLayout(
+			DescriptorSetLayoutConfiguration pConf
+		) noexcept;
+	
+		Internal::Vulkan::DescriptorSetLayout& AccessDescriptorSetLayout(HYD_ID_SPACE pID) noexcept;
+	
+	
+		HYD_ID_SPACE AllocateDescriptorSet(
+			HYD_ID_SPACE pSetLayoutID
+		) noexcept;
+	
+		Internal::Vulkan::DescriptorSet& AccessDescriptorSet(HYD_ID_SPACE pID) noexcept;
+	
+	
+		HYD_ID_SPACE CreateSampler(
+			SamplerConfiguration pConf
+		) noexcept;
+	
+		Internal::Vulkan::Sampler& AccessSampler(
+			HYD_ID_SPACE pID
+		) noexcept; 
+	
+	
+		std::vector<Instance<Texture2D>> CreateTextures(
+			std::vector<TextureConfiguration>& pConfs
+		) noexcept;
+	
+		Instance<Texture2D> CreateTexture(
+			TextureConfiguration&& pConf
+		) noexcept;
+
+		
+		UniformRef CreateUniformBuffer(
+			uint64 		 pSize,
+			uint32 		 pBinding,
+			HYD_ID_SPACE pUniformBufferSetID
+		) noexcept;
+
 	private: //friend only access
 
 		//Init and shutdown
@@ -82,46 +143,6 @@ namespace Hydrogen
 		inline  Internal::Vulkan::CommandBuffer& GlobalTransferCommandBuffer() {return m_TransferCommandBuffer;}
 
 
-		//Creates a Pipeline Layout and returns the handle
-		HYD_ID_SPACE CreatePipelineLayout(
-			PipelineLayoutConfiguration pConf
-		) noexcept;
-
-		Internal::Vulkan::PipelineLayout& AccessPipelineLayout(HYD_ID_SPACE pID) noexcept;
-
-		//Creates a Descriptor Set Layout and returns the handle
-		HYD_ID_SPACE CreateDescriptorSetLayout(
-			DescriptorSetLayoutConfiguration pConf
-		) noexcept;
-
-		Internal::Vulkan::DescriptorSetLayout& AccessDescriptorSetLayout(HYD_ID_SPACE pID) noexcept;
-
-
-		HYD_ID_SPACE AllocateDescriptorSet(
-			HYD_ID_SPACE pSetLayoutID
-		) noexcept;
-
-		Internal::Vulkan::DescriptorSet& AccessDescriptorSet(HYD_ID_SPACE pID) noexcept;
-
-
-		HYD_ID_SPACE CreateSampler(
-			SamplerConfiguration pConf
-		) noexcept;
-
-
-		Internal::Vulkan::Sampler& AccessSampler(
-			HYD_ID_SPACE pID
-		) noexcept; 
-
-
-		std::vector<Instance<Texture2D>> CreateTextures(
-			std::vector<TextureConfiguration>& pConfs
-		) noexcept;
-
-		
-		Instance<Texture2D> CreateTexture(
-			TextureConfiguration&& pConf
-		) noexcept;
 
 		uint32 ExecuteCommandBuffers(
 			VkQueue 										 pQueue,
@@ -136,14 +157,16 @@ namespace Hydrogen
 	private:
 
 		uint32 CreateSyncObjects() noexcept;
+		uint32 CreateRenderPass()  noexcept;
 
+
+		uint32 InitVulkan() noexcept;
 
 	private:
 
-		std::queue<Ptr<Primitive>> m_PrimitiveQueue;
+		std::queue<Instruction> m_InstructionQueue;
 
 		std::vector<const char*> m_DeviceLevelExtensions        = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-		std::vector<const char*> m_InstanceLevelExtensions		= {};
 
 
 		const uint32 m_FramesInFlights = 2; //by default
@@ -182,19 +205,21 @@ namespace Hydrogen
 		std::unordered_map<HYD_ID_SPACE, Internal::Vulkan::Sampler> 				   m_Samplers;
 
 
-		ResourcePool<Texture2D>              			   m_Textures;
-		ResourcePool<Internal::Vulkan::GraphicsPipeline>   m_Pipelines;
-		ResourcePool<Internal::Vulkan::VertexBuffer> 	   m_VertexBuffers;
-		ResourcePool<Internal::Vulkan::IndexBuffer>  	   m_IndexBuffers;
+		ResourcePool<Texture2D>              			   			   m_Textures;
+		ResourcePool<Internal::Vulkan::GraphicsPipeline>   			   m_Pipelines;
+		ResourcePool<Internal::Vulkan::VertexBuffer> 	   			   m_VertexBuffers;
+		ResourcePool<Internal::Vulkan::IndexBuffer>  	   			   m_IndexBuffers;
+		ResourcePool<std::vector<Internal::Vulkan::UniformBuffer>>	   m_UniformBuffers;
 
 		Attachment DepthAttachment;
+		Attachment NormalAttachment;
 
-		Ptr<Scene> m_RenderedScene;
+		Instance<Scene> m_RenderedScene;
 
-		Window m_Window;
-
+		Window 		m_Window;
 		Ptr<Camera> m_DefCam = nullptr;
 
+		Camera m_DefaultCamera;
 
 	private:
 		static Ptr<Renderer> s_Self;

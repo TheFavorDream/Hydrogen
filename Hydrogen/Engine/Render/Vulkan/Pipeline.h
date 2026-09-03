@@ -115,6 +115,11 @@ namespace Hydrogen{
             HYD_ID_SPACE pLayoutID
         ) noexcept;
 
+        //Set the parent
+        HYD void SetParent(
+            Ptr<Internal::Vulkan::GraphicsPipeline> pParent
+        ) noexcept;
+
     private:
 
         HYD_ID_SPACE                          m_LayoutID;
@@ -146,13 +151,15 @@ namespace Hydrogen{
         StencilOpState                        m_StencilBack     = {};
         
         std::vector<ColorBlendState>          m_AttachmentStates;
-        bool                                  m_BlendLogicEnable       = false;
+        bool                                  m_BlendLogicEnable  = false;
         LogicOperations                       m_ColorBlendLogicOp = HYD_LOGIC_OP_COPY;
         std::array<float, 4>                  m_BlendConstants    = {0.0f, 0.0f, 0.0,0.0f};
     
+        Ptr<Internal::Vulkan::GraphicsPipeline> m_ParentPipeline = nullptr;
     
     private:
         friend class Internal::Vulkan::GraphicsPipeline;
+        friend class Renderer;
     };
     
     
@@ -273,6 +280,8 @@ namespace Vulkan{
         VkPipelineColorBlendStateCreateInfo              m_ColorBlendState;
         //Depth & Stencil State:
         VkPipelineDepthStencilStateCreateInfo   m_DepthStencil;
+
+        Ptr<GraphicsPipeline> m_Parent = nullptr;
 
     private:
         friend class Hydrogen::Renderer;

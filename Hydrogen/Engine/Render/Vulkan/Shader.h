@@ -16,6 +16,7 @@ namespace Hydrogen
     struct ShaderConfiguration
     {
         ShaderType  Type;
+        Buffer      Binary;
         std::string Path;
         std::string EntryName = "main";
     };
@@ -43,14 +44,8 @@ namespace Vulkan
         
         
     private:
-        //Create shader module from SpirV code
-        uint32 CreateShaderFromSpirV(
-            ShaderType        pShaderType,
-            const Buffer&     pCode,
-            const char*       pEntryPoint = "main"
-        ) noexcept; 
 
-        //Load a SpirV binary, then create the shader
+        //create shader
         uint32 CreateShader(
             const ShaderConfiguration& pConf
         ) noexcept; 

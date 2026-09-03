@@ -138,6 +138,14 @@ namespace Hydrogen
         m_LayoutID = pLayoutID;
     }
 
+
+    void GraphicsPipelineConfiguration::SetParent(
+        Ptr<Internal::Vulkan::GraphicsPipeline> pParent
+    ) noexcept
+    {
+        m_ParentPipeline = pParent;
+    }
+
 namespace Internal
 {
 
@@ -308,6 +316,7 @@ namespace Internal
 	    AttachmentColorBlend.alphaBlendOp 		 = VK_BLEND_OP_ADD; // Optional
         m_Attachments.clear();
         m_Attachments.push_back(AttachmentColorBlend); //default color blending
+        m_Attachments.push_back(AttachmentColorBlend); //default color blending
 
         
         m_DynamicStatesInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
@@ -460,6 +469,8 @@ namespace Internal
         m_Subpass        = pConfig.m_Subpass;
         m_PipelineLayout = pConfig.m_LayoutID;
 
+        m_Parent = pConfig.m_ParentPipeline;
+
         return CreatePipelineObject();
     }
     
@@ -498,7 +509,7 @@ namespace Internal
         VkGraphicsPipelineCreateInfo CInfo{};
         CInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         CInfo.pNext = nullptr;
-        CInfo.flags = 0;
+        CInfo.flags = (m_Parent != nullptr)?  VK_PIPELINE_CREATE_DERIVATIVE_BIT : 0;
 
         
         CInfo.stageCount          = m_Stages.size();
@@ -526,7 +537,7 @@ namespace Internal
         CInfo.renderPass = Renderer::Self().RenderPass().m_Handle;
         CInfo.subpass    = m_Subpass;
 
-        CInfo.basePipelineHandle = VK_NULL_HANDLE;
+        CInfo.basePipelineHandle = (m_Parent != nullptr)? m_Parent->m_Handle : VK_NULL_HANDLE;
         CInfo.basePipelineIndex  = -1;
 
         //Create Pipeline:

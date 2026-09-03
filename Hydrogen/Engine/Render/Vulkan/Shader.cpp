@@ -45,18 +45,33 @@ namespace Internal
     }
 
 
-    //Create shader module from SpirV code
-    uint32 Vulkan::Shader::CreateShaderFromSpirV(
-        ShaderType        pShaderType,
-        const Buffer&     pCode,
-        const char*       pEntryPoint
+
+
+    //Load a SpirV binary, then create the shader
+    uint32 Vulkan::Shader::CreateShader(
+        const ShaderConfiguration& pConf
     ) noexcept
     {
+        Buffer Code;
+
+        if (!pConf.Path.empty())
+        {
+            Code = Hydrogen::Internal::FileSys::ReadFile(pConf.Path);
+
+            if (!Code.GetPtr())
+                return HYD_FAILED;
+        }
+
+        else if (pConf.Binary.GetPtr())
+        {
+            Code = Buffer(pConf.Binary.GetPtr(), pConf.Binary.Length());
+        }
+
         VkShaderModuleCreateInfo CInfo{};
         CInfo.sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
         CInfo.pNext    = nullptr;
-        CInfo.codeSize = pCode.Length();
-        CInfo.pCode    = static_cast<uint32_t*>((void*)pCode.GetPtr());
+        CInfo.codeSize = Code.Length();
+        CInfo.pCode    = static_cast<uint32_t*>((void*)Code.GetPtr());
         
 
         VkResult Res = vkCreateShaderModule(
@@ -74,22 +89,9 @@ namespace Internal
             return HYD_FAILED;
         }
 
-        m_Stage = VkShaderStageFlagBits(pShaderType);
+        m_Stage = VkShaderStageFlagBits(pConf.Type);
 
         return HYD_OK;
-    }
-
-    //Load a SpirV binary, then create the shader
-    uint32 Vulkan::Shader::CreateShader(
-        const ShaderConfiguration& pConf
-    ) noexcept
-    {
-        Buffer Code = Hydrogen::Internal::FileSys::ReadFile(pConf.Path);
-
-        if (!Code.GetPtr())
-            return HYD_FAILED;
-
-        return CreateShaderFromSpirV(pConf.Type, Code, pConf.EntryName.c_str());
     }
 
     //Destroys the shader

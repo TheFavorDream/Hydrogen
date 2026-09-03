@@ -51,6 +51,8 @@ namespace Hydrogen
 		//ShaderPool::s_Self = Memory::AllocateRaw<ShaderPool>();
 
 		m_Running = true;
+
+		//m_Grid.GenerateGrid();
 	}
 
 	Core::~Core()
@@ -138,7 +140,7 @@ namespace Hydrogen
 
 
 
-	void Core::Event()
+	void Core::Event() noexcept
 	{
 		glfwPollEvents();
 		for (auto& i : m_Layers)
@@ -147,12 +149,23 @@ namespace Hydrogen
 		}
 	}
 
-	void Core::Update()
+	void Core::Update() noexcept
 	{
 		for (auto& i : m_Layers)
 		{
 			i->Update();
 		}
+	}
+
+
+	void Core::Render() noexcept
+	{
+
+
+		////Grid:
+		//Renderer::Self().PushPrimitive(dynamic_cast<Primitive*>(&m_Grid));
+
+		Renderer::Self().Render();
 	}
 
 }

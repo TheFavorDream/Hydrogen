@@ -25,101 +25,11 @@ namespace Hydrogen
 			return HYD_FAILED;
 		}
 
-		
-		//Vulkan Init
+
+		CHECK_ERROR(InitVulkan());
 
 
-		VkApplicationInfo AppInfo{
-			.sType            = VK_STRUCTURE_TYPE_APPLICATION_INFO,
-			.pNext            = nullptr,
-			.pApplicationName = m_Window.GetTitle(),
-			.pEngineName      = "Hydrogen",
-			.engineVersion    = VK_MAKE_VERSION(HYD_VERSION_MAJOR, HYD_VERSION_MINOR, HYD_VERSION_PATCH),
-			.apiVersion       = VK_MAKE_VERSION(1, 0, 0),
-		};
-
-		uint32 ReqCount   = 0;
-		const char** exts = glfwGetRequiredInstanceExtensions(&ReqCount);
-	
-		for (uint32 Iter = 0 ; Iter < ReqCount; ++Iter)
-			m_Instance.PushExtension(exts[Iter]);
-
-		CHECK_ERROR(m_Instance.CreateVkInstance(AppInfo, true));
-
-	
-	
-		//Create Rendering Surface
-		m_Window.CreateVulkanSurface(m_Instance.GetInstance());
-		
-		//Creating Logical device and queues
-		CHECK_ERROR(m_Device.CreateDevice(
-			m_Instance.GetInstance(),
-			m_DeviceLevelExtensions
-		));
-
-
-		//Swapchain creation:
-
-		Internal::Vulkan::SwapchainConfiguration SwapchainConf;
-
-		SwapchainConf.Surface             = m_Window.GetSurface();
-		SwapchainConf.SurfaceCapabilities = m_Window.QuarrySurfaceInfo(m_Device.m_PhysicalDevice);
-		SwapchainConf.ImageSize           = m_Swapchain.SelectExtent(SwapchainConf.SurfaceCapabilities, m_Window);
-		SwapchainConf.ImageCount          = 3;
-		SwapchainConf.DesiredFormats      = {VK_FORMAT_R8G8B8A8_SRGB};
-		SwapchainConf.DesiredPresentMode  = {VK_PRESENT_MODE_FIFO_KHR};
-
-		CHECK_ERROR(m_Swapchain.CreateSwapchain(
-		SwapchainConf
-		));
-
-
-		//Creating the Depth Buffer:
-
-		DepthAttachment.CreateAttachment(
-			HYD_ATTACHMENT_TYPE_DEPTH,
-			SwapchainConf.ImageSize.width,
-			SwapchainConf.ImageSize.height,
-			HYD_SAMPLE_COUNT_1_BIT
-		);
-
-
-		for (uint32 I = 0 ; I < m_Swapchain.ImageCount() ; ++I)
-		{
-			Internal::Vulkan::FrameBuffer framebuffer;
-			framebuffer.CreateFrameBuffer(
-				m_RenderPass,
-				{m_Swapchain.GetAttachment(I), &DepthAttachment},
-				m_Swapchain.GetImageExtent().width,
-				m_Swapchain.GetImageExtent().height
-			);
-			m_FrameBuffers.push_back(std::move(framebuffer));
-		}
-
-
-
-
-		//Command Buffer Creation:
-		CHECK_ERROR(m_RenderCommandPool.CreatePool(m_Device.m_QueueFamily.Graphics.value(),
-		 VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
-		);
-
-		m_RenderCommandBuffers.resize(m_FramesInFlights);
-		for (uint32 I = 0 ; I < m_FramesInFlights ; I++)
-		{
-			m_RenderCommandBuffers[I] = m_RenderCommandPool.AllocateCommandBuffer(); 
-		}
-
-
-		CHECK_ERROR(
-				m_TransferCommandPool.CreatePool(m_Device.m_QueueFamily.Transfer.value(), 
-		VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT | VK_COMMAND_POOL_CREATE_TRANSIENT_BIT)
-		);
-
-		m_TransferCommandBuffer = m_TransferCommandPool.AllocateCommandBuffer();
-
-		//Create synchronization objects:
-		CHECK_ERROR(CreateSyncObjects());
+		m_DefaultCamera.SetupCamera(60.0f, glm::vec3(0.0f), 2.0f, 0.001f, 10000.0f);
 
 		return HYD_OK;
 	}
@@ -168,7 +78,17 @@ namespace Hydrogen
 		for (auto& pipeline : m_Pipelines)
 			pipeline.Object.DestroyPipeline();
 
+		for (auto& Uniforms : m_UniformBuffers)
+		{
+			for(auto& Uniform : Uniforms.Object)
+				Uniform.DestroyBuffer();
+		}
+
 		DepthAttachment.DestroyAttachment();
+		NormalAttachment.DestroyAttachment();
+
+
+		CHECK_ERROR(m_UniformBuffers.Shutdown());
 
 		CHECK_ERROR(m_VertexBuffers.Shutdown());
 		CHECK_ERROR(m_IndexBuffers.Shutdown());
@@ -178,6 +98,7 @@ namespace Hydrogen
 
 		CHECK_ERROR(m_TransferCommandPool.DestroyPool());
 		CHECK_ERROR(m_RenderCommandPool.DestroyPool());
+
 
 		m_RenderPass.DestroyRenderPass();
 		m_Swapchain.DestroySwapchain();
@@ -205,10 +126,11 @@ namespace Hydrogen
 */
 
 
-	void Renderer::PushPrimitive(Ptr<Primitive> pPrimitive) noexcept
+	void Renderer::PushInstruction(
+		Instruction pIns
+	) noexcept
 	{
-		if (pPrimitive != nullptr)
-			m_PrimitiveQueue.push(pPrimitive);
+		m_InstructionQueue.push(pIns);
 	}
 
 
@@ -221,63 +143,60 @@ namespace Hydrogen
 
 		//Reset the Fence for the next frame:
 		vkResetFences(m_Device.m_Handle, 1, &m_FrameFinishSignals[m_FrameIndex]);
-		m_RenderCommandBuffers[m_FrameIndex].ResetCommandBuffer();
 		
-
+		
 		//Retrive an image from the swapchain:
 		uint32 ImageIndex = m_Swapchain.AcquireImage(m_ImageAvailableSemaphors[m_FrameIndex]);
-
-
+		
+		GlobalRenderCommandBuffer().ResetCommandBuffer();
 		GlobalRenderCommandBuffer().RecordCommandBuffer();
-
+		
 		m_RenderPass.BeginRenderPass(
 			m_FrameBuffers[ImageIndex],
 			VkRect2D{VkOffset2D{0, 0}, m_Swapchain.GetImageExtent()},
 			VecF4(0.02f, 0.02f, 0.02, 1.0f)
 		);
 		
+		
 		m_Window.UpdateViewport();		
-
 		
-		Internal::Vulkan::UniformBuffer& ubo = m_RenderedScene->m_UniformBuffers[m_FrameIndex];
-		
-
-		ubo.UploadData(m_DefCam->GetViewPtr(),    sizeof(glm::mat4), sizeof(MatF4));
-		ubo.UploadData(m_DefCam->GetProjectionPtr(), sizeof(glm::mat4), 2*sizeof(MatF4));
-
-
-		while (!m_PrimitiveQueue.empty())
+		while (!m_InstructionQueue.empty())
 		{
 			
-			Ptr<Primitive> pri = m_PrimitiveQueue.front();
-			m_PrimitiveQueue.pop();
-
-			pri->m_Pipeline->BindPipeline();
-			pri->m_VertexBuffer->Bind();
-			pri->m_IndexBuffer->Bind();
+			//Retrive the instruction:
+			Instruction instruction = m_InstructionQueue.front();
+			m_InstructionQueue.pop();
 			
-
-			ubo.UploadData(pri->m_Transform.Transpose().GetPointer(), sizeof(MatF4));
+			//Bind 
+			instruction.Pipeline->BindPipeline();
+			instruction.Vertices->Bind();
+			instruction.Indices->Bind();
+			
+			
+			Internal::Vulkan::UniformBuffer& ubo = instruction.Uniform->at(m_FrameIndex);
+			
+			ubo.UploadData(instruction.ModelMatrix.GetPointer(),sizeof(MatF4));
+			ubo.UploadData(instruction.CameraPtr->GetViewPtr(),sizeof(glm::mat4),sizeof(MatF4));
+			ubo.UploadData(instruction.CameraPtr->GetProjectionPtr(),sizeof(glm::mat4),2*sizeof(MatF4));
 			ubo.Bind(
-				AccessPipelineLayout(pri->m_Pipeline->m_PipelineLayout)
+				AccessPipelineLayout(instruction.Pipeline->m_PipelineLayout)
 			);
 	
 			
-			
-			
-			
-			
-	      pri->m_Material.Bind(AccessPipelineLayout(pri->m_Pipeline->m_PipelineLayout));
+	      	instruction.MaterialPtr->Bind(
+				AccessPipelineLayout(instruction.Pipeline->m_PipelineLayout)
+			);
 
+			uint32 IndexCount = instruction.Indices->GetCount();
 		 	//Issue a draw call
 		 	vkCmdDrawIndexed(
 		 		GlobalRenderCommandBuffer().GetHandle(),
-				pri->m_IndexBuffer->GetCount(), 1,0, 0, 0);
+				IndexCount, 1,0, 0, 0
+			);
 
 		}
 
 		m_RenderPass.EndRenderPass();
-
 		GlobalRenderCommandBuffer().EndRecordingCommandBuffer();
 
 
@@ -296,7 +215,6 @@ namespace Hydrogen
 
 
 		m_FrameIndex = (m_FrameIndex + 1) % m_FramesInFlights;
-
 		Core::s_Self->m_Running = !m_Window.ShouldWindowClose();
 		return HYD_OK;
 	}
@@ -312,7 +230,7 @@ namespace Hydrogen
 
 
 		DepthAttachment.DestroyAttachment();
-
+		NormalAttachment.DestroyAttachment();
 
 		m_FrameBuffers.clear();
 
@@ -337,12 +255,19 @@ namespace Hydrogen
 			HYD_SAMPLE_COUNT_1_BIT
 		);
 
+		NormalAttachment.CreateAttachment(
+			HYD_ATTACHMENT_TYPE_COLOR,
+			m_Swapchain.GetImageExtent().width,
+			m_Swapchain.GetImageExtent().height,
+			HYD_SAMPLE_COUNT_1_BIT
+		);
+
 		for (uint32 I = 0 ; I < m_Swapchain.ImageCount() ; ++I)
 		{
 			Internal::Vulkan::FrameBuffer framebuffer;
 			framebuffer.CreateFrameBuffer(
 				m_RenderPass,
-				{m_Swapchain.GetAttachment(I), &DepthAttachment},
+				{m_Swapchain.GetAttachment(I), &NormalAttachment, &DepthAttachment},
 				m_Swapchain.GetImageExtent().width,
 				m_Swapchain.GetImageExtent().height
 			);
@@ -473,8 +398,186 @@ namespace Hydrogen
 		return HYD_OK;
 	}
 
+	uint32 Renderer::CreateRenderPass() noexcept
+	{
+		//Attachment configurations:
+		Hydrogen::RenderpassAttachment   ColorOut;
+		ColorOut.Format      = Renderer::Self().Swapchain().GetImageFormat();
+		ColorOut.InitLayout  = Hydrogen::HYD_IMAGE_LAYOUT_UNDEFINED;
+		ColorOut.FinalLayout = Hydrogen::HYD_IMAGE_LAYOUT_PRESENT_SRC_KHR; 
+		ColorOut.LoadOp      = Hydrogen::HYD_ATTACHMENT_LOAD_OP_CLEAR;
+		ColorOut.StoreOp     = Hydrogen::HYD_ATTACHMENT_STORE_OP_STORE;
+		ColorOut.SampleCount = Hydrogen::HYD_SAMPLE_COUNT_1_BIT;
 
 
+		Hydrogen::RenderpassAttachment   NormalOut;
+		NormalOut.Format      = NormalAttachment.GetAttachmentFormat();
+		NormalOut.SampleCount = NormalAttachment.GetAttachmentSampleCount();
+		NormalOut.InitLayout  = Hydrogen::HYD_IMAGE_LAYOUT_UNDEFINED;
+		NormalOut.FinalLayout = Hydrogen::HYD_IMAGE_LAYOUT_PRESENT_SRC_KHR; 
+		NormalOut.LoadOp      = Hydrogen::HYD_ATTACHMENT_LOAD_OP_CLEAR;
+		NormalOut.StoreOp     = Hydrogen::HYD_ATTACHMENT_STORE_OP_STORE;
+
+		Hydrogen::RenderpassAttachment DepthOut;
+		DepthOut.Format      = DepthAttachment.GetAttachmentFormat();
+		DepthOut.SampleCount = DepthAttachment.GetAttachmentSampleCount();
+		DepthOut.InitLayout  = Hydrogen::HYD_IMAGE_LAYOUT_UNDEFINED;
+		DepthOut.FinalLayout = Hydrogen::HYD_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; 
+		DepthOut.LoadOp      = Hydrogen::HYD_ATTACHMENT_LOAD_OP_CLEAR;
+		DepthOut.StoreOp     = Hydrogen::HYD_ATTACHMENT_STORE_OP_STORE;
+
+		//Subpass Configurations:
+		Hydrogen::SubpassConfiguration SubpassConf;
+		SubpassConf.AddColorAttachment({.Index=0, .Layout=HYD_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL}); 
+		SubpassConf.AddColorAttachment({.Index=1, .Layout=HYD_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL}); 
+		SubpassConf.AddDepthStencilAttachment({.Index=2, .Layout=HYD_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL});
+		
+
+		//Subpass Dependencies Configurations:
+		Hydrogen::SubpassDependencyConfiguration DependencyConf;
+		DependencyConf.SourceSubpass      = UINT32_MAX; //Extenal source
+		DependencyConf.DestinationSubpass = 0;
+		DependencyConf.SrcStageMask       = Hydrogen::HYD_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
+		DependencyConf.SrcAccessMask 	  = 0;
+		DependencyConf.DstStageMask       = Hydrogen::HYD_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;   
+		DependencyConf.DstAccessMask      = Hydrogen::HYD_ACCESS_COLOR_ATTACHMENT_WRITE;    
+
+		Hydrogen::SubpassDependencyConfiguration DepthDependency;
+
+		DepthDependency.SourceSubpass      = UINT32_MAX;
+		DepthDependency.DestinationSubpass = 0;
+		DepthDependency.SrcStageMask       = HYD_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS | HYD_PIPELINE_STAGE_LATE_FRAGMENT_TESTS;
+		DepthDependency.SrcAccessMask      = 0;
+		DepthDependency.DstStageMask       = HYD_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS | HYD_PIPELINE_STAGE_LATE_FRAGMENT_TESTS;
+		DepthDependency.DstAccessMask      = HYD_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE;
+
+		Hydrogen::RenderpassConfiguration RenderPassConf;
+		RenderPassConf.AddAttachment(ColorOut);
+		RenderPassConf.AddAttachment(NormalOut);
+		RenderPassConf.AddAttachment(DepthOut);
+		RenderPassConf.AddSubpass(SubpassConf);
+		RenderPassConf.AddDependency(DependencyConf);
+		RenderPassConf.AddDependency(DepthDependency);
+		return m_RenderPass.CreateRenderPass(RenderPassConf);
+	}
+
+
+
+
+	uint32 Renderer::InitVulkan() noexcept
+	{
+
+		//Vulkan Init
+
+
+		VkApplicationInfo AppInfo{
+			.sType            = VK_STRUCTURE_TYPE_APPLICATION_INFO,
+			.pNext            = nullptr,
+			.pApplicationName = m_Window.GetTitle(),
+			.pEngineName      = "Hydrogen",
+			.engineVersion    = VK_MAKE_VERSION(HYD_VERSION_MAJOR, HYD_VERSION_MINOR, HYD_VERSION_PATCH),
+			.apiVersion       = VK_MAKE_VERSION(1, 0, 0),
+		};
+
+		uint32 ReqCount   = 0;
+		const char** exts = glfwGetRequiredInstanceExtensions(&ReqCount);
+	
+		for (uint32 Iter = 0 ; Iter < ReqCount; ++Iter)
+			m_Instance.PushExtension(exts[Iter]);
+
+		CHECK_ERROR(m_Instance.CreateVkInstance(AppInfo, true));
+
+	
+	
+		//Create Rendering Surface
+		m_Window.CreateVulkanSurface(m_Instance.GetInstance());
+		
+		//Creating Logical device and queues
+		CHECK_ERROR(m_Device.CreateDevice(
+			m_Instance.GetInstance(),
+			m_DeviceLevelExtensions
+		));
+
+
+		//Swapchain creation:
+
+		Internal::Vulkan::SwapchainConfiguration SwapchainConf;
+
+		SwapchainConf.Surface             = m_Window.GetSurface();
+		SwapchainConf.SurfaceCapabilities = m_Window.QuarrySurfaceInfo(m_Device.m_PhysicalDevice);
+		SwapchainConf.ImageSize           = m_Swapchain.SelectExtent(SwapchainConf.SurfaceCapabilities, m_Window);
+		SwapchainConf.ImageCount          = 3;
+		SwapchainConf.DesiredFormats      = {VK_FORMAT_R8G8B8A8_SRGB};
+		SwapchainConf.DesiredPresentMode  = {VK_PRESENT_MODE_FIFO_KHR};
+
+		CHECK_ERROR(m_Swapchain.CreateSwapchain(
+		SwapchainConf
+		));
+
+		//Creating the Depth Buffer:
+
+		DepthAttachment.CreateAttachment(
+			HYD_ATTACHMENT_TYPE_DEPTH,
+			SwapchainConf.ImageSize.width,
+			SwapchainConf.ImageSize.height,
+			HYD_SAMPLE_COUNT_1_BIT
+		);
+
+		NormalAttachment.CreateAttachment(
+			HYD_ATTACHMENT_TYPE_COLOR,
+			SwapchainConf.ImageSize.width,
+			SwapchainConf.ImageSize.height,
+			HYD_SAMPLE_COUNT_1_BIT
+		);
+
+		//Renderpass:
+		CHECK_ERROR(CreateRenderPass());
+
+
+		for (uint32 I = 0 ; I < m_Swapchain.ImageCount() ; ++I)
+		{
+			Internal::Vulkan::FrameBuffer framebuffer;
+			framebuffer.CreateFrameBuffer(
+				m_RenderPass,
+				{m_Swapchain.GetAttachment(I),&NormalAttachment, &DepthAttachment},
+				m_Swapchain.GetImageExtent().width,
+				m_Swapchain.GetImageExtent().height
+			);
+			m_FrameBuffers.push_back(std::move(framebuffer));
+		}
+
+
+
+
+		//Command Buffer Creation:
+		CHECK_ERROR(m_RenderCommandPool.CreatePool(m_Device.m_QueueFamily.Graphics.value(),
+		 VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
+		);
+
+		m_RenderCommandBuffers.resize(m_FramesInFlights);
+		for (uint32 I = 0 ; I < m_FramesInFlights ; I++)
+		{
+			m_RenderCommandBuffers[I] = m_RenderCommandPool.AllocateCommandBuffer(); 
+		}
+
+
+		CHECK_ERROR(
+				m_TransferCommandPool.CreatePool(m_Device.m_QueueFamily.Transfer.value(), 
+		VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT | VK_COMMAND_POOL_CREATE_TRANSIENT_BIT)
+		);
+
+		m_TransferCommandBuffer = m_TransferCommandPool.AllocateCommandBuffer();
+
+		//Create synchronization objects:
+		CHECK_ERROR(CreateSyncObjects());
+
+
+		return HYD_OK;
+	}
+
+
+
+	
 	//Creates a Pipeline Layout and returns the handle
 	HYD_ID_SPACE Renderer::CreatePipelineLayout(
 		PipelineLayoutConfiguration pConf
@@ -619,6 +722,33 @@ namespace Hydrogen
 		return std::move(texture);
 	}
 
+	UniformRef Renderer::CreateUniformBuffer(
+		uint64 		 pSize,
+		uint32 		 pBinding,
+		HYD_ID_SPACE pUniformBufferSetID
+	) noexcept
+	{
+		UniformRef NewUniform = m_UniformBuffers.Resource();
+		NewUniform->resize(m_FramesInFlights);
+
+
+		auto& DescriptorSets = m_DescriptorSets.at(pUniformBufferSetID);
+
+		for (uint32 FrameIndex = 0 ; FrameIndex < m_FramesInFlights ; ++FrameIndex)
+		{
+			NewUniform->at(FrameIndex).CreateUniformBuffer(pSize);
+			NewUniform->at(FrameIndex).SetDescriptorSet(pUniformBufferSetID);
+
+			DescriptorSets.at(FrameIndex).AttachUniformBuffer(
+				pBinding, 
+				NewUniform->at(FrameIndex)
+			);
+
+			DescriptorSets.at(FrameIndex).UpdateDescriptorSet();
+		}
+
+		return std::move(NewUniform);
+	}
 
 
 }; // namespace Hydrogen

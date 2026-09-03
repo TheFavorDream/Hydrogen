@@ -94,6 +94,7 @@ GENERATED += $(OBJDIR)/Descriptors.o
 GENERATED += $(OBJDIR)/Device.o
 GENERATED += $(OBJDIR)/FileSystem.o
 GENERATED += $(OBJDIR)/FrameBuffer.o
+GENERATED += $(OBJDIR)/Grid.o
 GENERATED += $(OBJDIR)/HydPch.o
 GENERATED += $(OBJDIR)/Image.o
 GENERATED += $(OBJDIR)/Keyboard.o
@@ -128,6 +129,7 @@ OBJECTS += $(OBJDIR)/Descriptors.o
 OBJECTS += $(OBJDIR)/Device.o
 OBJECTS += $(OBJDIR)/FileSystem.o
 OBJECTS += $(OBJDIR)/FrameBuffer.o
+OBJECTS += $(OBJDIR)/Grid.o
 OBJECTS += $(OBJDIR)/HydPch.o
 OBJECTS += $(OBJDIR)/Image.o
 OBJECTS += $(OBJDIR)/Keyboard.o
@@ -250,6 +252,9 @@ $(OBJDIR)/Primitive.o: Geometry/Primitive.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/HydPch.o: HydPch.cpp
+	@echo "$(notdir $<)"
+	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/Grid.o: InternalEntities/Grid.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/Log.o: Log/Log.cpp

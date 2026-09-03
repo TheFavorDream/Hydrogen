@@ -264,7 +264,7 @@ namespace Hydrogen
 		Log::SetError(
 			Log::FmtStr("[VULKAN ERROR] Message:%s", pCallbackData->pMessage)
 		);
-		assert(false);
+		//assert(false);
 		return VK_FALSE;
 	}
 

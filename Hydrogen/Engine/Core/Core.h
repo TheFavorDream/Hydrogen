@@ -9,6 +9,7 @@
 #include "../Common.h"
 #include "../Log/Log.h"
 #include "../Render/Renderer.h"
+#include "../InternalEntities/Grid.h"
 #include "Scene.h"
 #include "Timer/Timer.h"
 
@@ -37,9 +38,9 @@ namespace Hydrogen
 		HYD void Loop();
 	
 	private:
-		HYD void Event();
-		HYD void Update();
-
+		HYD void Event()  noexcept;
+		HYD void Update() noexcept;
+		HYD void Render() noexcept;
 	public:
 		HYD inline static float		 GetDeltaTime() { return s_DeltaTime; }
 		HYD static Instance<Scene>   CreateScene() noexcept;
@@ -50,8 +51,10 @@ namespace Hydrogen
 	private:
 
 		std::vector<Ptr<Layer>> m_Layers;
-		
 		bool  m_Running = false;
+
+
+		Grid m_Grid;
 
 	public:
 		static float		       s_DeltaTime;

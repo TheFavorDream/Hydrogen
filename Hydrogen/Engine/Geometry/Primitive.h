@@ -32,14 +32,12 @@ namespace Hydrogen
 
 
 	
-	struct Primitive
+	class Primitive
 	{
-
-		MatF4				    m_Transform;
-		Material				m_Material;
-
+	public:
+		MatF4				    					m_Transform;
+		Material									m_Material;
 		GraphicsPipelineRef    			    		m_Pipeline;
-		
 		Internal::Vulkan::VertexAttribute 		    m_Attributes;
 		Instance<Internal::Vulkan::VertexBuffer>    m_VertexBuffer;
 		Instance<Internal::Vulkan::IndexBuffer>     m_IndexBuffer;

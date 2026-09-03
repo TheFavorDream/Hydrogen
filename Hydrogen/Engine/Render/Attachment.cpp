@@ -44,6 +44,7 @@ namespace Hydrogen
     ) noexcept
     {
 
+
         ImageConfiguration ImgConf{};
         
         ImgConf.ImageSize.X   = pWidth;
@@ -74,6 +75,7 @@ namespace Hydrogen
                 .baseArrayLayer = 0,
                 .layerCount     = 1
             };
+
             break;
         case HYD_ATTACHMENT_TYPE_DEPTH:
             ImgConf.Format  = HYD_FORMAT_D32_SFLOAT;
@@ -102,10 +104,14 @@ namespace Hydrogen
             break;
         }
 
+        m_Format        = ImgConf.Format;
+        m_SampleCount   = ImgConf.SampleCount;
+        
         CHECK_ERROR(m_Image.CreateImage(ImgConf));
 
         ViewConf.Image = &m_Image;
         CHECK_ERROR(m_View.CreateImageView(ViewConf));
+
 
         return HYD_OK;
     }
@@ -116,5 +122,4 @@ namespace Hydrogen
         m_View.DestroyImageView();
         m_Image.DestroyImage();
     }
-
 };

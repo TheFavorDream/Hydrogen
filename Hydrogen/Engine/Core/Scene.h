@@ -117,8 +117,7 @@ namespace Hydrogen
 		HYD_ID_SPACE			      m_MVPLayoutID 	 = 0;
 		HYD_ID_SPACE			      m_MaterialLayoutID = 0;
 		SceneShaderLayout   	      m_ShaderBinding;
-
-		std::vector<Internal::Vulkan::UniformBuffer> m_UniformBuffers;
+		UniformRef 				      m_Uniforms;
 		
 	private:
 		friend class Renderer;

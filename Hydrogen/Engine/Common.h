@@ -111,18 +111,19 @@ namespace Hydrogen
 	class  Node;
 	class  Renderer;
 	class  Mesh;
-	struct Primitive;
+	class  Primitive;
 	class  Material;
-	class  Texture;
-	
 
-	class Attachment;
-	class Texture2D;
-	class Texture3D;
-	class CubeMap;
 	
-	class Mouse;
-	class Keyboard;
+	class  Grid;
+
+	class  Attachment;
+	class  Texture2D;
+	class  Texture3D;
+	class  CubeMap;
+	
+	class  Mouse;
+	class  Keyboard;
 	
 	namespace Internal
 	{
@@ -158,9 +159,12 @@ namespace Hydrogen
 	};
 
 	    //typedef Instance<Internal::Vulkan::PipelineLayout>   PipelineLayout;
-	typedef Instance<Internal::Vulkan::Image>            ImageRef;
-    typedef Instance<Internal::Vulkan::GraphicsPipeline> GraphicsPipelineRef;
-	typedef Internal::Vulkan::DescriptorSetLayout        UniformLayoutRef;
+	typedef Instance<Internal::Vulkan::Image>            		     ImageRef;
+    typedef Instance<Internal::Vulkan::GraphicsPipeline> 		     GraphicsPipelineRef;
+	typedef Instance<Internal::Vulkan::VertexBuffer>	 		     VertexBufferRef;
+	typedef Instance<Internal::Vulkan::IndexBuffer>	     		     IndexBufferRef;
+	typedef Instance<std::vector<Internal::Vulkan::UniformBuffer>>	 UniformRef;
+	typedef Internal::Vulkan::DescriptorSetLayout        			 UniformLayoutRef;
 };
 
 
