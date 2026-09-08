@@ -52,26 +52,30 @@ namespace Internal
         const ShaderConfiguration& pConf
     ) noexcept
     {
-        Buffer Code;
+        
+        VkShaderModuleCreateInfo CInfo{};
+        CInfo.sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        CInfo.pNext    = nullptr;
 
+
+        Buffer Code;
         if (!pConf.Path.empty())
         {
             Code = Hydrogen::Internal::FileSys::ReadFile(pConf.Path);
 
             if (!Code.GetPtr())
                 return HYD_FAILED;
-        }
 
+            CInfo.codeSize = Code.Length();
+            CInfo.pCode    = reinterpret_cast<uint32_t*>(Code.GetPtr());
+        }
+        
         else if (pConf.Binary.GetPtr())
         {
-            Code = Buffer(pConf.Binary.GetPtr(), pConf.Binary.Length());
+            CInfo.codeSize = pConf.Binary.Length();
+            CInfo.pCode    = reinterpret_cast<uint32_t*>(pConf.Binary.GetPtr());
         }
 
-        VkShaderModuleCreateInfo CInfo{};
-        CInfo.sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        CInfo.pNext    = nullptr;
-        CInfo.codeSize = Code.Length();
-        CInfo.pCode    = static_cast<uint32_t*>((void*)Code.GetPtr());
         
 
         VkResult Res = vkCreateShaderModule(

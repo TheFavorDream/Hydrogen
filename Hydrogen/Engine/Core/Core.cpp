@@ -58,6 +58,8 @@ namespace Hydrogen
 	Core::~Core()
 	{
 
+		Renderer::Self().WaitOnDeviceCompletion();
+
 		//Scene Shutdown:
 		for (auto& scene : s_Scenes)
 		{
@@ -65,16 +67,16 @@ namespace Hydrogen
 		}
 		s_Scenes.Shutdown();
 
-		Renderer::s_Self->Shutdown();
-		delete Renderer::s_Self;
-	
-
+		
 		for (int i = 0; i < m_Layers.size(); i++)
 		{
 			m_Layers[i]->Shutdown();
 			delete m_Layers[i];
 		}
-
+		
+		Renderer::s_Self->Shutdown();
+		delete Renderer::s_Self;
+	
 		
 
 		//delete ShaderPool::s_Self;

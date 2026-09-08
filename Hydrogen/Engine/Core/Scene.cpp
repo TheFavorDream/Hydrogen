@@ -47,6 +47,11 @@ namespace Hydrogen
 
 	uint32 Scene::FreeScene()
 	{
+		for (auto& node : m_Children)
+		{
+			node.Destroy();
+		}
+
 		m_Meshes.Shutdown();
 		return HYD_OK;
 	}
@@ -69,10 +74,13 @@ namespace Hydrogen
 			Node Current = Travers.top();
 			Travers.pop();
 
+
+			//Upload Camera Data:
+			Renderer::Self().AccessUniformBuffer(m_Uniforms).UploadData(m_Camera.GetViewPtr(),sizeof(glm::mat4),sizeof(MatF4));
+			Renderer::Self().AccessUniformBuffer(m_Uniforms).UploadData(m_Camera.GetProjectionPtr(),sizeof(glm::mat4),2*sizeof(MatF4));
 			
 			if (!Current.GetMesh().IsNull())
 				Current.GetMesh()->Render(
-					m_Camera,
 					m_Uniforms,
 					Current.GetTransform()
 				);
@@ -348,7 +356,7 @@ namespace Hydrogen
 
 		m_Uniforms = Renderer::Self().CreateUniformBuffer(
 			sizeof(MatF4)*3,
-			pShaderLayout.MVP.Binding,
+			pShaderLayout.MVP,
 			UniformBufferSetID
 		);
 
@@ -425,5 +433,14 @@ namespace Hydrogen
 		return *this;
 
 	}
+
+
+	void Node::Destroy() noexcept
+	{
+		m_Mesh.Reset();
+		for (auto& node : m_Children)
+			node.Destroy();
+	}
+
 
 };

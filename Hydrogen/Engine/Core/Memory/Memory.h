@@ -127,6 +127,7 @@ namespace Hydrogen
 
 		HYD inline operator void*() const { return (void*)m_Ptr; }
 
+		HYD inline uint8*     AccessPtr() {return m_Ptr;}
 		HYD inline Ptr<uint8> GetPtr() const { return m_Ptr; }
 		HYD inline uint64     Length() const { return m_ByteLength; }
 

@@ -46,7 +46,7 @@ namespace Internal
         if (!m_DescriptorSetID)
             return;
 
-        Renderer::Self().AccessDescriptorSet(m_DescriptorSetID).Bind(pPipelineLayout, 0);
+        Renderer::Self().AccessDescriptorSet(m_DescriptorSetID).Bind(pPipelineLayout, m_Binding.Set);
     }
 
 

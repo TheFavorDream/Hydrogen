@@ -109,7 +109,12 @@ namespace Hydrogen
 
 		void ResetObject(uint64 pIndex)
 		{
-			ASSERT(pIndex < HYD_BUCKET_SIZE, "Index Out of Bound");
+			if (pIndex >= HYD_BUCKET_SIZE)
+			{ 
+				Log::SetError("Index Out of Bound");
+				return;
+			}
+
 			m_Bucket[pIndex].Object.~Type(); //explicitly calls the destructor
 			m_Bucket[pIndex].RefCount = 0;
 			memset((void*)&m_Bucket[pIndex].Raw[0], 0, sizeof(Type));
@@ -263,11 +268,19 @@ namespace Hydrogen
 		//Deallocates the memory reserved by pool entirly
 		uint32 Shutdown()
 		{
+
+			m_Unused.clear();
+
 			if (!m_BucketCount)
 				return HYD_OK;
 
-			//if (m_Used > 0)
-			//	return HYD_FAILED; //cannot delete buckets when begin used by active instances
+			if (m_Used > 0)
+			{
+				Log::SetError(
+					Log::FmtStr("cannot delete buckets when begin used by active instances. Used:%i", m_Used)
+				);
+				return HYD_FAILED; //cannot delete buckets when begin used by active instances
+			}
 
 			while (m_Tail != nullptr)
 			{
@@ -440,10 +453,7 @@ namespace Hydrogen
 	{
 	public:
 		
-		Instance() noexcept
-		{
-
-		}
+		Instance() noexcept = default;
 
 	   ~Instance() noexcept
 	    {

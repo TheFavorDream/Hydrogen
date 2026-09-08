@@ -42,8 +42,8 @@ namespace Hydrogen
 
 	public:
 
-		HYD  Material();
-		HYD ~Material();
+		HYD  Material() = default;
+		HYD ~Material() = default;
 
 		HYD Material(const Material& pOther) = delete;
 		HYD Material(Material&& pOther);
@@ -64,13 +64,13 @@ namespace Hydrogen
 		float m_RoughnessFactor    = 1.0f;
 		VecF4 m_BaseColorFactor    = VecF4(1.0f);
 
-		Instance<Texture2D>           m_BaseColor;
-		Instance<Texture2D>           m_NormalMap;
-		Instance<Texture2D>           m_MetallicMap;
-		Instance<Texture2D>			  m_EmissiveMap;
-		Instance<Texture2D>			  m_OcclusionMap;
-
-		HYD_ID_SPACE m_SetID;
+		Instance<Texture2D>  m_BaseColor;
+		Instance<Texture2D>  m_NormalMap;
+		Instance<Texture2D>  m_MetallicMap;
+		Instance<Texture2D>	 m_EmissiveMap;
+		Instance<Texture2D>	 m_OcclusionMap;
+		HYD_ID_SPACE 		 m_SetID;
+		MaterialBinding      m_Binding;
 
 		friend class Core;
 	};

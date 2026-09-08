@@ -9,7 +9,6 @@ namespace Hydrogen
 {
 
 
-
     class Grid : public Primitive
     {
     public:
@@ -24,9 +23,25 @@ namespace Hydrogen
         HYD Grid& operator=(Grid&& pOther) noexcept;
 
         HYD void GenerateGrid() noexcept;
+        HYD void Render()       noexcept;
+        HYD void DestroyGrid()  noexcept;
+
 
     private:
-        float m_Spacing = 1.0f;
+
+        struct GridUniformData
+        {
+            alignas(16) glm::mat4 View;
+            alignas(16) glm::mat4 Projection;
+            alignas(16) VecF3     CameraPos;
+            alignas(16) VecF3     FogCoefficient; 
+        };
+
+        GridUniformData m_UniData;
+
+    private:
+        float      m_Spacing = 1.0f;
+        UniformRef m_Uniform;
     };
 
 };

@@ -5,6 +5,7 @@
 #include "glm/matrix.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
+#include "../VecMath/Vector/Vectors.h"
 #include "Event/Keyboard.h"
 #include "Event/Mouse.h"
 
@@ -29,7 +30,12 @@ namespace Hydrogen
 		HYD glm::mat4& GetView();
 		HYD glm::mat4& GetProjection();
 
-		HYD inline glm::vec3& GetCameraPos() { return m_Position; }
+		HYD inline VecF3 GetCameraPos()  { return VecF3(m_Position.x, m_Position.y, m_Position.z); }
+		HYD inline VecF3 GetCameraLook() { return VecF3(m_Front.x, m_Front.y, m_Front.z); }
+		HYD inline float GetZNear() const {return m_NearPlane;}
+		HYD inline float GetZFar()  const {return m_FarPlane;}
+		HYD inline float GetFOV()  const {return m_FOV;}
+
 	private:
 
 		HYD void CalculateCameraAngle();

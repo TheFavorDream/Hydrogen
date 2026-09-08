@@ -38,7 +38,8 @@ namespace Vulkan
 
     private:
 
-        HYD_ID_SPACE m_DescriptorSetID = 0;
+        HYD_ID_SPACE                   m_DescriptorSetID = 0;
+        Hydrogen::ShaderUniformBinding m_Binding; 
     
     private:
         friend class Hydrogen::Renderer;

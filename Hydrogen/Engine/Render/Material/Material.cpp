@@ -102,21 +102,12 @@ namespace Hydrogen
 		for (auto& set : Set)
 			set.UpdateDescriptorSet();
 
+		NewMaterial.m_Binding = pBindings;
+
 		return std::move(NewMaterial);
 	}
 
 
-
-
-	Material::Material()
-	{
-		
-	}
-
-	Material::~Material()
-	{
-		
-	}
 
 
 
@@ -130,6 +121,7 @@ namespace Hydrogen
     	m_BaseColorFactor    = pOther.m_BaseColorFactor;
 
 		m_SetID 			 = pOther.m_SetID;
+		m_Binding  			 = pOther.m_Binding;
 	}
 
 	Material& Material::operator=(Material&& pOther)
@@ -144,7 +136,9 @@ namespace Hydrogen
     	m_RoughnessFactor    = pOther.m_RoughnessFactor;
     	m_BaseColorFactor    = pOther.m_BaseColorFactor;
 		
-		m_SetID = pOther.m_SetID;
+		m_SetID 	= pOther.m_SetID;
+		m_Binding  	= pOther.m_Binding;
+
 		return *this;
 	}
 
@@ -155,7 +149,7 @@ namespace Hydrogen
 	{
 		if (!m_SetID)
 			return;
-		Renderer::Self().AccessDescriptorSet(m_SetID).Bind(pLayout, 1);
+		Renderer::Self().AccessDescriptorSet(m_SetID).Bind(pLayout, m_Binding.Set);
 	}
 
 };

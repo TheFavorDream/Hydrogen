@@ -11,3 +11,5 @@
 #include "Engine/Render/Window/Window.h"
 #include "Engine/Camera/Camera.h"
 #include "Engine/Timer/Timer.h"
+#include "Engine/InternalEntities/Grid.h"
+#include "Engine/Core/Scene.h"

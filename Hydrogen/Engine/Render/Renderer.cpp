@@ -37,10 +37,6 @@ namespace Hydrogen
 	uint32 Renderer::Shutdown() noexcept
 	{
 
-		
-
-		vkDeviceWaitIdle(m_Device.m_Handle);
-
 		Log::SetInfo("Shutting Down Renderer");
 		
 		
@@ -130,7 +126,7 @@ namespace Hydrogen
 		Instruction pIns
 	) noexcept
 	{
-		m_InstructionQueue.push(pIns);
+		m_InstructionQueue.push(std::move(pIns));
 	}
 
 
@@ -164,7 +160,7 @@ namespace Hydrogen
 		{
 			
 			//Retrive the instruction:
-			Instruction instruction = m_InstructionQueue.front();
+			Instruction instruction = std::move(m_InstructionQueue.front());
 			m_InstructionQueue.pop();
 			
 			//Bind 
@@ -173,19 +169,17 @@ namespace Hydrogen
 			instruction.Indices->Bind();
 			
 			
-			Internal::Vulkan::UniformBuffer& ubo = instruction.Uniform->at(m_FrameIndex);
-			
-			ubo.UploadData(instruction.ModelMatrix.GetPointer(),sizeof(MatF4));
-			ubo.UploadData(instruction.CameraPtr->GetViewPtr(),sizeof(glm::mat4),sizeof(MatF4));
-			ubo.UploadData(instruction.CameraPtr->GetProjectionPtr(),sizeof(glm::mat4),2*sizeof(MatF4));
-			ubo.Bind(
+			AccessUniformBuffer(instruction.Uniform).Bind(
 				AccessPipelineLayout(instruction.Pipeline->m_PipelineLayout)
 			);
 	
-			
-	      	instruction.MaterialPtr->Bind(
-				AccessPipelineLayout(instruction.Pipeline->m_PipelineLayout)
-			);
+			//Bind Material If Present
+			if (instruction.MaterialPtr)
+			{
+	      		instruction.MaterialPtr->Bind(
+					AccessPipelineLayout(instruction.Pipeline->m_PipelineLayout)
+				);
+			}
 
 			uint32 IndexCount = instruction.Indices->GetCount();
 		 	//Issue a draw call
@@ -328,6 +322,10 @@ namespace Hydrogen
 		return HYD_OK;
 	}
 	
+	void Renderer::WaitOnDeviceCompletion() noexcept
+	{
+		vkDeviceWaitIdle(m_Device.m_Handle);
+	}
 
 
 	Instance<Internal::Vulkan::VertexBuffer> Renderer::InstanceVertexBuffer() noexcept
@@ -723,9 +721,9 @@ namespace Hydrogen
 	}
 
 	UniformRef Renderer::CreateUniformBuffer(
-		uint64 		 pSize,
-		uint32 		 pBinding,
-		HYD_ID_SPACE pUniformBufferSetID
+		uint64 		 			pSize,
+		ShaderUniformBinding    pBinding,
+		HYD_ID_SPACE 			pUniformBufferSetID
 	) noexcept
 	{
 		UniformRef NewUniform = m_UniformBuffers.Resource();
@@ -740,14 +738,22 @@ namespace Hydrogen
 			NewUniform->at(FrameIndex).SetDescriptorSet(pUniformBufferSetID);
 
 			DescriptorSets.at(FrameIndex).AttachUniformBuffer(
-				pBinding, 
+				pBinding.Binding, 
 				NewUniform->at(FrameIndex)
 			);
 
 			DescriptorSets.at(FrameIndex).UpdateDescriptorSet();
+			NewUniform->at(FrameIndex).m_Binding = pBinding;
 		}
 
 		return std::move(NewUniform);
+	}
+
+	Internal::Vulkan::UniformBuffer& Renderer::AccessUniformBuffer(
+		UniformRef pUniformBuffer
+	) noexcept
+	{
+		return pUniformBuffer->at(m_FrameIndex);
 	}
 
 

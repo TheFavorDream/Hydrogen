@@ -42,7 +42,6 @@ namespace Hydrogen
 		HYD inline const std::string GetName() { return m_Name; }
 
 		HYD uint32 Render(
-			Camera& 			  pCamera,
 			UniformRef		      pUniform,
 			const Transformation& pTransform = Transformation()
 		) noexcept;

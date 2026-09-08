@@ -83,7 +83,6 @@ namespace Hydrogen
 
 
 	uint32 Mesh::Render(
-		Camera& 			  pCamera,
 		UniformRef		      pUniform,
 		const Transformation& pTransform
 	) noexcept
@@ -94,16 +93,22 @@ namespace Hydrogen
 
 		for (auto& pri : m_Primitives)
 		{
-			pri.m_Transform = Matrix.Transpose();
-			Renderer::Self().PushInstruction(Instruction{
-				.Vertices    = pri.m_VertexBuffer,
-				.Indices     = pri.m_IndexBuffer,
-				.Pipeline    = pri.m_Pipeline,
-				.Uniform 	 = pUniform,
-				.CameraPtr   = &pCamera,
-				.MaterialPtr = &pri.m_Material,
-				.ModelMatrix = Matrix
-			});
+			pri.m_Transform = Matrix;//.Transpose();
+			
+
+			Renderer::Self().AccessUniformBuffer(pUniform).UploadData(pri.m_Transform.GetPointer(), sizeof(MatF4), 0);
+
+			
+			Instruction instruction;
+			instruction.Vertices    = pri.m_VertexBuffer;
+			instruction.Indices     = pri.m_IndexBuffer;
+			instruction.Pipeline    = pri.m_Pipeline;
+			instruction.Uniform 	= pUniform;
+			instruction.MaterialPtr = &pri.m_Material;
+			
+			Renderer::Self().PushInstruction(
+				std::move(instruction)
+			);
 		}
 		return HYD_OK;
 	}

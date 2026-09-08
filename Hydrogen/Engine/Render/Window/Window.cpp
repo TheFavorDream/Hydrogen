@@ -133,7 +133,19 @@ namespace Hydrogen
 			.maxDepth = 1.0f
 		};
 
+		VkRect2D Scissor{
+			.offset = VkOffset2D{
+				.x = 0,
+				.y = 0
+			},
+			.extent = VkExtent2D{
+				.width  = static_cast<uint32>(m_ViewportSize.X),
+				.height = static_cast<uint32>(m_ViewportSize.Y)
+			}
+		};
+
 		vkCmdSetViewport(Renderer::Self().GlobalRenderCommandBuffer().GetHandle(), 0, 1, &CurrantViewport);
+		vkCmdSetScissor(Renderer::Self().GlobalRenderCommandBuffer().GetHandle(),0, 1, &Scissor);
 	}
 
 	int Window::SetViewportSize(int32 pWidth, int32 pHeight, int32 pStartX, int32 pStartY)

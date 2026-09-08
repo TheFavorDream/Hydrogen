@@ -53,6 +53,7 @@ namespace Hydrogen
 		inline Instance<Mesh>& GetMesh()	  { return m_Mesh; }
 		inline Transformation& GetTransform() { return m_Transform; }
 
+		HYD void Destroy() noexcept;
 
 
 	private:

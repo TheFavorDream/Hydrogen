@@ -442,11 +442,19 @@ namespace Internal
         m_DepthStencil.flags                 = 0;
 
 
-        VkDynamicState DynamicStates[] = {VK_DYNAMIC_STATE_VIEWPORT};
+        VkDynamicState DynamicStates[] = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
 
-        m_DynamicStatesInfo.dynamicStateCount = 1;
+        m_DynamicStatesInfo.dynamicStateCount = 2;
         m_DynamicStatesInfo.pDynamicStates    = DynamicStates;
 
+
+
+        if (pConfig.m_AttachmentStates.size())
+        {
+            m_Attachments.clear();
+            m_Attachments = pConfig.m_AttachmentStates;
+        }
+        
         m_ColorBlendState.attachmentCount   = m_Attachments.size();
         m_ColorBlendState.pAttachments      = m_Attachments.data();
         m_ColorBlendState.logicOp           = VkLogicOp(pConfig.m_ColorBlendLogicOp);

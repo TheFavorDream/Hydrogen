@@ -4,13 +4,11 @@
 #include "Shader.h"
 #include <cstdint>
 #include <vulkan/vulkan.h>
-#include <vulkan/vulkan_core.h>
-#include "UniformBuffer.h"
 #include "VkEnumReDefs.h"
 
 namespace Hydrogen
 {
-
+    
     struct ShaderUniformBinding
     {
         uint32       Binding;
@@ -18,19 +16,19 @@ namespace Hydrogen
         ShaderStages ShaderStage;
         UniformType  Type;
     };
-
+    
     struct ShaderUniformLayout
     {
-    public:
+        public:
         HYD void AddUniformBinding(
             ShaderUniformBinding pBinding
         ) noexcept;
-    private:
+        private:
         std::vector<ShaderUniformBinding> m_Bindings;             
-  
+        
     };
-
-
+    
+    
     struct DescriptorBinding
     {
         uint32       Binding;
@@ -38,6 +36,12 @@ namespace Hydrogen
         ShaderStages Stage;
         UniformType  Type;
     };
+};
+
+#include "UniformBuffer.h"
+
+namespace Hydrogen
+{
 
     struct DescriptorSetLayoutConfiguration
     {

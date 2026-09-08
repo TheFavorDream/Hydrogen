@@ -44,9 +44,20 @@ namespace Hydrogen
 		IndexBufferRef       Indices;
 		GraphicsPipelineRef  Pipeline;
 		UniformRef			 Uniform;
-		Ptr<Camera>			 CameraPtr;
 		Ptr<Material>		 MaterialPtr;
-		MatF4				 ModelMatrix;
+
+
+		 Instruction() = default;
+		~Instruction() = default; 
+	
+		Instruction(Instruction&& pOther)
+			: Vertices(std::move(pOther.Vertices)),
+		  	  Indices(std::move(pOther.Indices)),
+		  	  Pipeline(std::move(pOther.Pipeline)),
+		  	  Uniform(std::move(pOther.Uniform)),
+		  	  MaterialPtr(pOther.MaterialPtr)
+			{}
+		
 	};
 
 
@@ -74,10 +85,12 @@ namespace Hydrogen
 	
 
 
-		HYD inline  Internal::Vulkan::Swapchain&     Swapchain()  {return m_Swapchain;}
-		HYD inline  Internal::Vulkan::Renderpass&    RenderPass() {return m_RenderPass;}
-		HYD inline  Window& 						 GetWindow()  {return m_Window;}
-	
+		HYD inline  Internal::Vulkan::Swapchain&     Swapchain()  		{return m_Swapchain;}
+		HYD inline  Internal::Vulkan::Renderpass&    RenderPass() 		{return m_RenderPass;}
+		HYD inline  Window& 						 GetWindow()  		{return m_Window;}
+		HYD inline 	Ptr<Camera>					     GetCurrentCamera() {return m_DefCam;}							 
+
+
 		//Creates a Pipeline Layout and returns the handle
 		HYD_ID_SPACE CreatePipelineLayout(
 			PipelineLayoutConfiguration pConf
@@ -109,19 +122,23 @@ namespace Hydrogen
 		) noexcept; 
 	
 	
-		std::vector<Instance<Texture2D>> CreateTextures(
+		HYD std::vector<Instance<Texture2D>> CreateTextures(
 			std::vector<TextureConfiguration>& pConfs
 		) noexcept;
 	
-		Instance<Texture2D> CreateTexture(
+		HYD Instance<Texture2D> CreateTexture(
 			TextureConfiguration&& pConf
 		) noexcept;
 
 		
-		UniformRef CreateUniformBuffer(
-			uint64 		 pSize,
-			uint32 		 pBinding,
-			HYD_ID_SPACE pUniformBufferSetID
+		HYD UniformRef CreateUniformBuffer(
+			uint64 		 			pSize,
+			ShaderUniformBinding    pBinding,
+			HYD_ID_SPACE 		    pUniformBufferSetID
+		) noexcept;
+
+		HYD Internal::Vulkan::UniformBuffer& AccessUniformBuffer(
+			UniformRef pUniformBuffer
 		) noexcept;
 
 	private: //friend only access
@@ -153,6 +170,7 @@ namespace Hydrogen
 			VkFence 								       	 pSignalFence      = VK_NULL_HANDLE
 		) noexcept;
 
+		void WaitOnDeviceCompletion() noexcept;
 
 	private:
 

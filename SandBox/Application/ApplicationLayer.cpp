@@ -11,7 +11,7 @@ void AppLayer::Setup()
 	m_Scene = Core::CreateScene();
 
 	//Camera Setup
-	m_Scene->GetCamera().SetupCamera(45.0f, glm::vec3(0.0f), 2.0f, 0.1f, 1000.0f);
+	m_Scene->GetCamera().SetupCamera(45.0f, glm::vec3(0.0f, 10.0f, 0.0f), 2.0f, 0.1f, 1000.0f);
 	
 	Renderer::Self().SetCamera(&m_Scene->GetCamera());
 	
@@ -41,7 +41,7 @@ void AppLayer::Setup()
 
 
 	Xenon::Model model = Core::Load(
-		"/home/Volta/Desktop/Dev/Hydrogen/SandBox/Resources/Models/Pistol/scene.gltf",
+		"/home/Volta/Desktop/Dev/Hydrogen/SandBox/Resources/Models/ChainSaw/scene.gltf",
 		Xenon::LF_BASE_NORMAL_ONLY
 	);
 	
@@ -50,16 +50,21 @@ void AppLayer::Setup()
 		model[0] //first scene
 	);
 
-	//Hydrogen::Quaternion Rot;  Rot.Euler(0.0f, 180.0f, 0.0f);
+	Hydrogen::Quaternion Rot;  Rot.Euler(0.0f, 180.0f, 0.0f);
 	//m_Scene->GetTransform().t_Rotate = Rot;
-	//m_Scene->GetTransform().t_Scale = Hydrogen::VecF3(0.1f);
+	m_Scene->GetTransform().t_Scale = Hydrogen::VecF3(2.0f);
+
+
+
+	m_Grid.GenerateGrid();
 
 }
 
 
 void AppLayer::Shutdown()
 {
-	m_Scene.ResetWithoutRefDrop();
+	m_Grid.DestroyGrid();
+	//m_Scene.ResetWithoutRefDrop();
 }
 
 void AppLayer::Event()
@@ -72,7 +77,8 @@ void AppLayer::Event()
 
 void AppLayer::Update()
 {
-	//m_Scene->Render();
+	m_Grid.Render();
+	m_Scene->Render();
 }
 
 
