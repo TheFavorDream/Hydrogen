@@ -91,6 +91,7 @@ namespace Vulkan
             PipelineStageFlags pDstStage
         ) noexcept;
 
+        void GenerateMipMaps() noexcept;
 
         inline VkExtent3D GetImageExtent() const {return VkExtent3D{.width=m_Width, .height=m_Heihgt, .depth=1 };}
 

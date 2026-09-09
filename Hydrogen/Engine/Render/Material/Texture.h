@@ -78,7 +78,7 @@ namespace Hydrogen
 		HYD void Bind();
 
 	private:
-		Internal::Vulkan::Image     m_ImageHandle;
+		Internal::Vulkan::Image     m_Image;
 		Internal::Vulkan::ImageView m_View;
 		Internal::Vulkan::Sampler   m_Sampler;
 		uint32 				        m_TexCoordSet = 0;

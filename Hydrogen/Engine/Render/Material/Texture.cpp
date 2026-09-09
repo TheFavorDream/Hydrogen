@@ -142,22 +142,24 @@ namespace Hydrogen
 
 		uint32 ImageLength = ImgData.Width*ImgData.Height*4	;
 
+		uint32 MipMaps = floor(fmax(log2(ImgData.Width), log2(ImgData.Height)))-1;
+
 		ImageConfiguration ImageConf;
 		ImageConf.ImageSize               = Vec3<uint32>(ImgData.Width, ImgData.Height, 1);
 		ImageConf.ArrayLayers             = 1;
-		ImageConf.MipMapLevels            = 1;
+		ImageConf.MipMapLevels            = MipMaps;
 		ImageConf.InitialLayout           = HYD_IMAGE_LAYOUT_UNDEFINED;
 		ImageConf.Format                  = Internal::Vulkan::Image::ChannelToImageFormat(ImgData.ImageChannel);
 		ImageConf.SampleCount             = HYD_SAMPLE_COUNT_1_BIT;
-		ImageConf.Usage                   = HYD_IMAGE_USAGE_SAMPLED_BIT | HYD_IMAGE_USAGE_TRANSFER_DST_BIT; 
+		ImageConf.Usage                   = HYD_IMAGE_USAGE_SAMPLED_BIT | HYD_IMAGE_USAGE_TRANSFER_DST_BIT | HYD_IMAGE_USAGE_TRANSFER_SRC_BIT; 
 		ImageConf.Type 			          = HYD_IMAGE_TYPE_2D;
 		ImageConf.SharingMode.SharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-		CHECK_ERROR(m_ImageHandle.CreateImage(ImageConf));
+		CHECK_ERROR(m_Image.CreateImage(ImageConf));
 
 		//Transition Layout to Transfer Dst optimal
 
-		m_ImageHandle.TransitionLayout(
+		m_Image.TransitionLayout(
 			HYD_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 			HYD_PIPELINE_STAGE_TOP_OF_PIPE,
 			HYD_PIPELINE_STAGE_TRANSFER
@@ -169,27 +171,32 @@ namespace Hydrogen
 		Internal::Vulkan::StagingBuffer CopyBuffer;
 		CopyBuffer.CreateBuffer(ImageLength);
 		CopyBuffer.UploadData(ImgData.Data, ImageLength);
-		CopyBuffer.CopyImage(m_ImageHandle);
+		CopyBuffer.CopyImage(m_Image);
 		CopyBuffer.DestroyBuffer();
+
+
+
+		m_Image.GenerateMipMaps();
 
 
 		//Transition Layout to Shader read optimal
 
-		m_ImageHandle.TransitionLayout(
+		/*
+		m_Image.TransitionLayout(
 			HYD_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 			HYD_PIPELINE_STAGE_TRANSFER,
 			HYD_PIPELINE_STAGE_FRAGMENT_SHADER
 		);
-
+*/
 
 		ImageViewConfiguration ViewConf;
-		ViewConf.Image 	      = &m_ImageHandle;
+		ViewConf.Image 	      = &m_Image;
 		ViewConf.ViewType     = HYD_IMAGE_VIEW_TYPE_2D;
 		ViewConf.Format       = ImageConf.Format;
 		ViewConf.SubResources = VkImageSubresourceRange{
 			.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
 			.baseMipLevel   = 0,
-			.levelCount 	= 1,
+			.levelCount 	= MipMaps,
 			.baseArrayLayer = 0,
 			.layerCount     = 1
 		};
@@ -204,7 +211,7 @@ namespace Hydrogen
 
 	void  Texture2D::DestroyTexture() noexcept
 	{
-		m_ImageHandle.DestroyImage();
+		m_Image.DestroyImage();
 		m_View.DestroyImageView();
 		m_Sampler.DestroySampler();
 	}

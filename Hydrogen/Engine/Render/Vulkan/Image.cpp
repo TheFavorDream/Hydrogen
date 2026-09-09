@@ -190,7 +190,7 @@ namespace Internal
         MemBarrier.pNext                           = nullptr;
         MemBarrier.image                           = m_Handle;
         MemBarrier.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
-        MemBarrier.subresourceRange.levelCount     = 1;
+        MemBarrier.subresourceRange.levelCount     = m_Level;
         MemBarrier.subresourceRange.baseMipLevel   = 0;
         MemBarrier.subresourceRange.layerCount     = 1;
         MemBarrier.subresourceRange.baseArrayLayer = 0;
@@ -243,6 +243,125 @@ namespace Internal
         Renderer::Self().ExecuteCommandBuffers(
             Renderer::Self().GetQueues().Transfer,
             {commandBuffer.GetHandle()}
+        );
+
+        vkQueueWaitIdle(Renderer::Self().GetQueues().Transfer);
+    }
+
+    void Vulkan::Image::GenerateMipMaps() noexcept
+    {
+
+        VkImageMemoryBarrier ImgBarrier;
+        ImgBarrier.sType               = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        ImgBarrier.pNext               = nullptr;
+        ImgBarrier.image               = m_Handle;
+        ImgBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        ImgBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        ImgBarrier.subresourceRange    = VkImageSubresourceRange{
+            .aspectMask       = VK_IMAGE_ASPECT_COLOR_BIT,
+            .baseMipLevel     = 0,
+            .levelCount       = 1,
+            .baseArrayLayer   = 0,
+            .layerCount       = 1
+        };
+
+        CommandBuffer& Transfer = Renderer::Self().GlobalTransferCommandBuffer();
+        
+        
+        int32 MipWidth  = static_cast<int32>(m_Width);
+        int32 MipHeight = static_cast<int32>(m_Heihgt);
+        
+        for (uint32 level = 1 ; level < m_Level ; ++level)
+        {
+            Transfer.RecordCommandBuffer();
+
+            ImgBarrier.subresourceRange.baseMipLevel = level - 1;
+            ImgBarrier.oldLayout                     = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+            ImgBarrier.newLayout                     = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+            ImgBarrier.dstAccessMask                 = VK_ACCESS_TRANSFER_READ_BIT;
+            ImgBarrier.srcAccessMask                 = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+            vkCmdPipelineBarrier(
+                Transfer.GetHandle(),
+                VK_PIPELINE_STAGE_TRANSFER_BIT,
+                VK_PIPELINE_STAGE_TRANSFER_BIT,
+                0,
+                0, nullptr, 0, nullptr, 1, &ImgBarrier);
+
+            VkImageBlit Blit;
+
+            Blit.srcSubresource = VkImageSubresourceLayers{
+                .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
+                .mipLevel       = level - 1,
+                .baseArrayLayer = 0,
+                .layerCount     = 1
+            };
+            Blit.srcOffsets[0] = VkOffset3D{0, 0, 0};
+            Blit.srcOffsets[1] = VkOffset3D{MipWidth, MipHeight, 1};
+
+            Blit.dstSubresource = VkImageSubresourceLayers{
+                .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
+                .mipLevel       = level,
+                .baseArrayLayer = 0,
+                .layerCount     = 1
+            };
+            Blit.dstOffsets[0] = VkOffset3D{0, 0, 0};
+            Blit.dstOffsets[1] = VkOffset3D{MipWidth > 1? MipWidth/2 : 1, MipHeight > 1? MipHeight/2 : 1, 1};
+
+            MipWidth  /= 2;
+            MipHeight /= 2;
+
+
+            vkCmdBlitImage(
+                Transfer.GetHandle(),
+                m_Handle, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                m_Handle, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                1, &Blit,
+                VK_FILTER_LINEAR
+            );
+
+
+            ImgBarrier.oldLayout     = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+            ImgBarrier.newLayout     = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            ImgBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            ImgBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+            vkCmdPipelineBarrier(Transfer.GetHandle(),
+            VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
+            0, nullptr,
+            0, nullptr,
+            1, &ImgBarrier
+            );
+
+
+            Transfer.EndRecordingCommandBuffer();
+            Renderer::Self().ExecuteCommandBuffers(
+                Renderer::Self().GetQueues().Transfer,
+                {Transfer.GetHandle()}
+            );
+            vkQueueWaitIdle(Renderer::Self().GetQueues().Transfer);
+        }
+
+
+        
+        Transfer.RecordCommandBuffer();
+
+        ImgBarrier.subresourceRange.baseMipLevel = m_Level - 1; 
+        ImgBarrier.oldLayout        = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        ImgBarrier.newLayout        = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        ImgBarrier.srcAccessMask    = VK_ACCESS_TRANSFER_READ_BIT;
+        ImgBarrier.dstAccessMask    = VK_ACCESS_SHADER_READ_BIT;
+
+        vkCmdPipelineBarrier(Transfer.GetHandle(),
+        VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
+        0, nullptr,
+        0, nullptr,
+        1, &ImgBarrier);
+        
+        Transfer.EndRecordingCommandBuffer();
+        Renderer::Self().ExecuteCommandBuffers(
+            Renderer::Self().GetQueues().Transfer,
+            {Transfer.GetHandle()}
         );
 
         vkQueueWaitIdle(Renderer::Self().GetQueues().Transfer);
