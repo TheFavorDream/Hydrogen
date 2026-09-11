@@ -316,7 +316,7 @@ namespace Internal
 	    AttachmentColorBlend.alphaBlendOp 		 = VK_BLEND_OP_ADD; // Optional
         m_Attachments.clear();
         m_Attachments.push_back(AttachmentColorBlend); //default color blending
-        m_Attachments.push_back(AttachmentColorBlend); //default color blending
+       // m_Attachments.push_back(AttachmentColorBlend); //default color blending
 
         
         m_DynamicStatesInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;

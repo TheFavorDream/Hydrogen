@@ -222,7 +222,6 @@ namespace Internal
 
 		VkClearValue ClearVals[] = {
 			{pClearColor.R, pClearColor.G, pClearColor.B, pClearColor.A},
-			{0.0f, 0.0f, 0.0f, 0.0f},
 			{0.0f}
 		};
 
@@ -231,7 +230,7 @@ namespace Internal
 		BeginInfo.pNext 	  	  = nullptr;
 		BeginInfo.renderPass  	  = m_Handle;
 		BeginInfo.framebuffer 	  = pFrameBuffer.GetHandle();
-		BeginInfo.clearValueCount = 3;
+		BeginInfo.clearValueCount = 2;
 		BeginInfo.pClearValues    = ClearVals;
 		BeginInfo.renderArea 	  = pRenderArea;
 

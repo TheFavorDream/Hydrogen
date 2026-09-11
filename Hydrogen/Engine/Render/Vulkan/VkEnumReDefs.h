@@ -421,6 +421,7 @@ namespace Hydrogen
         HYD_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK   = VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK
     };
 
+    typedef UniformType DescriptorType;
 
 	enum ShaderType {
 		HYD_STAGE_UNSPECIFIED       			 = 0x00000000,

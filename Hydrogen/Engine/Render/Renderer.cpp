@@ -1,9 +1,7 @@
-#include "Attachment.h"
-#include "Vulkan/VkEnumReDefs.h"
-#include <GLFW/glfw3.h>
+
+#include <cstdint>
 #define RENDERER_H
 #include "Renderer.h"
-#include "../Core/Core.h"
 #include "HydPch.h"
 
 
@@ -12,34 +10,44 @@ namespace Hydrogen
 	Ptr<Renderer> Renderer::s_Self = nullptr;
 	Renderer& Renderer::Self() { return *(Renderer::s_Self); }
 
+	
+
+/*
+	Purpose: Initializes the Renderer, Creates Window etc 
+*/
 
 	uint32 Renderer::Init(WindowInfo pWindow) noexcept
-
 	{
 		Log::SetInfo("Renderer:Init");
 
-
+		//Window Creation:
 		if (m_Window.MakeWindow(pWindow.Width, pWindow.Height, pWindow.Title) != HYD_OK)
 		{
 			Log::SetError("Unable to Create Window");
 			return HYD_FAILED;
 		}
 
-
 		CHECK_ERROR(InitVulkan());
-
-
-		m_DefaultCamera.SetupCamera(60.0f, glm::vec3(0.0f), 2.0f, 0.001f, 10000.0f);
-
 		return HYD_OK;
 	}
 
+/*
+	Purpose: Frees All Allocated Buffers, Textures, Samplers etc
+*/
 	uint32 Renderer::Shutdown() noexcept
 	{
 
 		Log::SetInfo("Shutting Down Renderer");
 		
-		
+
+		//Shutdown UI
+		if (UI::Core::s_Self)
+		{
+			UI::Core::s_Self->Shutdown();
+			delete UI::Core::s_Self;
+		}
+
+
 		for (auto& Cbuffer : m_RenderCommandBuffers)
 			Cbuffer.ResetCommandBuffer();
 
@@ -49,7 +57,7 @@ namespace Hydrogen
 
 
 		for (auto& descSetPool : m_DescriptorPools)
-			descSetPool.DestroyDescriptorPool();
+			descSetPool.second.DestroyDescriptorPool();
 
 		for (auto& descSetLayout : m_DescSetLayouts)
 			descSetLayout.second.DestroyDescriptorSetLayout();
@@ -81,7 +89,6 @@ namespace Hydrogen
 		}
 
 		DepthAttachment.DestroyAttachment();
-		NormalAttachment.DestroyAttachment();
 
 
 		CHECK_ERROR(m_UniformBuffers.Shutdown());
@@ -108,6 +115,7 @@ namespace Hydrogen
 			vkDestroyFence(m_Device.m_Handle,     m_FrameFinishSignals[I],      VULKAN_ALLOCATION_CALLBACK);
 		}
 
+
 		m_Device.DestroyDevice();
 		m_Window.DestroyWindow(m_Instance.GetInstance());
 		m_Instance.DestroyInstance();
@@ -116,12 +124,9 @@ namespace Hydrogen
 	}
 
 
-
 /*
-	Rendering Related:
+	Purpose: Push an Instruction to the queue to be rendered:
 */
-
-
 	void Renderer::PushInstruction(
 		Instruction pIns
 	) noexcept
@@ -129,10 +134,15 @@ namespace Hydrogen
 		m_InstructionQueue.push(std::move(pIns));
 	}
 
+/*
+	Purpose: Main Rendering Function
 
-	uint32 Renderer::Render()
+	TODO:
+		*Abstract the Syncronization semaphores and fences
+*/
+
+	void Renderer::Render()
 	{
-
 
 		//Wait for previous frame to finish:
 		vkWaitForFences(m_Device.m_Handle, 1, &m_FrameFinishSignals[m_FrameIndex], VK_TRUE, UINT64_MAX);
@@ -187,14 +197,23 @@ namespace Hydrogen
 		 		GlobalRenderCommandBuffer().GetHandle(),
 				IndexCount, 1,0, 0, 0
 			);
-
 		}
+
+		//Render UI if present:
+		if (UI::Core::s_Self)
+		{
+			ImGui_ImplVulkan_RenderDrawData(
+				UI::Core::s_Self->m_FrameDrawData,
+				GlobalRenderCommandBuffer().GetHandle()
+			);
+			UI::Core::s_Self->m_FrameDrawData = nullptr;
+		}
+
 
 		m_RenderPass.EndRenderPass();
 		GlobalRenderCommandBuffer().EndRecordingCommandBuffer();
 
-
-
+		//Submit Work to the queues
 		ExecuteCommandBuffers(
 			m_Device.m_Queues.Graphics,
 			{m_RenderCommandBuffers[m_FrameIndex].GetHandle()},
@@ -209,27 +228,30 @@ namespace Hydrogen
 
 
 		m_FrameIndex = (m_FrameIndex + 1) % m_FramesInFlights;
+
 		Core::s_Self->m_Running = !m_Window.ShouldWindowClose();
-		return HYD_OK;
 	}
 
+/*
+	Purpose:Recreate the swapchain and Attachments to fit the new Surface size.
+	TODO:
+		Get rid of this in here and make a proper ReCreation method:
+*/
 
 	uint32 Renderer::RecreateSwapchain() noexcept
 	{
 
-		vkDeviceWaitIdle(m_Device.m_Handle);
+		WaitOnDeviceCompletion();
 
 		for (auto& framebuffer : m_FrameBuffers)
 			framebuffer.DestroyFrameBuffer();
 
-
-		DepthAttachment.DestroyAttachment();
-		NormalAttachment.DestroyAttachment();
-
 		m_FrameBuffers.clear();
 
-		Internal::Vulkan::SwapchainRecreateConfiguration ReConf;
+		DepthAttachment.DestroyAttachment();
 
+
+		Internal::Vulkan::SwapchainRecreateConfiguration ReConf;
 
 
 		ReConf.NewExtent = m_Swapchain.SelectExtent(
@@ -249,19 +271,13 @@ namespace Hydrogen
 			HYD_SAMPLE_COUNT_1_BIT
 		);
 
-		NormalAttachment.CreateAttachment(
-			HYD_ATTACHMENT_TYPE_COLOR,
-			m_Swapchain.GetImageExtent().width,
-			m_Swapchain.GetImageExtent().height,
-			HYD_SAMPLE_COUNT_1_BIT
-		);
 
 		for (uint32 I = 0 ; I < m_Swapchain.ImageCount() ; ++I)
 		{
 			Internal::Vulkan::FrameBuffer framebuffer;
 			framebuffer.CreateFrameBuffer(
 				m_RenderPass,
-				{m_Swapchain.GetAttachment(I), &NormalAttachment, &DepthAttachment},
+				{m_Swapchain.GetAttachment(I), &DepthAttachment},
 				m_Swapchain.GetImageExtent().width,
 				m_Swapchain.GetImageExtent().height
 			);
@@ -274,13 +290,14 @@ namespace Hydrogen
 
 
 
-	void Renderer::SetCamera(
-		Ptr<Camera> pCamera
-	) noexcept
+	HYD void Renderer::SetCamera(Ptr<Camera> pCamera) noexcept
 	{
 		m_DefCam = pCamera;
 	}
 
+/*
+	Purpose: Submits the Commandbuffer to the queue 
+*/
 
 	uint32 Renderer::ExecuteCommandBuffers(
 		VkQueue 										 pQueue,
@@ -322,24 +339,31 @@ namespace Hydrogen
 		return HYD_OK;
 	}
 	
+/*
+	Purpose: Halt the program till All Submitted tasks are completed 
+*/
 	void Renderer::WaitOnDeviceCompletion() noexcept
 	{
 		vkDeviceWaitIdle(m_Device.m_Handle);
 	}
 
 
+/*
+	Purpose: Create Vertex & Index Buffer
+*/
 	Instance<Internal::Vulkan::VertexBuffer> Renderer::InstanceVertexBuffer() noexcept
-	{
-		Instance<Internal::Vulkan::VertexBuffer> instance = m_VertexBuffers.Resource();
-		return std::move(instance);
+	{ 
+		return std::move(m_VertexBuffers.Resource());
 	}
 
 	Instance<Internal::Vulkan::IndexBuffer>  Renderer::InstanceIndexBuffer()  noexcept
 	{
-		Instance<Internal::Vulkan::IndexBuffer> instance = m_IndexBuffers.Resource();
-		return std::move(instance);
+		return std::move(m_IndexBuffers.Resource());
 	}
 
+/*
+	Purpose: Create Graphics Pipeline object
+*/
 	Instance<Internal::Vulkan::GraphicsPipeline> Renderer::CreatePipeline(
 		const GraphicsPipelineConfiguration& pConf
 	) noexcept
@@ -348,6 +372,10 @@ namespace Hydrogen
 		Pipeline.GetPtr()->CreatePipeline(pConf);
 		return Pipeline;
 	}
+
+/*
+	Purpose: Create Shader Module
+*/
 
 	Shader  Renderer::CreateShader(
 		const ShaderConfiguration& pConf
@@ -358,116 +386,43 @@ namespace Hydrogen
 		return Shader;
 	}
 
+/*
+	Purpose: Inits the UI Core. 
+*/
 
-	uint32 Renderer::CreateSyncObjects() noexcept
+	uint32 Renderer::InitUICore(
+		UI::CoreConfiguration pConf// = UI::CoreConfiguration{} 
+	) noexcept
 	{
 
+		UI::Core::s_Self = UI::Core::Create();
 
-		
-		m_ImageAvailableSemaphors.resize(m_FramesInFlights);
-		m_FrameFinishSignals.resize(m_FramesInFlights);
-		m_RenderSignalSemaphors.resize(m_Swapchain.ImageCount());
+		UI::ImGuiVulkanInfo VkInitInfo{};
+		VkInitInfo.Instance           = m_Instance.GetInstance();
+		VkInitInfo.ApiVersion         = m_Instance.GetAPIVersion();
+		VkInitInfo.Device             = m_Device.m_Handle;
+		VkInitInfo.PhysicalDevice     = m_Device.m_PhysicalDevice;
+		VkInitInfo.ImageCount         = m_Swapchain.ImageCount();
+		VkInitInfo.MinImageCount      = m_Swapchain.ImageCount();
+		VkInitInfo.Allocator          = VK_NULL_HANDLE;
+		VkInitInfo.QueueFamily        = m_Device.m_QueueFamily.Graphics.value();
+		VkInitInfo.Queue              = m_Device.m_Queues.Graphics;
+		VkInitInfo.DescriptorPoolSize = 0;
 
-		VkSemaphoreCreateInfo SemCInfo{};
+		VkInitInfo.PipelineInfoMain.RenderPass = m_RenderPass.m_Handle;
+		VkInitInfo.PipelineInfoMain.Subpass	   = 0;
 
-		SemCInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-		SemCInfo.pNext = nullptr;
-
-
-
-		for (uint32 I = 0 ; I < m_Swapchain.ImageCount() ; ++I)
-			vkCreateSemaphore(m_Device.m_Handle, &SemCInfo, VULKAN_ALLOCATION_CALLBACK, &m_RenderSignalSemaphors[I]);
-		
-		for (uint32 I = 0 ; I < m_FramesInFlights ; ++I)
-			vkCreateSemaphore(m_Device.m_Handle, &SemCInfo, VULKAN_ALLOCATION_CALLBACK, &m_ImageAvailableSemaphors[I]);
-		
-		
-		
-		
-		VkFenceCreateInfo FenceCInfo{};
-		FenceCInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-		FenceCInfo.pNext = nullptr;
-		FenceCInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-		for (uint32 I = 0 ; I < m_FramesInFlights ; ++I)
-			vkCreateFence(m_Device.m_Handle, &FenceCInfo, VULKAN_ALLOCATION_CALLBACK, &m_FrameFinishSignals[I]);
-
-
-		return HYD_OK;
-	}
-
-	uint32 Renderer::CreateRenderPass() noexcept
-	{
-		//Attachment configurations:
-		Hydrogen::RenderpassAttachment   ColorOut;
-		ColorOut.Format      = Renderer::Self().Swapchain().GetImageFormat();
-		ColorOut.InitLayout  = Hydrogen::HYD_IMAGE_LAYOUT_UNDEFINED;
-		ColorOut.FinalLayout = Hydrogen::HYD_IMAGE_LAYOUT_PRESENT_SRC_KHR; 
-		ColorOut.LoadOp      = Hydrogen::HYD_ATTACHMENT_LOAD_OP_CLEAR;
-		ColorOut.StoreOp     = Hydrogen::HYD_ATTACHMENT_STORE_OP_STORE;
-		ColorOut.SampleCount = Hydrogen::HYD_SAMPLE_COUNT_1_BIT;
-
-
-		Hydrogen::RenderpassAttachment   NormalOut;
-		NormalOut.Format      = NormalAttachment.GetAttachmentFormat();
-		NormalOut.SampleCount = NormalAttachment.GetAttachmentSampleCount();
-		NormalOut.InitLayout  = Hydrogen::HYD_IMAGE_LAYOUT_UNDEFINED;
-		NormalOut.FinalLayout = Hydrogen::HYD_IMAGE_LAYOUT_PRESENT_SRC_KHR; 
-		NormalOut.LoadOp      = Hydrogen::HYD_ATTACHMENT_LOAD_OP_CLEAR;
-		NormalOut.StoreOp     = Hydrogen::HYD_ATTACHMENT_STORE_OP_STORE;
-
-		Hydrogen::RenderpassAttachment DepthOut;
-		DepthOut.Format      = DepthAttachment.GetAttachmentFormat();
-		DepthOut.SampleCount = DepthAttachment.GetAttachmentSampleCount();
-		DepthOut.InitLayout  = Hydrogen::HYD_IMAGE_LAYOUT_UNDEFINED;
-		DepthOut.FinalLayout = Hydrogen::HYD_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; 
-		DepthOut.LoadOp      = Hydrogen::HYD_ATTACHMENT_LOAD_OP_CLEAR;
-		DepthOut.StoreOp     = Hydrogen::HYD_ATTACHMENT_STORE_OP_STORE;
-
-		//Subpass Configurations:
-		Hydrogen::SubpassConfiguration SubpassConf;
-		SubpassConf.AddColorAttachment({.Index=0, .Layout=HYD_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL}); 
-		SubpassConf.AddColorAttachment({.Index=1, .Layout=HYD_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL}); 
-		SubpassConf.AddDepthStencilAttachment({.Index=2, .Layout=HYD_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL});
-		
-
-		//Subpass Dependencies Configurations:
-		Hydrogen::SubpassDependencyConfiguration DependencyConf;
-		DependencyConf.SourceSubpass      = UINT32_MAX; //Extenal source
-		DependencyConf.DestinationSubpass = 0;
-		DependencyConf.SrcStageMask       = Hydrogen::HYD_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
-		DependencyConf.SrcAccessMask 	  = 0;
-		DependencyConf.DstStageMask       = Hydrogen::HYD_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;   
-		DependencyConf.DstAccessMask      = Hydrogen::HYD_ACCESS_COLOR_ATTACHMENT_WRITE;    
-
-		Hydrogen::SubpassDependencyConfiguration DepthDependency;
-
-		DepthDependency.SourceSubpass      = UINT32_MAX;
-		DepthDependency.DestinationSubpass = 0;
-		DepthDependency.SrcStageMask       = HYD_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS | HYD_PIPELINE_STAGE_LATE_FRAGMENT_TESTS;
-		DepthDependency.SrcAccessMask      = 0;
-		DepthDependency.DstStageMask       = HYD_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS | HYD_PIPELINE_STAGE_LATE_FRAGMENT_TESTS;
-		DepthDependency.DstAccessMask      = HYD_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE;
-
-		Hydrogen::RenderpassConfiguration RenderPassConf;
-		RenderPassConf.AddAttachment(ColorOut);
-		RenderPassConf.AddAttachment(NormalOut);
-		RenderPassConf.AddAttachment(DepthOut);
-		RenderPassConf.AddSubpass(SubpassConf);
-		RenderPassConf.AddDependency(DependencyConf);
-		RenderPassConf.AddDependency(DepthDependency);
-		return m_RenderPass.CreateRenderPass(RenderPassConf);
+		return UI::Core::Self().Init(VkInitInfo, m_Window);
 	}
 
 
-
-
+/*
+	Purpose: Vulkan Initialization
+*/
 	uint32 Renderer::InitVulkan() noexcept
 	{
 
 		//Vulkan Init
-
-
 		VkApplicationInfo AppInfo{
 			.sType            = VK_STRUCTURE_TYPE_APPLICATION_INFO,
 			.pNext            = nullptr,
@@ -521,12 +476,6 @@ namespace Hydrogen
 			HYD_SAMPLE_COUNT_1_BIT
 		);
 
-		NormalAttachment.CreateAttachment(
-			HYD_ATTACHMENT_TYPE_COLOR,
-			SwapchainConf.ImageSize.width,
-			SwapchainConf.ImageSize.height,
-			HYD_SAMPLE_COUNT_1_BIT
-		);
 
 		//Renderpass:
 		CHECK_ERROR(CreateRenderPass());
@@ -537,14 +486,12 @@ namespace Hydrogen
 			Internal::Vulkan::FrameBuffer framebuffer;
 			framebuffer.CreateFrameBuffer(
 				m_RenderPass,
-				{m_Swapchain.GetAttachment(I),&NormalAttachment, &DepthAttachment},
+				{m_Swapchain.GetAttachment(I), &DepthAttachment},
 				m_Swapchain.GetImageExtent().width,
 				m_Swapchain.GetImageExtent().height
 			);
 			m_FrameBuffers.push_back(std::move(framebuffer));
 		}
-
-
 
 
 		//Command Buffer Creation:
@@ -569,12 +516,107 @@ namespace Hydrogen
 		//Create synchronization objects:
 		CHECK_ERROR(CreateSyncObjects());
 
+		return HYD_OK;
+	}
+
+/*
+	Purpose: Syncronization objects(Semaphores and Fences)
+*/
+	uint32 Renderer::CreateSyncObjects() noexcept
+	{
+		
+		m_ImageAvailableSemaphors.resize(m_FramesInFlights);
+		m_FrameFinishSignals.resize(m_FramesInFlights);
+		m_RenderSignalSemaphors.resize(m_Swapchain.ImageCount());
+
+		VkSemaphoreCreateInfo SemCInfo{};
+
+		SemCInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+		SemCInfo.pNext = nullptr;
+
+
+
+		for (uint32 I = 0 ; I < m_Swapchain.ImageCount() ; ++I)
+			vkCreateSemaphore(m_Device.m_Handle, &SemCInfo, VULKAN_ALLOCATION_CALLBACK, &m_RenderSignalSemaphors[I]);
+		
+		for (uint32 I = 0 ; I < m_FramesInFlights ; ++I)
+			vkCreateSemaphore(m_Device.m_Handle, &SemCInfo, VULKAN_ALLOCATION_CALLBACK, &m_ImageAvailableSemaphors[I]);
+		
+		
+		
+		
+		VkFenceCreateInfo FenceCInfo{};
+		FenceCInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		FenceCInfo.pNext = nullptr;
+		FenceCInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+		for (uint32 I = 0 ; I < m_FramesInFlights ; ++I)
+			vkCreateFence(m_Device.m_Handle, &FenceCInfo, VULKAN_ALLOCATION_CALLBACK, &m_FrameFinishSignals[I]);
+
 
 		return HYD_OK;
 	}
 
+/*
+	Purpose: Sets Up and Creates the Renderpass Objects
+*/
+	uint32 Renderer::CreateRenderPass() noexcept
+	{
+		//Attachment configurations:
+		Hydrogen::RenderpassAttachment   ColorOut;
+		ColorOut.Format      = Renderer::Self().Swapchain().GetImageFormat();
+		ColorOut.InitLayout  = Hydrogen::HYD_IMAGE_LAYOUT_UNDEFINED;
+		ColorOut.FinalLayout = Hydrogen::HYD_IMAGE_LAYOUT_PRESENT_SRC_KHR; 
+		ColorOut.LoadOp      = Hydrogen::HYD_ATTACHMENT_LOAD_OP_CLEAR;
+		ColorOut.StoreOp     = Hydrogen::HYD_ATTACHMENT_STORE_OP_STORE;
+		ColorOut.SampleCount = Hydrogen::HYD_SAMPLE_COUNT_1_BIT;
 
 
+		Hydrogen::RenderpassAttachment DepthOut;
+		DepthOut.Format      = DepthAttachment.GetAttachmentFormat();
+		DepthOut.SampleCount = DepthAttachment.GetAttachmentSampleCount();
+		DepthOut.InitLayout  = Hydrogen::HYD_IMAGE_LAYOUT_UNDEFINED;
+		DepthOut.FinalLayout = Hydrogen::HYD_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; 
+		DepthOut.LoadOp      = Hydrogen::HYD_ATTACHMENT_LOAD_OP_CLEAR;
+		DepthOut.StoreOp     = Hydrogen::HYD_ATTACHMENT_STORE_OP_STORE;
+
+		//Color Subpass Configurations:
+		Hydrogen::SubpassConfiguration ColorSubpassConf;
+		ColorSubpassConf.AddColorAttachment({.Index=0, .Layout=HYD_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL}); 
+		ColorSubpassConf.AddDepthStencilAttachment({.Index=1, .Layout=HYD_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL});
+		
+
+		//Subpass Dependencies Configurations:
+		Hydrogen::SubpassDependencyConfiguration DependencyConf;
+		DependencyConf.SourceSubpass      = UINT32_MAX; //Extenal source
+		DependencyConf.DestinationSubpass = 0;
+		DependencyConf.SrcStageMask       = Hydrogen::HYD_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;
+		DependencyConf.SrcAccessMask 	  = 0;
+		DependencyConf.DstStageMask       = Hydrogen::HYD_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT;   
+		DependencyConf.DstAccessMask      = Hydrogen::HYD_ACCESS_COLOR_ATTACHMENT_WRITE;    
+
+		Hydrogen::SubpassDependencyConfiguration DepthDependency;
+
+		DepthDependency.SourceSubpass      = UINT32_MAX;
+		DepthDependency.DestinationSubpass = 0;
+		DepthDependency.SrcStageMask       = HYD_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS | HYD_PIPELINE_STAGE_LATE_FRAGMENT_TESTS;
+		DepthDependency.SrcAccessMask      = 0;
+		DepthDependency.DstStageMask       = HYD_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS | HYD_PIPELINE_STAGE_LATE_FRAGMENT_TESTS;
+		DepthDependency.DstAccessMask      = HYD_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE;
+
+		Hydrogen::RenderpassConfiguration RenderPassConf;
+		RenderPassConf.AddAttachment(ColorOut);
+		RenderPassConf.AddAttachment(DepthOut);
+		RenderPassConf.AddSubpass(ColorSubpassConf);
+		RenderPassConf.AddDependency(DependencyConf);
+		RenderPassConf.AddDependency(DepthDependency);
+		return m_RenderPass.CreateRenderPass(RenderPassConf);
+	}
+
+
+/*
+------------------------------------------------------------------Resource Creators-----------------------------------------
+*/
 	
 	//Creates a Pipeline Layout and returns the handle
 	HYD_ID_SPACE Renderer::CreatePipelineLayout(
@@ -592,18 +634,20 @@ namespace Hydrogen
 		return Id;
 	}
 
-
-
-
 	Internal::Vulkan::PipelineLayout& Renderer::AccessPipelineLayout(
 		HYD_ID_SPACE pID
 	) noexcept
 	{
-		ASSERT((m_PipelineLayouts.find(pID) != m_PipelineLayouts.end()), "Requested Pipeline Layout does not exist");
+		ASSERT(
+			(m_PipelineLayouts.find(pID) != m_PipelineLayouts.end()),
+			"Requested Pipeline Layout does not exist"
+		);
 		return m_PipelineLayouts.at(pID);
 	}
 
-	//Creates a Descriptor Set Layout and returns the handle
+
+
+//--------------------------------------------------Creates a Descriptor Set Layout and returns the handle-----------------------------
 	HYD_ID_SPACE Renderer::CreateDescriptorSetLayout(
 		DescriptorSetLayoutConfiguration pConf
 	) noexcept
@@ -619,10 +663,15 @@ namespace Hydrogen
 		HYD_ID_SPACE pID
 	) noexcept
 	{
-		ASSERT((m_DescSetLayouts.find(pID) != m_DescSetLayouts.end()), "Requested DescSet Layout does not exist");
+		ASSERT(
+			(m_DescSetLayouts.find(pID) != m_DescSetLayouts.end()),
+			"Requested DescSet Layout does not exist"
+		);
 		return m_DescSetLayouts.at(pID);
 	}
 
+
+//-----------------------------------------Descriptor Set Allocation-----------------------------------------
 
 	HYD_ID_SPACE Renderer::AllocateDescriptorSet(
 		HYD_ID_SPACE pSetLayoutID
@@ -631,21 +680,20 @@ namespace Hydrogen
 		Internal::Vulkan::DescriptorSetLayout& SetLayout = AccessDescriptorSetLayout(pSetLayoutID);
 
 		//Create DescriptorPool 
-
-		std::vector<VkDescriptorPoolSize> PoolSizes;
+		std::vector<DescriptorPoolSize> PoolSizes;
 		for (auto& binding : SetLayout.m_Bindings)
 		{
 			PoolSizes.push_back(
-				VkDescriptorPoolSize{
-					.type 			 = binding.descriptorType,
-					.descriptorCount = m_FramesInFlights
+				DescriptorPoolSize{
+					.Type 			 = UniformType(binding.descriptorType),
+					.Count           = m_FramesInFlights
 				}
 			);
 		}
 
-		Internal::Vulkan::DescriptorPool Pool;
-		Pool.CreateDescriptorPool(std::move(PoolSizes), m_FramesInFlights*PoolSizes.size());
-		HYD_ID_SPACE PoolID = m_DescriptorPoolIDGen++;
+		HYD_ID_SPACE PoolID = CreateDescriptorPool(PoolSizes);
+		auto& Pool          = AccessDescriptorPool(PoolID);
+
 
 		//Allocate Descriptor Set
 		std::vector<Internal::Vulkan::DescriptorSet> Sets; Sets.resize(m_FramesInFlights);
@@ -654,8 +702,6 @@ namespace Hydrogen
 			Sets.at(Iter) 			  = Pool.AllocateDescriptorSet(SetLayout);
 			Sets.at(Iter).m_ParentPool = PoolID;
 		}
-
-		m_DescriptorPools.push_back(std::move(Pool));
 
 
 		HYD_ID_SPACE SetID = m_DescriptorSetIDGen++;
@@ -671,10 +717,54 @@ namespace Hydrogen
 		HYD_ID_SPACE pID
 	) noexcept
 	{
-		ASSERT((m_DescriptorSets.find(pID) != m_DescriptorSets.end()), "Requested Descriptor Set  does not exist");
+		ASSERT(
+			(m_DescriptorSets.find(pID) != m_DescriptorSets.end()),
+			"Requested Descriptor Set  does not exist"
+		);
 		return m_DescriptorSets.at(pID).at(m_FrameIndex);
 	}
 
+//-----------------------------------------------------------Descriptor Pool-------------------------------------
+	HYD_ID_SPACE Renderer::CreateDescriptorPool(
+	   std::vector<DescriptorPoolSize>    pPoolSizes,
+	   uint32							  pMaxSets,  //= UINT32_MAX, //if pMaxSets = UINT32_MAX, the Max size will be calculated by the engine
+	   uint32							  pFlags     //= 0	
+   ) noexcept
+   {
+
+	   uint32 MaxSets = pMaxSets;
+
+	   if (MaxSets == UINT32_MAX)
+	   {
+		   //Calculate manaully
+			MaxSets = pPoolSizes.size()*m_FramesInFlights;
+	   }
+	   
+
+	   Internal::Vulkan::DescriptorPool Pool;
+	   Pool.CreateDescriptorPool(pPoolSizes, MaxSets, pFlags);
+
+	   HYD_ID_SPACE PoolID = m_DescriptorPoolIDGen++;
+	   m_DescriptorPools.emplace(
+		   PoolID,
+		   std::move(Pool)
+	   );
+
+	   return PoolID;
+   }
+
+   Internal::Vulkan::DescriptorPool& Renderer::AccessDescriptorPool(
+	   HYD_ID_SPACE pPoolID
+   ) noexcept
+   {
+	   ASSERT(
+		(m_DescriptorPools.find(pPoolID) != m_DescriptorPools.end()),
+	 "Requested Descriptor Pool  does not exist"
+		);
+	   return m_DescriptorPools.at(pPoolID);
+   }
+
+//---------------------------------------------------------Sampelers---------------------------------------------
 
 	HYD_ID_SPACE Renderer::CreateSampler(
 		SamplerConfiguration pConf
@@ -693,6 +783,7 @@ namespace Hydrogen
 		return m_Samplers.at(pID);
 	}
 
+//------------------------------------------------------Textures------------------------------------
 
 	std::vector<Instance<Texture2D>> Renderer::CreateTextures(
 		std::vector<TextureConfiguration>& pConfs
@@ -719,6 +810,8 @@ namespace Hydrogen
 		texture->CreateTexture(std::move(pConf));
 		return std::move(texture);
 	}
+
+//---------------------------------------Uniform Buffers-------------------------------------
 
 	UniformRef Renderer::CreateUniformBuffer(
 		uint64 		 			pSize,
@@ -755,6 +848,5 @@ namespace Hydrogen
 	{
 		return pUniformBuffer->at(m_FrameIndex);
 	}
-
 
 }; // namespace Hydrogen

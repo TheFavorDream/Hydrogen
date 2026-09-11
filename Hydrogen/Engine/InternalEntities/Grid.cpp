@@ -554,18 +554,9 @@ const uint32 FragmentShaderSizeInBytes = 3524;
         BlendState1.srcAlphaBlendFactor = VkBlendFactor(HYD_BLEND_FACTOR_ONE);
         BlendState1.dstAlphaBlendFactor = VkBlendFactor(HYD_BLEND_FACTOR_ZERO);
 
-        ColorBlendState BlendState2;
-        BlendState2.colorWriteMask      = HYD_COLOR_COMPONENT_R | HYD_COLOR_COMPONENT_G | HYD_COLOR_COMPONENT_B | HYD_COLOR_COMPONENT_A;
-        BlendState2.blendEnable         = VK_FALSE;
-        BlendState2.colorBlendOp        = VkBlendOp(HYD_BLEND_OP_ADD);
-        BlendState2.srcColorBlendFactor = VkBlendFactor(HYD_BLEND_FACTOR_SRC_ALPHA);
-        BlendState2.dstColorBlendFactor = VkBlendFactor(HYD_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA);
-        BlendState2.alphaBlendOp        = VkBlendOp(HYD_BLEND_OP_ADD);
-        BlendState2.srcAlphaBlendFactor = VkBlendFactor(HYD_BLEND_FACTOR_ONE);
-        BlendState2.dstAlphaBlendFactor = VkBlendFactor(HYD_BLEND_FACTOR_ZERO);
 
         PipelineConf.ColorBlending(
-            {BlendState1, BlendState1}
+            {BlendState1}
         );
 
 

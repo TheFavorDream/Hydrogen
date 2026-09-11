@@ -9,6 +9,7 @@
 #include "../Log/Log.h"
 #include "Material/Material.h"
 #include "Material/Texture.h"
+#include <cstdint>
 #include <optional>
 #include <unordered_map>
 #include <vector>
@@ -20,7 +21,7 @@
 #include "../Geometry/Primitive.h"
 #include "Core/Core.h"
 #include "../Camera/Camera.h"
-
+#include "UI/UI.h"
 #include "Vulkan/Swapchain.h"
 #include "Vulkan/Renderpass.h"
 #include "Vulkan/FrameBuffer.h"
@@ -32,6 +33,7 @@
 #include "Vulkan/VertexAttribute.h"
 #include "Vulkan/Descriptors.h"
 #include "Vulkan/Device.h"
+
 
 namespace Hydrogen
 {
@@ -67,52 +69,78 @@ namespace Hydrogen
 		HYD static Renderer& Self();
 	
 	public:
-		//Adds Renderable Primitive to the Rendering queue
+
+//----------------------------Pushes a Render Instruction to the Instruction Queue-------------------------------
 		HYD void PushInstruction(Instruction pIns) noexcept;
 
+//--------------------------Sets the Engines Current Camera-----------------------------------
 		HYD void SetCamera(Ptr<Camera> pCamera) noexcept;
 			
+//---------------------------------------Creates New Vertex & Index Buffers---------------------------------
 		HYD Instance<Internal::Vulkan::VertexBuffer>     InstanceVertexBuffer() noexcept;
 		HYD Instance<Internal::Vulkan::IndexBuffer>      InstanceIndexBuffer()  noexcept;
 		
+//-------------------------Creates a Graphics Pipeline Object------------------------------------------
 		HYD Instance<Internal::Vulkan::GraphicsPipeline> CreatePipeline(
 			const GraphicsPipelineConfiguration& pConf
 		) noexcept;
-		
+
+//--------------------------Create A Shader Module---------------------------------------
 		HYD Shader  CreateShader(
 			const ShaderConfiguration& pConf
 		) noexcept;
 	
+//-----------------------Initializes the UI Core------------------------------------
 
+		HYD uint32 InitUICore(
+			UI::CoreConfiguration pConf = UI::CoreConfiguration{} 
+		) noexcept;
 
+//----------------------Accessor Methods----------------------------------------
 		HYD inline  Internal::Vulkan::Swapchain&     Swapchain()  		{return m_Swapchain;}
 		HYD inline  Internal::Vulkan::Renderpass&    RenderPass() 		{return m_RenderPass;}
 		HYD inline  Window& 						 GetWindow()  		{return m_Window;}
 		HYD inline 	Ptr<Camera>					     GetCurrentCamera() {return m_DefCam;}							 
-
-
-		//Creates a Pipeline Layout and returns the handle
+//--------------------------------------Creates a Pipeline Layout---------------------------------------------
 		HYD_ID_SPACE CreatePipelineLayout(
 			PipelineLayoutConfiguration pConf
 		) noexcept;
 	
-		Internal::Vulkan::PipelineLayout& AccessPipelineLayout(HYD_ID_SPACE pID) noexcept;
+		Internal::Vulkan::PipelineLayout& AccessPipelineLayout(
+			HYD_ID_SPACE pID
+		) noexcept;
 	
-		//Creates a Descriptor Set Layout and returns the handle
+//---------------------------------Creates a Descriptor Set Layout-------------------------------------------
 		HYD_ID_SPACE CreateDescriptorSetLayout(
 			DescriptorSetLayoutConfiguration pConf
 		) noexcept;
 	
-		Internal::Vulkan::DescriptorSetLayout& AccessDescriptorSetLayout(HYD_ID_SPACE pID) noexcept;
+		Internal::Vulkan::DescriptorSetLayout& AccessDescriptorSetLayout(
+			HYD_ID_SPACE pID
+		) noexcept;
 	
-	
+//--------------------------------Descriptor Pool Creation---------------------------------------------------:
+		HYD HYD_ID_SPACE CreateDescriptorPool(
+			std::vector<DescriptorPoolSize>   pPoolSizes,
+			uint32							  pMaxSets   = UINT32_MAX, //if pMaxSets = UINT32_MAX, the Max size will be calculated by the engine
+			uint32							  pFlags     = 0	
+		) noexcept;
+		
+		Internal::Vulkan::DescriptorPool& AccessDescriptorPool(
+			HYD_ID_SPACE pPoolID
+		) noexcept;
+
+//-------------------------------------Descriptor Set Allocation-----------------------------------------------
 		HYD_ID_SPACE AllocateDescriptorSet(
 			HYD_ID_SPACE pSetLayoutID
 		) noexcept;
+		
+		Internal::Vulkan::DescriptorSet& AccessDescriptorSet(
+			HYD_ID_SPACE pID
+		) noexcept;
 	
-		Internal::Vulkan::DescriptorSet& AccessDescriptorSet(HYD_ID_SPACE pID) noexcept;
-	
-	
+//------------------------------------------Sampler Creation--------------------------------------------------
+
 		HYD_ID_SPACE CreateSampler(
 			SamplerConfiguration pConf
 		) noexcept;
@@ -121,7 +149,8 @@ namespace Hydrogen
 			HYD_ID_SPACE pID
 		) noexcept; 
 	
-	
+//-------------------------------------------Texture Creation---------------------------------------------------
+
 		HYD std::vector<Instance<Texture2D>> CreateTextures(
 			std::vector<TextureConfiguration>& pConfs
 		) noexcept;
@@ -130,7 +159,7 @@ namespace Hydrogen
 			TextureConfiguration&& pConf
 		) noexcept;
 
-		
+//-----------------------------------------Shader Uniform Buffer-----------------------------------------------	
 		HYD UniformRef CreateUniformBuffer(
 			uint64 		 			pSize,
 			ShaderUniformBinding    pBinding,
@@ -141,6 +170,8 @@ namespace Hydrogen
 			UniformRef pUniformBuffer
 		) noexcept;
 
+
+
 	private: //friend only access
 
 		//Init and shutdown
@@ -148,19 +179,20 @@ namespace Hydrogen
 		uint32 Shutdown() noexcept;
 
 
-		//Main Rendering 
-		uint32 Render();
+		//Main Rendering Happens here 
+		void Render();
 
+		//Takes care of Resizing
 		uint32 RecreateSwapchain() noexcept;
 
+		//Engine Internal Accessors:
 		inline const Internal::Vulkan::Queues&   GetQueues()  const { return m_Device.m_Queues; }
 		inline const VkDevice 	 		   	     GetDevice()  const { return m_Device.m_Handle; }
 
 		inline  Internal::Vulkan::CommandBuffer& GlobalRenderCommandBuffer()   {return m_RenderCommandBuffers[m_FrameIndex];};
 		inline  Internal::Vulkan::CommandBuffer& GlobalTransferCommandBuffer() {return m_TransferCommandBuffer;}
 
-
-
+		//Submits work to be executed in a queue
 		uint32 ExecuteCommandBuffers(
 			VkQueue 										 pQueue,
 			const std::vector<VkCommandBuffer>&  	    	 pCommandBuffers,
@@ -172,24 +204,22 @@ namespace Hydrogen
 
 		void WaitOnDeviceCompletion() noexcept;
 
-	private:
+	private: //Private members:
+
 
 		uint32 CreateSyncObjects() noexcept;
 		uint32 CreateRenderPass()  noexcept;
-
 
 		uint32 InitVulkan() noexcept;
 
 	private:
 
-		std::queue<Instruction> m_InstructionQueue;
-
+		std::queue<Instruction>  m_InstructionQueue;
 		std::vector<const char*> m_DeviceLevelExtensions        = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
 
 		const uint32 m_FramesInFlights = 2; //by default
 		uint32       m_FrameIndex      = 0;
-
 
 		
 		Internal::Vulkan::Instance					   m_Instance;
@@ -216,7 +246,7 @@ namespace Hydrogen
 		HYD_ID_SPACE m_DescriptorPoolIDGen  = 0;
 		HYD_ID_SPACE m_SamplerIDGen 	    = 1;
 
-		std::vector<Internal::Vulkan::DescriptorPool>      					           m_DescriptorPools;
+		std::unordered_map<HYD_ID_SPACE, Internal::Vulkan::DescriptorPool>   		   m_DescriptorPools;
 		std::unordered_map<HYD_ID_SPACE, Internal::Vulkan::PipelineLayout>             m_PipelineLayouts;
 		std::unordered_map<HYD_ID_SPACE, Internal::Vulkan::DescriptorSetLayout>        m_DescSetLayouts;
 		std::unordered_map<HYD_ID_SPACE, std::vector<Internal::Vulkan::DescriptorSet>> m_DescriptorSets;
@@ -230,7 +260,6 @@ namespace Hydrogen
 		ResourcePool<std::vector<Internal::Vulkan::UniformBuffer>>	   m_UniformBuffers;
 
 		Attachment DepthAttachment;
-		Attachment NormalAttachment;
 
 		Instance<Scene> m_RenderedScene;
 
@@ -242,7 +271,7 @@ namespace Hydrogen
 	private:
 		static Ptr<Renderer> s_Self;
 
-
+	private: //Friend Decl
 		friend class Scene;
 		friend class Core;
 		friend class Window;
@@ -266,7 +295,7 @@ namespace Hydrogen
 		friend class Internal::Vulkan::Image;
 		friend class Internal::Vulkan::ImageView;
 		friend class Internal::Vulkan::Sampler;
-
+		friend class UI::Core;
 		//Temp:
 		friend class Material;
 	};

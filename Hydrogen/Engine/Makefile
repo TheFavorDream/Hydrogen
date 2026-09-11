@@ -117,8 +117,10 @@ GENERATED += $(OBJDIR)/Swapchain.o
 GENERATED += $(OBJDIR)/Texture.o
 GENERATED += $(OBJDIR)/Timer.o
 GENERATED += $(OBJDIR)/Transformation.o
+GENERATED += $(OBJDIR)/UI.o
 GENERATED += $(OBJDIR)/UniformBuffer.o
 GENERATED += $(OBJDIR)/VecMath.o
+GENERATED += $(OBJDIR)/Widget.o
 GENERATED += $(OBJDIR)/Window.o
 OBJECTS += $(OBJDIR)/Attachment.o
 OBJECTS += $(OBJDIR)/Buffer.o
@@ -152,8 +154,10 @@ OBJECTS += $(OBJDIR)/Swapchain.o
 OBJECTS += $(OBJDIR)/Texture.o
 OBJECTS += $(OBJDIR)/Timer.o
 OBJECTS += $(OBJDIR)/Transformation.o
+OBJECTS += $(OBJDIR)/UI.o
 OBJECTS += $(OBJDIR)/UniformBuffer.o
 OBJECTS += $(OBJDIR)/VecMath.o
+OBJECTS += $(OBJDIR)/Widget.o
 OBJECTS += $(OBJDIR)/Window.o
 
 # Rules
@@ -270,6 +274,12 @@ $(OBJDIR)/Texture.o: Render/Material/Texture.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/Renderer.o: Render/Renderer.cpp
+	@echo "$(notdir $<)"
+	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/UI.o: Render/UI/UI.cpp
+	@echo "$(notdir $<)"
+	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/Widget.o: Render/UI/Widget.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/Buffer.o: Render/Vulkan/Buffer.cpp

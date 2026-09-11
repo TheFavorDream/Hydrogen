@@ -113,6 +113,7 @@ namespace Hydrogen
 	class  Mesh;
 	class  Primitive;
 	class  Material;
+	class  Window;
 
 	
 	class  Grid;
@@ -125,6 +126,21 @@ namespace Hydrogen
 	class  Mouse;
 	class  Keyboard;
 	
+	//UI Related:
+	namespace UI
+	{
+		class Core;
+		class Widget;
+		class Canvas;
+		class Button;
+		class Text;
+		class Slider;
+		class List;
+		class Checkbox;
+		class TextInput;
+		class Table;
+	};
+
 	namespace Internal
 	{
 		class  FileSys;

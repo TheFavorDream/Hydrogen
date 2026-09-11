@@ -2,21 +2,20 @@
 
 #include "../../Hydrogen//Hydrogen.h"
 #include "ApplicationLayer.h"
+#include "UILayer.h"
 
 class Application : public Hydrogen::Core
 {
 public:
-	Application();
+	 Application();
 	~Application();
 
 	void Run();
 
 
 private:
-
-	uint32 CreateRenderPass() noexcept;
-
-private:
 	Hydrogen::Layer* m_AppLayer = nullptr;
+	Hydrogen::Layer* m_UILayer = nullptr;
+
 };
 

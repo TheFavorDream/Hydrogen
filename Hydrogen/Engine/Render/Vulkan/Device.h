@@ -145,15 +145,14 @@ namespace Vulkan
         ) noexcept;
         void   DestroyInstance()  noexcept;
 
-        inline VkInstance GetInstance() const {return m_Handle;}
+        inline VkInstance GetInstance()   const {return m_Handle;}
+        inline uint32     GetAPIVersion() const {return m_APIVersion;}   
 
     private:
         VkInstance                         m_Handle = VK_NULL_HANDLE;
         std::vector<VkExtensionProperties> m_Extensions;
         std::vector<const char*>           m_EnabledExtensions;
-
-
-
+        uint32                             m_APIVersion;
 
         PFN_vkCreateDebugUtilsMessengerEXT  LD_vkCreateDebugUtilsMessengerEXT  = nullptr;
         PFN_vkDestroyDebugUtilsMessengerEXT LD_vkDestroyDebugUtilsMessengerEXT = nullptr;

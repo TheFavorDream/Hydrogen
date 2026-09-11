@@ -11,12 +11,15 @@ Application::Application()
 
 
 	m_AppLayer = new AppLayer();
+	m_UILayer  = new UILayer();
+
 	PushLayer(m_AppLayer);
+	PushLayer(m_UILayer);
 }
 
 Application::~Application()								
 {
-	
+
 }
 
 void Application::Run()

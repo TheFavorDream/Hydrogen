@@ -397,6 +397,7 @@ namespace Internal
             return HYD_FAILED;
         }
 
+        m_APIVersion = pAppInfo.apiVersion;
 
 
         if (!pValidationLayers)

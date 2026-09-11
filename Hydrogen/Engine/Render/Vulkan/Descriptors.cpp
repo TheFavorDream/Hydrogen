@@ -59,19 +59,29 @@ namespace Internal
 
 
     uint32 Vulkan::DescriptorPool::CreateDescriptorPool(
-        std::vector<VkDescriptorPoolSize> pPoolSizes,
-        uint32                            pMaxDesciptors,
+        std::vector<DescriptorPoolSize>   pPoolSizes,
+        uint32                            pMaxSets,
         VkDescriptorPoolCreateFlags       pFlags //= 0
     ) noexcept
     {
+
+        std::vector<VkDescriptorPoolSize> PoolSizes; PoolSizes.resize(pPoolSizes.size());
+
+        for (uint32 Iter = 0 ; Iter < PoolSizes.size() ; ++Iter)
+        {
+            PoolSizes.at(Iter)  = VkDescriptorPoolSize{
+                .type             = VkDescriptorType(pPoolSizes[Iter].Type),
+                .descriptorCount  = pPoolSizes[Iter].Count
+            };
+        }
 
         VkDescriptorPoolCreateInfo CInfo{};
         CInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         CInfo.pNext         = nullptr;
         CInfo.flags         = pFlags;
-        CInfo.poolSizeCount = pPoolSizes.size();
-        CInfo.pPoolSizes    = pPoolSizes.data();
-        CInfo.maxSets       = pMaxDesciptors;
+        CInfo.poolSizeCount = PoolSizes.size();
+        CInfo.pPoolSizes    = PoolSizes.data();
+        CInfo.maxSets       = pMaxSets;
         
         VkResult Res = vkCreateDescriptorPool(
             Renderer::Self().GetDevice(),

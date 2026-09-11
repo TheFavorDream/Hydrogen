@@ -87,9 +87,11 @@ OBJECTS :=
 
 GENERATED += $(OBJDIR)/Application.o
 GENERATED += $(OBJDIR)/ApplicationLayer.o
+GENERATED += $(OBJDIR)/UILayer.o
 GENERATED += $(OBJDIR)/main.o
 OBJECTS += $(OBJDIR)/Application.o
 OBJECTS += $(OBJDIR)/ApplicationLayer.o
+OBJECTS += $(OBJDIR)/UILayer.o
 OBJECTS += $(OBJDIR)/main.o
 
 # Rules
@@ -158,6 +160,9 @@ $(OBJDIR)/Application.o: Application/Application.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/ApplicationLayer.o: Application/ApplicationLayer.cpp
+	@echo "$(notdir $<)"
+	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/UILayer.o: Application/UILayer.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/main.o: main.cpp

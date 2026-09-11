@@ -4,6 +4,7 @@
 #include "Shader.h"
 #include <cstdint>
 #include <vulkan/vulkan.h>
+#include <vulkan/vulkan_core.h>
 #include "VkEnumReDefs.h"
 
 namespace Hydrogen
@@ -36,6 +37,14 @@ namespace Hydrogen
         ShaderStages Stage;
         UniformType  Type;
     };
+
+
+    struct DescriptorPoolSize
+    {
+        UniformType     Type;
+        uint32          Count;
+    };
+
 };
 
 #include "UniformBuffer.h"
@@ -96,12 +105,13 @@ namespace Vulkan
         DescriptorPool(DescriptorPool&& pOther)            noexcept;
         DescriptorPool& operator=(DescriptorPool&& pOther) noexcept;
 
+        inline VkDescriptorPool GetHandle() {return m_Handle;}
 
     private: // Accessable by Friends only
 
         uint32 CreateDescriptorPool(
-            std::vector<VkDescriptorPoolSize> pPoolSizes,
-            uint32                            pMaxDescriptors,
+            std::vector<DescriptorPoolSize>   pPoolSizes,
+            uint32                            pMaxSets,
             VkDescriptorPoolCreateFlags       pFlags = 0
         ) noexcept;
 
