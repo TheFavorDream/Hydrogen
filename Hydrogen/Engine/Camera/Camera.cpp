@@ -22,42 +22,54 @@ namespace Hydrogen
 
 	}
 
-	void Camera::HandleCameraMovement()
+	void Camera::HandleCameraMovement(
+		FrameEvent& pEvents		  ,
+		uint32 		pForwardKey   ,//= GLFW_KEY_W,
+		uint32 		pBackwardKey  ,//= GLFW_KEY_S,
+		uint32 		pLeftKey 	  ,//= GLFW_KEY_A,
+		uint32 		pRightKey 	  ,//= GLFW_KEY_D,
+		uint32 		pUpKey 	      ,//= GLFW_KEY_SPACE,
+		uint32 		pDownKey      ,//= GLFW_KEY_LEFT_SHIFT,
+		uint32 		pSpeedKey 	   //= GLFW_KEY_LEFT_CONTROL
+	) noexcept
 	{
-
+		
 		if (m_CameraLocked)
 			return;
 
 		float DeltaTime = Core::GetDeltaTime();
 
-		if (Hydrogen::Keyboard::GetKeyState(GLFW_KEY_W) == Hydrogen::KEY_DOWN)
+		if (pEvents.QueueKeyState(pForwardKey) == KEY_DOWN)
 		{
 			m_Position += m_Front * m_Speed;// *DeltaTime;
 		}
-		if (Hydrogen::Keyboard::GetKeyState(GLFW_KEY_S) == Hydrogen::KEY_DOWN)
+		if (pEvents.QueueKeyState(pBackwardKey) == KEY_DOWN)
 		{
 			m_Position += -m_Front * m_Speed;// *DeltaTime;
 		}
-		if (Hydrogen::Keyboard::GetKeyState(GLFW_KEY_D) == Hydrogen::KEY_DOWN)
+		if (pEvents.QueueKeyState(pRightKey) == KEY_DOWN)
 		{
 			m_Position += glm::normalize(glm::cross(m_Front, m_Up))* m_Speed;// *DeltaTime;
 		}
-		if (Hydrogen::Keyboard::GetKeyState(GLFW_KEY_A) == Hydrogen::KEY_DOWN)
+		if (pEvents.QueueKeyState(pLeftKey) == KEY_DOWN)
 		{
 			m_Position += -glm::normalize(glm::cross(m_Front, m_Up))* m_Speed;// *DeltaTime;
 		}
 
-		if (Hydrogen::Keyboard::GetKeyState(GLFW_KEY_SPACE) == Hydrogen::KEY_DOWN)
+		if (pEvents.QueueKeyState(pUpKey) == KEY_DOWN)
 		{
 			m_Position += m_Up * m_Speed;// *DeltaTime;
 		}
-		if (Hydrogen::Keyboard::GetKeyState(GLFW_KEY_LEFT_SHIFT) == Hydrogen::KEY_DOWN)
+		if (pEvents.QueueKeyState(pDownKey) == KEY_DOWN)
 		{
 			m_Position += -m_Up * m_Speed;// *DeltaTime;
 		}
+		
 	}
 
-	void Camera::HandleCameraLooking()
+	void Camera::HandleCameraLooking(
+		VecD2 pCurserOffset
+	) noexcept
 	{
 		static bool FirstTime = true;
 
@@ -66,7 +78,8 @@ namespace Hydrogen
 
 		float DeltaTime = Core::GetDeltaTime()/1000.0f;
 
-		if (Hydrogen::Mouse::GetLeftKeyState() == Hydrogen::KEY_DOWN)
+		
+		if (Mouse::MouseLeftKey == Hydrogen::KEY_DOWN)
 		{
 			if (FirstTime)
 			{
@@ -74,8 +87,8 @@ namespace Hydrogen
 			}
 
 
-			float OffsetX = (float)Hydrogen::Mouse::GetOffsetX();
-			float OffsetY = (float)Hydrogen::Mouse::GetOffsetY();
+			float OffsetX = (float)pCurserOffset.X;
+			float OffsetY = -(float)pCurserOffset.Y;
 
 
 			if (!FirstTime)
@@ -98,13 +111,15 @@ namespace Hydrogen
 			else if (m_Yaw < -360.0f)
 				m_Yaw += 360.0f;
 		}
+		
 
-		if (Hydrogen::Mouse::GetLeftKeyState() == Hydrogen::KEY_UP)
+		if (Mouse::MouseLeftKey == KEY_UP)
 		{
-			Hydrogen::Mouse::DisableCursor(false);
+			Mouse::DisableCursor(false);
 			FirstTime = true;
 		}
-
+		
+		
 		CalculateCameraAngle();
 	}
 

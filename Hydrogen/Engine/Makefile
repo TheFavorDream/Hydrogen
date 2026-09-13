@@ -92,20 +92,18 @@ GENERATED += $(OBJDIR)/Commands.o
 GENERATED += $(OBJDIR)/Core.o
 GENERATED += $(OBJDIR)/Descriptors.o
 GENERATED += $(OBJDIR)/Device.o
+GENERATED += $(OBJDIR)/Event.o
 GENERATED += $(OBJDIR)/FileSystem.o
 GENERATED += $(OBJDIR)/FrameBuffer.o
 GENERATED += $(OBJDIR)/Grid.o
 GENERATED += $(OBJDIR)/HydPch.o
 GENERATED += $(OBJDIR)/Image.o
-GENERATED += $(OBJDIR)/Keyboard.o
-GENERATED += $(OBJDIR)/Layer.o
 GENERATED += $(OBJDIR)/Log.o
 GENERATED += $(OBJDIR)/Material.o
 GENERATED += $(OBJDIR)/Math.o
 GENERATED += $(OBJDIR)/Memory.o
 GENERATED += $(OBJDIR)/Mesh.o
 GENERATED += $(OBJDIR)/MeshGenerator.o
-GENERATED += $(OBJDIR)/Mouse.o
 GENERATED += $(OBJDIR)/Pipeline.o
 GENERATED += $(OBJDIR)/Primitive.o
 GENERATED += $(OBJDIR)/Quaternion.o
@@ -129,20 +127,18 @@ OBJECTS += $(OBJDIR)/Commands.o
 OBJECTS += $(OBJDIR)/Core.o
 OBJECTS += $(OBJDIR)/Descriptors.o
 OBJECTS += $(OBJDIR)/Device.o
+OBJECTS += $(OBJDIR)/Event.o
 OBJECTS += $(OBJDIR)/FileSystem.o
 OBJECTS += $(OBJDIR)/FrameBuffer.o
 OBJECTS += $(OBJDIR)/Grid.o
 OBJECTS += $(OBJDIR)/HydPch.o
 OBJECTS += $(OBJDIR)/Image.o
-OBJECTS += $(OBJDIR)/Keyboard.o
-OBJECTS += $(OBJDIR)/Layer.o
 OBJECTS += $(OBJDIR)/Log.o
 OBJECTS += $(OBJDIR)/Material.o
 OBJECTS += $(OBJDIR)/Math.o
 OBJECTS += $(OBJDIR)/Memory.o
 OBJECTS += $(OBJDIR)/Mesh.o
 OBJECTS += $(OBJDIR)/MeshGenerator.o
-OBJECTS += $(OBJDIR)/Mouse.o
 OBJECTS += $(OBJDIR)/Pipeline.o
 OBJECTS += $(OBJDIR)/Primitive.o
 OBJECTS += $(OBJDIR)/Quaternion.o
@@ -231,19 +227,13 @@ $(OBJDIR)/Core.o: Core/Core.cpp
 $(OBJDIR)/FileSystem.o: Core/FileSystem.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/Layer.o: Core/Layer.cpp
-	@echo "$(notdir $<)"
-	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/Memory.o: Core/Memory/Memory.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/Scene.o: Core/Scene.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/Keyboard.o: Event/Keyboard.cpp
-	@echo "$(notdir $<)"
-	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/Mouse.o: Event/Mouse.cpp
+$(OBJDIR)/Event.o: Event/Event.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/Mesh.o: Geometry/Mesh.cpp

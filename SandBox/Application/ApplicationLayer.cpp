@@ -67,11 +67,14 @@ void AppLayer::Shutdown()
 	//m_Scene.ResetWithoutRefDrop();
 }
 
-void AppLayer::Event()
+void AppLayer::Event(
+	Hydrogen::FrameEvent& pEvents
+)
 {
 
-	m_Scene->GetCamera().HandleCameraLooking();
-	m_Scene->GetCamera().HandleCameraMovement();
+
+	m_Scene->GetCamera().HandleCameraLooking(pEvents.PositionOffset);
+	m_Scene->GetCamera().HandleCameraMovement(pEvents);
 
 }
 

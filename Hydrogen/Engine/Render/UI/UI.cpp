@@ -77,14 +77,22 @@ namespace Hydrogen
         ImGui::DestroyContext();
     }
 
-
+    /*
+        Purpose: UI Event Handling
+    */
+    void UI::Core::Event(
+        Hydrogen::FrameEvent& pEvents
+    ) noexcept
+    {
+        m_ImGuiIO->AddMousePosEvent(Mouse::MousePosition.X, Mouse::MousePosition.Y);
+        m_ImGuiIO->AddMouseButtonEvent(GLFW_MOUSE_BUTTON_LEFT,  Mouse::MouseLeftKey==KEY_DOWN);
+        m_ImGuiIO->AddMouseButtonEvent(GLFW_MOUSE_BUTTON_RIGHT, Mouse::MouseRightKey==KEY_DOWN);
+        m_ImGuiIO->AddMouseWheelEvent(pEvents.ScrollOffset.Y,pEvents.ScrollOffset.Y);
+    }
+        
 
     void UI::Core::Render() noexcept
     {
-        m_ImGuiIO->AddMousePosEvent(Mouse::GetCursorX(), Mouse::GetCursorY());
-        m_ImGuiIO->AddMouseButtonEvent(GLFW_MOUSE_BUTTON_LEFT, Mouse::IsLeftKeyPressed());
-        m_ImGuiIO->AddMouseButtonEvent(GLFW_MOUSE_BUTTON_RIGHT, Mouse::IsRightKeyPressed());
-        m_ImGuiIO->AddMouseWheelEvent(0.0f,Mouse::GetScrollVerticalOffset());
 
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -94,7 +102,7 @@ namespace Hydrogen
         for (auto& widget : m_Widgets)
             widget->Render();
         
-
+        ImGui::ShowDemoWindow();
 
         ImGui::Render();
         m_FrameDrawData = ImGui::GetDrawData();

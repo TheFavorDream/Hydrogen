@@ -9,7 +9,7 @@
 #include "../Common.h"
 #include "../Log/Log.h"
 #include "../Render/Renderer.h"
-#include "../InternalEntities/Grid.h"
+#include "../Event/Event.h"
 #include "Scene.h"
 #include "Timer/Timer.h"
 
@@ -51,10 +51,7 @@ namespace Hydrogen
 	private:
 
 		std::vector<Ptr<Layer>> m_Layers;
-		bool  m_Running = false;
-
-
-		Grid m_Grid;
+		bool  					m_Running = false; 
 
 	public:
 		static float		       s_DeltaTime;

@@ -4,7 +4,6 @@
 #include "../../Log/Log.h"
 #include "GLFW/glfw3.h"
 #include "../../VecMath/Vector/Vectors.h"
-#include "../../Event/Mouse.h"
 #include <vulkan/vulkan_core.h>
 
 namespace Hydrogen

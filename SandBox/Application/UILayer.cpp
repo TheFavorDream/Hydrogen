@@ -14,9 +14,12 @@ void UILayer::Shutdown()
 
 }
 
-void UILayer::Event() 
+void UILayer::Event(
+	Hydrogen::FrameEvent& pEvents
+) 
 {
 
+	Hydrogen::UI::Core::Self().Event(pEvents);
 }
 
 void UILayer::Update() 

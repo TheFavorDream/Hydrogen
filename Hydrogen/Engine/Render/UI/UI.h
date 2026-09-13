@@ -10,6 +10,7 @@
 #include "../../../3rdParty/imgui/imgui_impl_glfw.h"
 #include "../../../3rdParty/imgui/imgui_impl_vulkan.h"
 #include "../Window/Window.h"
+#include "../../Event/Event.h"
 #include "Widget.h"
 
 namespace Hydrogen
@@ -55,12 +56,22 @@ namespace UI
 
 
 
+        /*
+            Purpose: UI Event Handling
+        */
+        HYD void   Event(
+            Hydrogen::FrameEvent& pEvents
+        ) noexcept;
+        
         HYD void   Render()   noexcept; //Renders the GUI
         
         //Public Functions:
         HYD void PushWidget(
             Ptr<Widget> pNewWidget
         ) noexcept;
+
+
+
 
     private: // internal Vars
 

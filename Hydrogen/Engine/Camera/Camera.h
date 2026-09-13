@@ -6,8 +6,8 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "../VecMath/Vector/Vectors.h"
-#include "Event/Keyboard.h"
-#include "Event/Mouse.h"
+#include <GLFW/glfw3.h>
+#include "../Event/Event.h"
 
 
 namespace Hydrogen
@@ -19,8 +19,19 @@ namespace Hydrogen
 		
 
 		HYD void SetupCamera(float pFOV, glm::vec3 pPosition, float pAspectRatio = 2.0f, float pNearPlane = 0.1, float pFarPlane = 100.0f);
-		HYD void HandleCameraMovement();
-		HYD void HandleCameraLooking();
+	
+		HYD void HandleCameraMovement(
+			FrameEvent& pEvents,
+			uint32 		pForwardKey   = GLFW_KEY_W,
+			uint32 		pBackwardKey  = GLFW_KEY_S,
+			uint32 		pLeftKey 	  = GLFW_KEY_A,
+			uint32 		pRightKey 	  = GLFW_KEY_D,
+			uint32 		pUpKey 	      = GLFW_KEY_SPACE,
+			uint32 		pDownKey      = GLFW_KEY_LEFT_SHIFT,
+			uint32 		pSpeedKey 	  = GLFW_KEY_LEFT_CONTROL
+		) noexcept;
+	
+		HYD void HandleCameraLooking(VecD2 pCurserOffset) noexcept;
 		 
 		HYD void DisableCameraMovement(bool pDisableCamera);
 		 

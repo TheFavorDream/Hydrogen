@@ -13,7 +13,10 @@ public:
 	void Setup()    override;
 	void Shutdown() override;
 
-	void Event()  override;
+	void Event(
+		Hydrogen::FrameEvent& pEvents
+	)  override;
+
 	void Update() override;
 
 private:

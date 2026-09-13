@@ -179,8 +179,8 @@ namespace Hydrogen
 
 	bool Window::IsMouseInViewPort()
 	{
-		double X = Mouse::GetCursorX();
-		double Y = Mouse::GetCursorY();
+		double X = Mouse::MousePosition.X;
+		double Y = Mouse::MousePosition.Y;
 
 		if (X < m_ViewportSize.X && X > m_ViewportSize.Z)
 		{

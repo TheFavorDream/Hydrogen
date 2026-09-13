@@ -145,10 +145,11 @@ namespace Hydrogen
 	void Core::Event() noexcept
 	{
 		glfwPollEvents();
-		for (auto& i : m_Layers)
+		for (int32 Iter = m_Layers.size()-1 ; Iter >= 0 ; --Iter)
 		{
-			i->Event();
+			m_Layers.at(Iter)->Event(FrameEvent::Self);
 		}
+		FrameEvent::Self.Reset();
 	}
 
 	void Core::Update() noexcept
