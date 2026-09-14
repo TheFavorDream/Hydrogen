@@ -483,7 +483,7 @@ namespace Internal
     }
     
     //Bind this pipeline
-    void Vulkan::GraphicsPipeline::BindPipeline() noexcept
+    void Vulkan::GraphicsPipeline::BindPipeline() const noexcept
     {
         vkCmdBindPipeline(
             Renderer::Self().GlobalRenderCommandBuffer().GetHandle(),

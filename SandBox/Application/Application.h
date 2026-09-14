@@ -2,7 +2,7 @@
 
 #include "../../Hydrogen//Hydrogen.h"
 #include "ApplicationLayer.h"
-#include "UILayer.h"
+#include "Editor.h"
 
 class Application : public Hydrogen::Core
 {
@@ -14,8 +14,8 @@ public:
 
 
 private:
-	Hydrogen::Layer* m_AppLayer = nullptr;
-	Hydrogen::Layer* m_UILayer = nullptr;
+	Ptr<Hydrogen::Layer> m_AppLayer = nullptr;
+	Ptr<Hydrogen::Layer> m_Editor   = nullptr;
 
 };
 

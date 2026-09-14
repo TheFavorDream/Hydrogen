@@ -63,6 +63,9 @@ namespace UI
             Hydrogen::FrameEvent& pEvents
         ) noexcept;
         
+
+
+        HYD void   NewFrame() noexcept;
         HYD void   Render()   noexcept; //Renders the GUI
         
         //Public Functions:
@@ -70,7 +73,7 @@ namespace UI
             Ptr<Widget> pNewWidget
         ) noexcept;
 
-
+        HYD inline bool IsUIEvent() const {return m_ImGuiIO->WantCaptureKeyboard || m_ImGuiIO->WantCaptureMouse;}
 
 
     private: // internal Vars

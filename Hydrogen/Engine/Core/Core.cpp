@@ -4,6 +4,7 @@
 #include "../../Xenon/include/Loader.h"
 
 #include "Timer/Timer.h"
+#include <vector>
 
 using namespace std::chrono_literals;
 
@@ -50,6 +51,7 @@ namespace Hydrogen
 
 		//ShaderPool::s_Self = Memory::AllocateRaw<ShaderPool>();
 
+
 		m_Running = true;
 
 		//m_Grid.GenerateGrid();
@@ -59,6 +61,10 @@ namespace Hydrogen
 	{
 
 		Renderer::Self().WaitOnDeviceCompletion();
+
+
+		for (auto& renderConf : m_LayerRenderConfigurations)
+			renderConf.Reset();
 
 		//Scene Shutdown:
 		for (auto& scene : s_Scenes)
@@ -99,6 +105,9 @@ namespace Hydrogen
 
 		pLayer->Setup();
 		m_Layers.push_back(pLayer);
+
+		m_LayerRenderConfigurations.emplace_back();
+
 		return HYD_OK;
 	}
 
@@ -128,12 +137,14 @@ namespace Hydrogen
 		while (m_Running)
 		{
 			timer.StartTimer();
+			
+			
 			Event();
 			Update();
-			Renderer::Self().Render();
+			Render();
+
 			timer.StopTimer();
 			//Calculate delta Time:
-
 			SetDeltaTime((float)timer.GetElapsedInMillis());
 			timer.ResetTimer();
 		}
@@ -163,12 +174,22 @@ namespace Hydrogen
 
 	void Core::Render() noexcept
 	{
+		static uint32 LayerCount = m_Layers.size();
 
+		for (uint32 LayerIndex = 0; LayerIndex < LayerCount ; ++LayerIndex)
+		{
+			
+			m_LayerRenderConfigurations.at(LayerIndex).Reset();
 
-		////Grid:
-		//Renderer::Self().PushPrimitive(dynamic_cast<Primitive*>(&m_Grid));
+			m_Layers.at(LayerIndex)->Render(
+				m_LayerRenderConfigurations.at(LayerIndex)
+			);
+			
+		}
 
-		Renderer::Self().Render();
+		Renderer::Self().Render(
+			m_LayerRenderConfigurations
+		);
 	}
 
 }

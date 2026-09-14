@@ -243,15 +243,17 @@ namespace Vulkan{
         uint32 DestroyPipeline()  noexcept;
         
         //Bind this pipeline
-        void BindPipeline() noexcept;
+        void BindPipeline() const noexcept ;
 
+
+        inline HYD_ID_SPACE GetPipelineLayout() const noexcept {return m_PipelineLayout;}
 
     private: //Member Accessable
         uint32 CreatePipelineObject() noexcept;
 
     private:
 
-        VkPipeline m_Handle = VK_NULL_HANDLE;
+        VkPipeline   m_Handle = VK_NULL_HANDLE;
 
         HYD_ID_SPACE m_PipelineLayout;
 

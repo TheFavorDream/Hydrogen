@@ -109,12 +109,14 @@ namespace Hydrogen
 	class  MeshGenerator;
 	class  Scene;
 	class  Node;
-	class  Renderer;
 	class  Mesh;
 	class  Primitive;
 	class  Material;
 	class  Window;
-
+	
+	struct FrameRenderConfig;
+	struct Instruction;
+	class  Renderer;
 	
 	class  Grid;
 

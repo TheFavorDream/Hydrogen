@@ -8,13 +8,13 @@ Application::Application()
 	: Core(WindowInfo(1400, 700, "Hydrogen"))
 {
 
-
+	Hydrogen::Renderer::Self().GetWindow().SetViewportRatio(100.0f, 100.0f);
 
 	m_AppLayer = new AppLayer();
-	m_UILayer  = new UILayer();
+	m_Editor   = new Editor();
 
 	PushLayer(m_AppLayer);
-	PushLayer(m_UILayer);
+	PushLayer(m_Editor);
 }
 
 Application::~Application()								

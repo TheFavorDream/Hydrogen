@@ -50,8 +50,9 @@ namespace Hydrogen
 
 	private:
 
-		std::vector<Ptr<Layer>> m_Layers;
-		bool  					m_Running = false; 
+		std::vector<Ptr<Layer>>        m_Layers;
+		bool  					       m_Running = false; 
+		std::vector<FrameRenderConfig> m_LayerRenderConfigurations;
 
 	public:
 		static float		       s_DeltaTime;

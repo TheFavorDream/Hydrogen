@@ -90,8 +90,10 @@ namespace Hydrogen
 		//Free ups the Resource Pools
 		HYD uint32 FreeScene();
 
-		//Renders the Scene
-		HYD uint32 Render();
+		/*
+			Purpose: Returns an Instruction List to Render the Scene
+		*/
+		HYD std::vector<Instruction> Render() noexcept;
 
 		//Load Models
 		HYD uint32 LoadScene(

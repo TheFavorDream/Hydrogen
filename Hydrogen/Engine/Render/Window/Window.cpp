@@ -127,8 +127,8 @@ namespace Hydrogen
 		VkViewport CurrantViewport{
 			.x=0.0f,
 			.y=0.0f,
-			.width = (float)m_ViewportSize.X,
-			.height = (float)m_ViewportSize.Y,
+			.width    = (float)m_ViewportSize.X*(m_ViewportRatios.X/100.0f),
+			.height   = (float)m_ViewportSize.Y*(m_ViewportRatios.Y/100.0f),
 			.minDepth = 0.0f,
 			.maxDepth = 1.0f
 		};

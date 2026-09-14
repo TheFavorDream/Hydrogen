@@ -328,7 +328,7 @@ namespace Internal
     }
 
 
-    void Vulkan::VertexBuffer::Bind() noexcept
+    void Vulkan::VertexBuffer::Bind() const noexcept
     {
         VkDeviceSize Offsets[] = {0};
         vkCmdBindVertexBuffers(
@@ -375,7 +375,7 @@ namespace Internal
     }
 
 
-    void Vulkan::IndexBuffer::Bind() noexcept
+    void Vulkan::IndexBuffer::Bind() const noexcept
     {
         vkCmdBindIndexBuffer(
             Renderer::Self().GlobalRenderCommandBuffer().GetHandle(),

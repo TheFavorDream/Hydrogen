@@ -52,6 +52,10 @@ namespace Hydrogen
 		 Instruction() = default;
 		~Instruction() = default; 
 	
+		Instruction(const Instruction& ) 			= default;
+		Instruction& operator=(const Instruction& ) = default;
+
+
 		Instruction(Instruction&& pOther)
 			: Vertices(std::move(pOther.Vertices)),
 		  	  Indices(std::move(pOther.Indices)),
@@ -60,6 +64,29 @@ namespace Hydrogen
 		  	  MaterialPtr(pOther.MaterialPtr)
 			{}
 		
+	};
+
+
+	struct FrameRenderConfig
+	{
+	public:
+	
+		void PushInstruction(
+			Instruction 			 pInstruction
+		) noexcept;
+
+		void PushInstruction(
+			std::vector<Instruction> pInstruction
+		) noexcept;
+
+
+		void Reset() noexcept;
+
+	private:
+		std::vector<Instruction> Instructions;
+	
+	private:
+		friend class Renderer;
 	};
 
 
@@ -180,7 +207,9 @@ namespace Hydrogen
 
 
 		//Main Rendering Happens here 
-		void Render();
+		void Render(
+			const std::vector<FrameRenderConfig>& pConfs = {}
+		) noexcept;
 
 		//Takes care of Resizing
 		uint32 RecreateSwapchain() noexcept;

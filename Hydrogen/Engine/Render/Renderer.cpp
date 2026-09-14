@@ -7,9 +7,40 @@
 
 namespace Hydrogen
 {
+
+
+
+/*
+	Purpose: FrameRenderConfig Difnitions:
+*/
+
+	void FrameRenderConfig::PushInstruction(
+		Instruction 			 pInstruction
+	) noexcept
+	{
+		Instructions.push_back(std::move(pInstruction));
+	}
+	
+	void FrameRenderConfig::PushInstruction(
+		std::vector<Instruction> pInstruction
+	) noexcept
+	{
+		Instructions.insert(
+			Instructions.cend(),
+			pInstruction.cbegin(),
+			pInstruction.cend()
+		);
+	}
+
+
+	void FrameRenderConfig::Reset() noexcept
+	{
+		Instructions.clear();
+	}
+
+
 	Ptr<Renderer> Renderer::s_Self = nullptr;
 	Renderer& Renderer::Self() { return *(Renderer::s_Self); }
-
 	
 
 /*
@@ -28,6 +59,7 @@ namespace Hydrogen
 		}
 
 		CHECK_ERROR(InitVulkan());
+		
 		return HYD_OK;
 	}
 
@@ -125,23 +157,15 @@ namespace Hydrogen
 
 
 /*
-	Purpose: Push an Instruction to the queue to be rendered:
-*/
-	void Renderer::PushInstruction(
-		Instruction pIns
-	) noexcept
-	{
-		m_InstructionQueue.push(std::move(pIns));
-	}
-
-/*
 	Purpose: Main Rendering Function
 
 	TODO:
 		*Abstract the Syncronization semaphores and fences
 */
 
-	void Renderer::Render()
+	void Renderer::Render(
+		const std::vector<FrameRenderConfig>& pConfs // = {}
+	) noexcept
 	{
 
 		//Wait for previous frame to finish:
@@ -166,38 +190,39 @@ namespace Hydrogen
 		
 		m_Window.UpdateViewport();		
 		
-		while (!m_InstructionQueue.empty())
+		for (const auto& renderConf : pConfs)
 		{
-			
-			//Retrive the instruction:
-			Instruction instruction = std::move(m_InstructionQueue.front());
-			m_InstructionQueue.pop();
-			
-			//Bind 
-			instruction.Pipeline->BindPipeline();
-			instruction.Vertices->Bind();
-			instruction.Indices->Bind();
-			
-			
-			AccessUniformBuffer(instruction.Uniform).Bind(
-				AccessPipelineLayout(instruction.Pipeline->m_PipelineLayout)
-			);
-	
-			//Bind Material If Present
-			if (instruction.MaterialPtr)
+
+			//Actual Rendering
+			for (const auto& instruction : renderConf.Instructions)
 			{
-	      		instruction.MaterialPtr->Bind(
-					AccessPipelineLayout(instruction.Pipeline->m_PipelineLayout)
+				//Bind 
+				instruction.Pipeline->BindPipeline();
+				instruction.Vertices->Bind();
+				instruction.Indices->Bind();
+			
+			
+				AccessUniformBuffer(instruction.Uniform).Bind(
+					AccessPipelineLayout(instruction.Pipeline->GetPipelineLayout())
+				);
+	
+				//Bind Material If Present
+				if (instruction.MaterialPtr)
+				{
+					  instruction.MaterialPtr->Bind(
+						AccessPipelineLayout(instruction.Pipeline->m_PipelineLayout)
+					);
+				}
+	
+				uint32 IndexCount = instruction.Indices->GetCount();
+				 //Issue a draw call
+				 vkCmdDrawIndexed(
+					 GlobalRenderCommandBuffer().GetHandle(),
+					IndexCount, 1,0, 0, 0
 				);
 			}
-
-			uint32 IndexCount = instruction.Indices->GetCount();
-		 	//Issue a draw call
-		 	vkCmdDrawIndexed(
-		 		GlobalRenderCommandBuffer().GetHandle(),
-				IndexCount, 1,0, 0, 0
-			);
 		}
+
 
 		//Render UI if present:
 		if (UI::Core::s_Self)

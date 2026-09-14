@@ -518,11 +518,11 @@ namespace Hydrogen
 		}
 
 
-		Type& operator*()
+		Type& operator*() const
 		{
 			return *m_Obj;
 		}
-		Ptr<Type> operator->()
+		Ptr<Type> operator->() const
 		{
 			return m_Obj;
 		}
@@ -581,7 +581,7 @@ namespace Hydrogen
 	private:
 		Ptr<
 		Bucket<Type>> m_Bucket  = nullptr;
-		Ptr<Type>     m_Obj     = nullptr;
+		mutable Ptr<Type>     m_Obj     = nullptr;
 		uint64		  m_Index;
 
 		friend class ResourcePool<Type>;

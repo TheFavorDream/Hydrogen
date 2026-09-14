@@ -136,7 +136,7 @@ namespace Vulkan
         ) noexcept override;
 
 
-        void Bind() noexcept;
+        void Bind() const noexcept;
 
     private:
         StagingBuffer m_StaginBuffer;
@@ -165,7 +165,7 @@ namespace Vulkan
         ) noexcept override;
 
 
-        void Bind() noexcept;
+        void Bind() const  noexcept;
 
         inline const uint64      GetCount()     const {return m_Count;} 
         inline const VkIndexType GetIndexType() const {return m_IndexType;}

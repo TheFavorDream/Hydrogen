@@ -22,6 +22,11 @@ public:
 	
 	void Update() override;
 
+
+	void Render(
+		Hydrogen::FrameRenderConfig& pRenderConf
+	) override; 
+
 private:
 
 	Hydrogen::GraphicsPipelineConfiguration ConfigPipeline() noexcept;

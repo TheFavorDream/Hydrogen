@@ -41,9 +41,10 @@ namespace Hydrogen
 
 		HYD inline const std::string GetName() { return m_Name; }
 
-		HYD uint32 Render(
-			UniformRef		      pUniform,
-			const Transformation& pTransform = Transformation()
+		HYD void Render(
+			std::vector<Instruction>& pInstructionSet,
+			UniformRef		      	  pUniform,
+			const Transformation& 	  pTransform = Transformation()
 		) noexcept;
 
 

@@ -91,18 +91,16 @@ namespace Hydrogen
     }
         
 
-    void UI::Core::Render() noexcept
+    void UI::Core::NewFrame() noexcept
     {
-
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+    }
 
+    void UI::Core::Render() noexcept
+    {
 
-        for (auto& widget : m_Widgets)
-            widget->Render();
-        
-        ImGui::ShowDemoWindow();
 
         ImGui::Render();
         m_FrameDrawData = ImGui::GetDrawData();

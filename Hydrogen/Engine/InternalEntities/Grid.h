@@ -22,10 +22,15 @@ namespace Hydrogen
         HYD Grid(Grid&& pOther)            noexcept;
         HYD Grid& operator=(Grid&& pOther) noexcept;
 
-        HYD void GenerateGrid() noexcept;
-        HYD void Render()       noexcept;
-        HYD void DestroyGrid()  noexcept;
+        HYD void        GenerateGrid() noexcept;
+        HYD Instruction Render()       noexcept;
+        HYD void        DestroyGrid()  noexcept;
 
+        HYD void SetFog(
+            float pQuad,
+            float pLinear,
+            float pConstant 
+        ) noexcept;
 
     private:
 

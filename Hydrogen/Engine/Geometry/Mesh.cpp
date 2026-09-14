@@ -82,9 +82,10 @@ namespace Hydrogen
 
 
 
-	uint32 Mesh::Render(
-		UniformRef		      pUniform,
-		const Transformation& pTransform
+	void Mesh::Render(
+		std::vector<Instruction>& pInstructionSet,
+		UniformRef		      	  pUniform,
+		const Transformation& 	  pTransform
 	) noexcept
 	{
 
@@ -106,11 +107,10 @@ namespace Hydrogen
 			instruction.Uniform 	= pUniform;
 			instruction.MaterialPtr = &pri.m_Material;
 			
-			Renderer::Self().PushInstruction(
+			pInstructionSet.push_back(
 				std::move(instruction)
 			);
 		}
-		return HYD_OK;
 	}
 
 

@@ -56,7 +56,7 @@ namespace Hydrogen
 		return HYD_OK;
 	}
 
-	uint32 Scene::Render()
+	std::vector<Instruction> Scene::Render() noexcept
 	{
 		//Start the Travers:
 		std::stack<Node> Travers;
@@ -68,6 +68,7 @@ namespace Hydrogen
 		}
 
 
+		std::vector<Instruction> InstructionSet;
 
 		while (!Travers.empty())
 		{
@@ -80,10 +81,11 @@ namespace Hydrogen
 			Renderer::Self().AccessUniformBuffer(m_Uniforms).UploadData(m_Camera.GetProjectionPtr(),sizeof(glm::mat4),2*sizeof(MatF4));
 			
 			if (!Current.GetMesh().IsNull())
-				Current.GetMesh()->Render(
-					m_Uniforms,
-					Current.GetTransform()
-				);
+					Current.GetMesh()->Render(
+						InstructionSet,
+						m_Uniforms,
+						Current.GetTransform()
+					);
 
 			for (auto node : Current)
 			{
@@ -93,7 +95,7 @@ namespace Hydrogen
 		
 		}
 
-		return HYD_OK;
+		return std::move(InstructionSet);
 	}
 
 

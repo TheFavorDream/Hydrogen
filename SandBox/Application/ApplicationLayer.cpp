@@ -1,6 +1,6 @@
 #include "ApplicationLayer.h"
 #include <glm/ext/matrix_float4x4.hpp>
-
+#include "Editor.h"
 
 
 
@@ -72,18 +72,36 @@ void AppLayer::Event(
 )
 {
 
-
-	m_Scene->GetCamera().HandleCameraLooking(pEvents.PositionOffset);
-	m_Scene->GetCamera().HandleCameraMovement(pEvents);
-
+	if (!Hydrogen::UI::Core::Self().IsUIEvent())
+	{
+		m_Scene->GetCamera().HandleCameraLooking(pEvents.PositionOffset);
+		m_Scene->GetCamera().HandleCameraMovement(pEvents);
+	}
 }
 
 void AppLayer::Update()
 {
-	m_Grid.Render();
-	m_Scene->Render();
+	//Update Grid Values:
+	m_Grid.SetFog(
+		Editor::FogQuad, Editor::FogLinear, Editor::FogConstant
+	);
 }
 
+
+void AppLayer::Render(
+	Hydrogen::FrameRenderConfig& pRenderConf
+)
+{
+	//Render the Grid
+	pRenderConf.PushInstruction(
+		m_Grid.Render()
+	);
+	//Render the Scene:
+	pRenderConf.PushInstruction(
+		m_Scene->Render()
+	);
+
+} 
 
 Hydrogen::GraphicsPipelineConfiguration AppLayer::ConfigPipeline() noexcept
 {

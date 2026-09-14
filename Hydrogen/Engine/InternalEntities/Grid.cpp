@@ -575,13 +575,22 @@ const uint32 FragmentShaderSizeInBytes = 3524;
     }
 
 
-    void Grid::Render() noexcept
+    void Grid::SetFog(
+        float pQuad,
+        float pLinear,
+        float pConstant 
+    ) noexcept
+    {
+        m_UniData.FogCoefficient = VecF3(pQuad, pLinear, pConstant);
+    }
+
+
+    Instruction Grid::Render() noexcept
     {
 
         m_UniData.View           = Renderer::Self().GetCurrentCamera()->GetView();
         m_UniData.Projection     = Renderer::Self().GetCurrentCamera()->GetProjection();
         m_UniData.CameraPos      = Renderer::Self().GetCurrentCamera()->GetCameraPos();
-        m_UniData.FogCoefficient = VecF3(0.05f, 0.0005f, 1.0f);
 
         Renderer::Self().AccessUniformBuffer(m_Uniform).UploadData(
             &m_UniData,
@@ -597,9 +606,7 @@ const uint32 FragmentShaderSizeInBytes = 3524;
         instruction.MaterialPtr = nullptr;
 
         
-        Renderer::Self().PushInstruction(
-            std::move(instruction)
-        );
+        return std::move(instruction);
     }
 
     void Grid::DestroyGrid()  noexcept
