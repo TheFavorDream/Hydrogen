@@ -20,6 +20,7 @@
 #include "../Geometry/Mesh.h"
 #include "../Geometry/Primitive.h"
 #include "Core/Core.h"
+#include "../InternalEntities/Light.h"
 #include "../Camera/Camera.h"
 #include "UI/UI.h"
 #include "Vulkan/Swapchain.h"
@@ -42,12 +43,12 @@ namespace Hydrogen
 
 	struct Instruction
 	{
-		VertexBufferRef      Vertices;
-		IndexBufferRef       Indices;
-		GraphicsPipelineRef  Pipeline;
-		UniformRef			 Uniform;
-		Ptr<Material>		 MaterialPtr;
-
+		VertexBufferRef       Vertices;
+		IndexBufferRef        Indices;
+		GraphicsPipelineRef   Pipeline;
+		UniformRef			  Uniform;
+		Ptr<Material>		  MaterialPtr;
+		Ptr<LightCollection>  Light = nullptr;
 
 		 Instruction() = default;
 		~Instruction() = default; 
@@ -61,7 +62,8 @@ namespace Hydrogen
 		  	  Indices(std::move(pOther.Indices)),
 		  	  Pipeline(std::move(pOther.Pipeline)),
 		  	  Uniform(std::move(pOther.Uniform)),
-		  	  MaterialPtr(pOther.MaterialPtr)
+		  	  MaterialPtr(pOther.MaterialPtr),
+			  Light(pOther.Light)
 			{}
 		
 	};
@@ -83,8 +85,7 @@ namespace Hydrogen
 		void Reset() noexcept;
 
 	private:
-		std::vector<Instruction> Instructions;
-	
+		std::vector<Instruction> m_Instructions;
 	private:
 		friend class Renderer;
 	};
@@ -96,6 +97,8 @@ namespace Hydrogen
 		HYD static Renderer& Self();
 	
 	public:
+
+		HYD inline uint32 FramesInFlight() const {return m_FramesInFlights;}
 
 //----------------------------Pushes a Render Instruction to the Instruction Queue-------------------------------
 		HYD void PushInstruction(Instruction pIns) noexcept;
@@ -242,8 +245,6 @@ namespace Hydrogen
 		uint32 InitVulkan() noexcept;
 
 	private:
-
-		std::queue<Instruction>  m_InstructionQueue;
 		std::vector<const char*> m_DeviceLevelExtensions        = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
 
@@ -324,6 +325,7 @@ namespace Hydrogen
 		friend class Internal::Vulkan::Image;
 		friend class Internal::Vulkan::ImageView;
 		friend class Internal::Vulkan::Sampler;
+		friend class LightCollection; 
 		friend class UI::Core;
 		//Temp:
 		friend class Material;

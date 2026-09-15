@@ -34,4 +34,5 @@ private:
 private:
 	Hydrogen::Instance<Hydrogen::Scene>  m_Scene;
 	Hydrogen::Grid						 m_Grid;
+
 };

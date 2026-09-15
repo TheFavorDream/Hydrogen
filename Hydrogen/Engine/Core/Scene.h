@@ -14,10 +14,18 @@
 #include "../VecMath/Transform/Transformation.h"
 #include "../Camera/Camera.h"
 #include "Xenon/include/Xenon.h"
+#include "../InternalEntities/Light.h"
 
 
 namespace Hydrogen
 {
+
+
+	enum SceneFlags 
+	{
+		HYD_SCENE_NONE		     = 0xffff,
+		HYD_SCENE_EXTERNAL_LIGHT = 1 << 1
+	};
 
 
 	struct SceneShaderLayout
@@ -103,22 +111,26 @@ namespace Hydrogen
 
 		HYD uint32 ConfigurePipeline(
 			const GraphicsPipelineConfiguration& pConf,
-			const SceneShaderLayout&			 pShaderLayout
+			const SceneShaderLayout&			 pShaderLayout,
+			SceneFlags							 pFlags = HYD_SCENE_NONE
 		) noexcept;
 
-		HYD inline Camera& 		   GetCamera()    { return m_Camera; }
-		HYD inline Transformation& GetTransform() { return m_Transform;}
+		HYD inline Camera& 		    GetCamera()    		 { return m_Camera; }
+		HYD inline Transformation&  GetTransform() 		 { return m_Transform;}
+		HYD inline LightCollection& GetLightCollection() { return m_Lights;}
 
 	private:
 
 		ResourcePool<Mesh>		      m_Meshes;
 		Camera					      m_Camera;
+		LightCollection				  m_Lights;
 
 		GraphicsPipelineConfiguration m_PipelineConf;
 		GraphicsPipelineRef 		  m_Pipeline;
 		HYD_ID_SPACE 				  m_PipelineLayoutID = 0;
 		HYD_ID_SPACE			      m_MVPLayoutID 	 = 0;
 		HYD_ID_SPACE			      m_MaterialLayoutID = 0;
+		HYD_ID_SPACE			      m_LightLayoutID    = 0;
 		SceneShaderLayout   	      m_ShaderBinding;
 		UniformRef 				      m_Uniforms;
 		

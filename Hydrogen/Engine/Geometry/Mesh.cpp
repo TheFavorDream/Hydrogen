@@ -85,6 +85,7 @@ namespace Hydrogen
 	void Mesh::Render(
 		std::vector<Instruction>& pInstructionSet,
 		UniformRef		      	  pUniform,
+		LightCollection&          pLights,
 		const Transformation& 	  pTransform
 	) noexcept
 	{
@@ -104,8 +105,9 @@ namespace Hydrogen
 			instruction.Vertices    = pri.m_VertexBuffer;
 			instruction.Indices     = pri.m_IndexBuffer;
 			instruction.Pipeline    = pri.m_Pipeline;
-			instruction.Uniform 	= pUniform;
+			instruction.Uniform     = pUniform;
 			instruction.MaterialPtr = &pri.m_Material;
+			instruction.Light       = &pLights;
 			
 			pInstructionSet.push_back(
 				std::move(instruction)

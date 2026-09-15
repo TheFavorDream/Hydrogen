@@ -44,6 +44,7 @@ namespace Hydrogen
 		HYD void Render(
 			std::vector<Instruction>& pInstructionSet,
 			UniformRef		      	  pUniform,
+			LightCollection&          pLights,
 			const Transformation& 	  pTransform = Transformation()
 		) noexcept;
 

@@ -119,6 +119,9 @@ namespace Hydrogen
 	class  Renderer;
 	
 	class  Grid;
+	class  Light;
+	class  LightCollection;
+
 
 	class  Attachment;
 	class  Texture2D;

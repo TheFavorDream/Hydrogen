@@ -33,10 +33,19 @@ void AppLayer::Setup()
 	SceneUniformLayout.Material.ShaderStage 			   = Hydrogen::HYD_SHADER_STAGE_FRAGMENT_BIT;
 	SceneUniformLayout.Material.Type		 			   = Hydrogen::HYD_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 
+
+	//Set Up the Lights:
+	m_Scene->GetLightCollection().CreateLight(
+		Hydrogen::Light(
+			Hydrogen::VecF3(0.0f, 5.0f, 0.0f),
+			Hydrogen::VecF3(1.0f)
+		)
+	);
 	//Pipeline Creation:
 	m_Scene->ConfigurePipeline(
 		ConfigPipeline(),
-		SceneUniformLayout
+		SceneUniformLayout,
+		Hydrogen::HYD_SCENE_EXTERNAL_LIGHT
 	);
 
 

@@ -84,6 +84,7 @@ namespace Hydrogen
 					Current.GetMesh()->Render(
 						InstructionSet,
 						m_Uniforms,
+						m_Lights,
 						Current.GetTransform()
 					);
 
@@ -273,13 +274,17 @@ namespace Hydrogen
 
 	uint32 Scene::ConfigurePipeline(
 		const GraphicsPipelineConfiguration& pConf,
-		const SceneShaderLayout&			 pShaderLayout
+		const SceneShaderLayout&			 pShaderLayout,
+		SceneFlags							 pFlags //= HYD_SCENE_NONE
 	) noexcept
 	{
 
 
 		std::vector<DescriptorSetLayoutConfiguration> DescriptorLayoutConfs;
-		DescriptorLayoutConfs.resize(2);
+
+		DescriptorLayoutConfs.resize(
+			 3
+		);
 		
 
 		//MVP DescriptorSet Layout
@@ -323,39 +328,47 @@ namespace Hydrogen
 			.Type    = pShaderLayout.Material.Type
 		});
 		
-
+		//Lights:
+		DescriptorLayoutConfs.at(2).AddBinding(DescriptorBinding{
+			.Binding = 0,
+			.Count   = m_Lights.GetLightCount(),
+			.Stage   = HYD_SHADER_STAGE_FRAGMENT_BIT,
+			.Type    = HYD_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+		});
+		
 
 		PipelineLayoutConfiguration PipelineLayoutConf;
 		
 
-		HYD_ID_SPACE MVPDescLayoutID      = Renderer::Self().CreateDescriptorSetLayout(DescriptorLayoutConfs[0]);
-		HYD_ID_SPACE MaterialDescLayoutID = Renderer::Self().CreateDescriptorSetLayout(DescriptorLayoutConfs[1]);
+		m_MVPLayoutID      = Renderer::Self().CreateDescriptorSetLayout(DescriptorLayoutConfs[0]);
+		m_MaterialLayoutID = Renderer::Self().CreateDescriptorSetLayout(DescriptorLayoutConfs[1]);
+		m_LightLayoutID    = Renderer::Self().CreateDescriptorSetLayout(DescriptorLayoutConfs[2]);
 
 
-		m_MaterialLayoutID = MaterialDescLayoutID;
-		m_MVPLayoutID      = MVPDescLayoutID;
+		Internal::Vulkan::DescriptorSetLayout& MVPDescSetLayout      = Renderer::Self().AccessDescriptorSetLayout(m_MVPLayoutID);
+		Internal::Vulkan::DescriptorSetLayout& MaterialDescSetLayout = Renderer::Self().AccessDescriptorSetLayout(m_MaterialLayoutID);
 
-		Internal::Vulkan::DescriptorSetLayout& MVPDescSetLayout      = Renderer::Self().AccessDescriptorSetLayout(MVPDescLayoutID);
-		Internal::Vulkan::DescriptorSetLayout& MaterialDescSetLayout = Renderer::Self().AccessDescriptorSetLayout(MaterialDescLayoutID);
 
 		PipelineLayoutConf.AttachDescriptorLayout(
-			MVPDescLayoutID
+			m_MVPLayoutID
 		);
 
 		PipelineLayoutConf.AttachDescriptorLayout(
-			MaterialDescLayoutID
+			m_MaterialLayoutID
+		);
+
+		PipelineLayoutConf.AttachDescriptorLayout(
+		m_LightLayoutID
 		);
 		
 
 		m_PipelineLayoutID = Renderer::Self().CreatePipelineLayout(PipelineLayoutConf);
 	
 
-		const uint32 FramesInFlight = Renderer::Self().m_FramesInFlights;
+		const uint32 FramesInFlight = Renderer::Self().FramesInFlight();
 		
 		//MVP uniform buffers:
-
-		HYD_ID_SPACE UniformBufferSetID = Renderer::Self().AllocateDescriptorSet(MVPDescLayoutID);
-
+		HYD_ID_SPACE UniformBufferSetID = Renderer::Self().AllocateDescriptorSet(m_MVPLayoutID);
 		m_Uniforms = Renderer::Self().CreateUniformBuffer(
 			sizeof(MatF4)*3,
 			pShaderLayout.MVP,
@@ -364,11 +377,16 @@ namespace Hydrogen
 
 		
 		m_ShaderBinding = pShaderLayout;
-		m_ShaderBinding.Material.DescriptorSetLayoutID = MaterialDescLayoutID;
+		m_ShaderBinding.Material.DescriptorSetLayoutID = m_MaterialLayoutID;
 		
 		m_PipelineConf   = pConf;
 		m_PipelineConf.SetPipelineLayout(m_PipelineLayoutID);
 
+
+		m_Lights.CreateCollection(
+			2, 
+			m_LightLayoutID
+		);
 		
 		return HYD_OK;
 	}

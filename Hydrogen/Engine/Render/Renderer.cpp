@@ -1,4 +1,5 @@
 
+#include "Vulkan/Pipeline.h"
 #include <cstdint>
 #define RENDERER_H
 #include "Renderer.h"
@@ -18,15 +19,15 @@ namespace Hydrogen
 		Instruction 			 pInstruction
 	) noexcept
 	{
-		Instructions.push_back(std::move(pInstruction));
+		m_Instructions.push_back(std::move(pInstruction));
 	}
 	
 	void FrameRenderConfig::PushInstruction(
 		std::vector<Instruction> pInstruction
 	) noexcept
 	{
-		Instructions.insert(
-			Instructions.cend(),
+		m_Instructions.insert(
+			m_Instructions.cend(),
 			pInstruction.cbegin(),
 			pInstruction.cend()
 		);
@@ -35,9 +36,8 @@ namespace Hydrogen
 
 	void FrameRenderConfig::Reset() noexcept
 	{
-		Instructions.clear();
+		m_Instructions.clear();
 	}
-
 
 	Ptr<Renderer> Renderer::s_Self = nullptr;
 	Renderer& Renderer::Self() { return *(Renderer::s_Self); }
@@ -194,23 +194,35 @@ namespace Hydrogen
 		{
 
 			//Actual Rendering
-			for (const auto& instruction : renderConf.Instructions)
+			for (const auto& instruction : renderConf.m_Instructions)
 			{
 				//Bind 
 				instruction.Pipeline->BindPipeline();
 				instruction.Vertices->Bind();
 				instruction.Indices->Bind();
 			
-			
+
+				Internal::Vulkan::PipelineLayout& PipelineLayout = AccessPipelineLayout(instruction.Pipeline->GetPipelineLayout()); 
+
+
 				AccessUniformBuffer(instruction.Uniform).Bind(
-					AccessPipelineLayout(instruction.Pipeline->GetPipelineLayout())
+					PipelineLayout
 				);
 	
+				
 				//Bind Material If Present
 				if (instruction.MaterialPtr)
 				{
-					  instruction.MaterialPtr->Bind(
-						AccessPipelineLayout(instruction.Pipeline->m_PipelineLayout)
+					instruction.MaterialPtr->Bind(
+						PipelineLayout
+					);
+				}
+
+				//Bind the Light Collection:
+				if (instruction.Light)
+				{
+					instruction.Light->BindCollection(
+						PipelineLayout
 					);
 				}
 	
