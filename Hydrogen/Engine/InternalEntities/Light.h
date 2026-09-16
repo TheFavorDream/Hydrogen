@@ -9,6 +9,7 @@
 #include "../VecMath/Math.h"
 #include "../VecMath/Vector/Vectors.h" 
 #include "../Render/Vulkan/UniformBuffer.h"
+#include <string>
 
 namespace Hydrogen
 {
@@ -24,11 +25,12 @@ namespace Hydrogen
         HYD ~Light() = default;
 
         HYD Light(
-            VecF3 pPosition,
-            VecF3 pColor,
-            VecF3 pAmbient   = VecF3(0.05f),
-            VecF3 pDiffuse   = VecF3(1.0f),
-            VecF3 pSpecular  = VecF3(1.0f)  
+            std::string pName,
+            VecF3       pPosition,
+            VecF3       pColor,
+            VecF3       pAmbient   = VecF3(0.05f),
+            VecF3       pDiffuse   = VecF3(1.0f),
+            VecF3       pSpecular  = VecF3(1.0f)  
         ) noexcept;
 
         HYD Light(const Light&)            = default;
@@ -38,18 +40,23 @@ namespace Hydrogen
         HYD Light& operator=(Light&&)      = default;
 
 
-        HYD inline VecF3& Position()  noexcept {return m_Position;}
-        HYD inline VecF3& Color()     noexcept {return m_Color;}
-        //HYD inline VecF3& Ambient()   noexcept {return m_Ambient;}
-        //HYD inline VecF3& Diffuse()   noexcept {return m_Diffuse;}
-        //HYD inline VecF3& Specular()  noexcept {return m_Specular;}
+        HYD inline std::string Name()       const noexcept {return m_Name;}
+        HYD inline VecF3&       Position()  noexcept {return m_Position;}
+        HYD inline VecF3&       Color()     noexcept {return m_Color;}
+        HYD inline VecF3&       Ambient()   noexcept {return m_Ambient;}
+        HYD inline VecF3&       Diffuse()   noexcept {return m_Diffuse;}
+        HYD inline VecF3&       Specular()  noexcept {return m_Specular;}
 
     private:
-        alignas(16) VecF3 m_Position  = VecF3(0.0f); //In the World Space
-        alignas(16) VecF3 m_Color     = VecF3(1.0f);
-        alignas(16) VecF3 m_Ambient   = VecF3(0.05f);
-        alignas(16) VecF3 m_Diffuse   = VecF3(1.0f); 
-        alignas(16) VecF3 m_Specular  = VecF3(1.0f);  
+        std::string  m_Name      = "Unknown";
+        VecF3        m_Position  = VecF3(0.0f); //In the World Space
+        VecF3        m_Color     = VecF3(1.0f);
+        VecF3        m_Ambient   = VecF3(0.05f);
+        VecF3        m_Diffuse   = VecF3(1.0f); 
+        VecF3        m_Specular  = VecF3(1.0f);  
+
+    private:
+        friend class LightCollection;
     };
 
 
@@ -71,6 +78,14 @@ namespace Hydrogen
         HYD LightCollection& operator=(const LightCollection& pOther) noexcept;
         HYD LightCollection& operator=(LightCollection&&      pOther) noexcept;
         
+        /*
+            Iterators
+        */
+
+        HYD inline std::vector<Light>::iterator begin() {return m_Lights.begin();}
+        HYD inline std::vector<Light>::iterator end()   {return m_Lights.end();}
+
+
         /*
             Purpose: Create the Collection(Allocate Descriptor Sets and uniform buffers)
         */
@@ -98,10 +113,19 @@ namespace Hydrogen
         /*
             Access An Light inside the Collection
         */
-        HYD Light& AccessLight(
+        HYD const Light& AccessLight(
+            uint32 pIndex
+        ) const noexcept; 
+
+        HYD Light& EditLight(
             uint32 pIndex
         ) noexcept; 
 
+        /*
+            Purpose: Uploads Light data in uniform buffer:
+        */
+
+        HYD void UploadData() noexcept;
 
         HYD inline uint32 GetLightCount() const {return m_LightCount;}
 
@@ -111,6 +135,7 @@ namespace Hydrogen
         uint32                           m_LightCount      = 0;    
         HYD_ID_SPACE                     m_DescriptorPool  = 0;
         HYD_ID_SPACE                     m_DescriptorSetID = 0;
+        bool                             m_IsDirty         = false;
     private:
         friend class Scene;
     };

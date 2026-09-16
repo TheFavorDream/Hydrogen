@@ -75,6 +75,7 @@ namespace UI
 
         HYD inline bool IsUIEvent() const {return m_ImGuiIO->WantCaptureKeyboard || m_ImGuiIO->WantCaptureMouse;}
 
+        HYD inline ImGuiIO& GetImGuiIO() {return *m_ImGuiIO;}
 
     private: // internal Vars
 

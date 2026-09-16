@@ -61,7 +61,7 @@ namespace Internal
         Buffer Code;
         if (!pConf.Path.empty())
         {
-            Code = Hydrogen::Internal::FileSys::ReadFile(pConf.Path);
+            Code = Hydrogen::FileSys::ReadFile(pConf.Path);
 
             if (!Code.GetPtr())
                 return HYD_FAILED;

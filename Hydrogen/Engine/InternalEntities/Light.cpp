@@ -5,13 +5,15 @@ namespace Hydrogen
 {
 
     Light::Light(
-        VecF3 pPosition,
-        VecF3 pColor,
-        VecF3 pAmbient,  //= VecF3(0.05f),
-        VecF3 pDiffuse , //= VecF3(1.0f),
-        VecF3 pSpecular  //= VecF3(1.0f)  
+        std::string pName,
+        VecF3       pPosition,
+        VecF3       pColor,
+        VecF3       pAmbient,  //= VecF3(0.05f),
+        VecF3       pDiffuse , //= VecF3(1.0f),
+        VecF3       pSpecular  //= VecF3(1.0f)  
     ) noexcept
-        : m_Position(pPosition),
+        : m_Name(pName),
+          m_Position(pPosition),
           m_Color(pColor),
           m_Ambient(pAmbient),
           m_Diffuse(pDiffuse),
@@ -98,13 +100,7 @@ namespace Hydrogen
             m_DescriptorSetID
         );
 
-        for (uint32 FrameIndex = 0 ; FrameIndex < Renderer::Self().FramesInFlight() ; ++FrameIndex)
-        {
-            m_UniBuffer->at(FrameIndex).UploadData(
-                m_Lights.data(),
-                BuffSize
-            );
-        }
+        UploadData();
         return HYD_OK;
     }
 
@@ -119,6 +115,7 @@ namespace Hydrogen
         return HYD_OK;
     }
 
+
     /*
         Purpose: Bind the Entire Light Collection to the specified Descriptor Set
     */
@@ -126,17 +123,75 @@ namespace Hydrogen
         const Internal::Vulkan::PipelineLayout& pPipelineLayout 
     ) noexcept
     {
+
+        if (m_IsDirty)
+        {
+            //Reupload Light data:
+            UploadData();
+        }
+
+
        Renderer::Self().AccessUniformBuffer(m_UniBuffer).Bind(
             pPipelineLayout
        );
     }
 
-    Light& LightCollection::AccessLight(
+    const Light& LightCollection::AccessLight(
         uint32 pIndex
-    ) noexcept
+    ) const noexcept
     {
         ASSERT(pIndex < m_Lights.size(), "Light Collection: Out of Range");
         return m_Lights.at(pIndex);
     } 
+
+    Light& LightCollection::EditLight(
+        uint32 pIndex
+    ) noexcept
+    {
+        ASSERT(pIndex < m_Lights.size(), "Light Collection: Out of Range");
+        m_IsDirty = true;
+        return m_Lights.at(pIndex);
+    }
+
+    /*
+        Purpose: Uploads Light data in uniform buffer:
+    */
+
+    void LightCollection::UploadData() noexcept
+    {
+        struct Data
+        {
+            alignas(16) VecF3        Position;
+            alignas(16) VecF3        Color;
+            alignas(16) VecF3        Ambient;
+            alignas(16) VecF3        Diffuse;
+            alignas(16) VecF3        Specular;
+        }; 
+
+    
+        std::vector<Data> Cache; Cache.resize(m_Lights.size());
+        for (uint32 LightIndex = 0 ; LightIndex < m_LightCount ; ++LightIndex)
+        {
+            Cache.at(LightIndex) = Data
+                                   {
+                                        .Position = m_Lights.at(LightIndex).m_Position,
+                                        .Color    = m_Lights.at(LightIndex).m_Color,
+                                        .Ambient  = m_Lights.at(LightIndex).m_Ambient,
+                                        .Diffuse  = m_Lights.at(LightIndex).m_Diffuse,
+                                        .Specular = m_Lights.at(LightIndex).m_Specular
+                                    };
+            
+        }
+
+        for (uint32 FrameIndex = 0 ; FrameIndex < Renderer::Self().FramesInFlight() ; ++FrameIndex)
+        {
+            m_UniBuffer->at(FrameIndex).UploadData(
+                Cache.data(),
+                Cache.size()*sizeof(Data)
+            );
+        }
+
+        m_IsDirty = false;
+    }
 
 };

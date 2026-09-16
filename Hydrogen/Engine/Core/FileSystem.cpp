@@ -3,9 +3,6 @@
 
 namespace Hydrogen
 {
-namespace Internal
-{
-
 
 	Buffer FileSys::ReadFile(const std::string & pPath)
 	{
@@ -44,5 +41,5 @@ namespace Internal
 		return SizeInBytes;
 	}
 	
-};
+
 };

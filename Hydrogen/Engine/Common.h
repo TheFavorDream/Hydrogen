@@ -131,6 +131,7 @@ namespace Hydrogen
 	class  Mouse;
 	class  Keyboard;
 	
+	class  FileSys;
 	//UI Related:
 	namespace UI
 	{
@@ -145,10 +146,9 @@ namespace Hydrogen
 		class TextInput;
 		class Table;
 	};
-
+	
 	namespace Internal
 	{
-		class  FileSys;
 		class  Memeory;
 
 		//Vulkan:

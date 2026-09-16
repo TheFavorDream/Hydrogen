@@ -12,10 +12,6 @@
 
 namespace Hydrogen
 {
-namespace Internal 
-{
-
-
 	class FileSys
 	{
 	public:
@@ -26,5 +22,4 @@ namespace Internal
 		HYD static uint64 FileSize(std::ifstream& pFileHandle);
 
 	};
-};
 };

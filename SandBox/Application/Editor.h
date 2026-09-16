@@ -24,10 +24,21 @@ public:
 	) override; 
 
 
-	static void GridController() noexcept; 
+	static void GridController()  noexcept; 
+	static void LightController() noexcept; 
+
 
 public:
 	static float FogQuad     ;
 	static float FogLinear   ;
 	static float FogConstant ;
+
+	static Hydrogen::Ptr<Hydrogen::LightCollection> Lights; 
+
+	bool IsGridWindow   = false;
+	bool IsLightsWindow = true;
+
+
+	ImFont* RegularFont = nullptr;
+
 };

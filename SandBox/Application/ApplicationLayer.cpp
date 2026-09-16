@@ -37,6 +37,7 @@ void AppLayer::Setup()
 	//Set Up the Lights:
 	m_Scene->GetLightCollection().CreateLight(
 		Hydrogen::Light(
+			"MainLight1",
 			Hydrogen::VecF3(0.0f, 5.0f, 0.0f),
 			Hydrogen::VecF3(1.0f)
 		)
@@ -91,6 +92,7 @@ void AppLayer::Event(
 void AppLayer::Update()
 {
 	//Update Grid Values:
+	Editor::Lights = &m_Scene->GetLightCollection();
 	m_Grid.SetFog(
 		Editor::FogQuad, Editor::FogLinear, Editor::FogConstant
 	);
