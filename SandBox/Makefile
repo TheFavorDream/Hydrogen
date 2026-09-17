@@ -162,7 +162,7 @@ $(OBJDIR)/Application.o: Application/Application.cpp
 $(OBJDIR)/ApplicationLayer.o: Application/ApplicationLayer.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/Editor.o: Application/Editor.cpp
+$(OBJDIR)/Editor.o: Application/UI/Editor.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/main.o: main.cpp

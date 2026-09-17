@@ -91,11 +91,11 @@ namespace Hydrogen
 	{
 
 		//if (m_Transform.IsDirty)
-		MatF4 Matrix = Transformation::CalculateMatrix(pTransform).Transpose();
+		MatF4 Matrix = Transformation::CalculateMatrix(pTransform);
 
 		for (auto& pri : m_Primitives)
 		{
-			pri.m_Transform = Matrix;//.Transpose();
+			pri.m_Transform = Matrix.Transpose();
 			
 
 			Renderer::Self().AccessUniformBuffer(pUniform).UploadData(pri.m_Transform.GetPointer(), sizeof(MatF4), 0);

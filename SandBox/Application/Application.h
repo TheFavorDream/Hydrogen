@@ -2,7 +2,7 @@
 
 #include "../../Hydrogen//Hydrogen.h"
 #include "ApplicationLayer.h"
-#include "Editor.h"
+#include "UI/Editor.h"
 
 class Application : public Hydrogen::Core
 {

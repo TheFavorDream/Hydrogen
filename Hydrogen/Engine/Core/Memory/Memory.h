@@ -138,6 +138,7 @@ namespace Hydrogen
 		HYD Buffer SubBuffer(uint64 pLength, uint64 pOffset=0);
 
 		HYD void Free();
+		HYD void Reset(); //Resets the m_Ptr & m_ByteLength. Does NOT deallocate anything!
 
 	private:
 		Ptr<uint8> m_Ptr        = nullptr;

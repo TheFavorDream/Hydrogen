@@ -15,6 +15,7 @@
 #include "../Camera/Camera.h"
 #include "Xenon/include/Xenon.h"
 #include "../InternalEntities/Light.h"
+#include <vector>
 
 
 namespace Hydrogen
@@ -57,9 +58,11 @@ namespace Hydrogen
 		HYD inline std::vector<Node>::iterator end()   const { return m_Children.end(); }
 
 
-		inline HYD_STRING&     GetName()	  { return m_Name; }
-		inline Instance<Mesh>& GetMesh()	  { return m_Mesh; }
-		inline Transformation& GetTransform() { return m_Transform; }
+		HYD inline HYD_STRING&     GetName()	  { return m_Name; }
+		HYD inline Instance<Mesh>& GetMesh()	  { return m_Mesh; }
+		HYD inline Transformation& GetTransform() { return m_Transform; }
+
+		HYD inline bool HasChild() {return m_Children.size();} 
 
 		HYD void Destroy() noexcept;
 
@@ -115,9 +118,10 @@ namespace Hydrogen
 			SceneFlags							 pFlags = HYD_SCENE_NONE
 		) noexcept;
 
-		HYD inline Camera& 		    GetCamera()    		 { return m_Camera; }
-		HYD inline Transformation&  GetTransform() 		 { return m_Transform;}
-		HYD inline LightCollection& GetLightCollection() { return m_Lights;}
+		HYD inline Camera& 		     GetCamera()    		 { return m_Camera; }
+		HYD inline Transformation&   GetTransform() 		 { return m_Transform;}
+		HYD inline LightCollection&  GetLightCollection() { return m_Lights;}
+		HYD inline std::vector<Node> GetChildren() {return m_Children;}
 
 	private:
 

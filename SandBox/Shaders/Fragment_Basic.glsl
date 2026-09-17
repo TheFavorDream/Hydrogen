@@ -30,7 +30,7 @@ layout(set = 2, binding = 0) uniform Light
 void main()
 {
 
-  
+  /*
   vec3 LightDir  = normalize(-(FragPos - light.Position));
   vec3 NormalVec = normalize(TBN * (2.0f*(texture(NormalMap, TexCoord0).rgb) - vec3(1.0f))); 
 
@@ -40,10 +40,10 @@ void main()
   
 
   vec3 FinalColor = (Diffuse + Ambient) * texture(BaseColor, TexCoord0).xyz;
-
+  */
   
   
-  OutColor      = vec4(FinalColor, 1.0f);
-  //OutColor = vec4(1.0f);
+  //OutColor      = vec4(FinalColor, 1.0f);
+  OutColor      = vec4(TexCoord0.xyx, 1.0f);
   gl_FragDepth  = 1.0f - gl_FragCoord.z;
 }

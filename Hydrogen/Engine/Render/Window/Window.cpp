@@ -122,13 +122,20 @@ namespace Hydrogen
 
 	void Window::UpdateViewport() noexcept
 	{
-		glfwGetFramebufferSize(m_Window, &m_ViewportSize.X, &m_ViewportSize.Y);
+		int32 Width, Height; 
+		glfwGetWindowSize(m_Window, &Width, &Height);
+
+
+		m_ViewportSize.X = Width*(m_ViewportRatios.X/100.0f);
+		m_ViewportSize.Y = Height*(m_ViewportRatios.Y/100.0f);
+		m_ViewportSize.Z = Width*(m_ViewportRatios.Z/100.0f);
+		m_ViewportSize.W = Height*(m_ViewportRatios.W/100.0f);
 
 		VkViewport CurrantViewport{
-			.x=0.0f,
-			.y=0.0f,
-			.width    = (float)m_ViewportSize.X*(m_ViewportRatios.X/100.0f),
-			.height   = (float)m_ViewportSize.Y*(m_ViewportRatios.Y/100.0f),
+			.x		  = 0.0f,//(float)m_ViewportSize.Z,
+			.y		  = 0.0f,//(float)m_ViewportSize.W,
+			.width    = float(Width),//(float)m_ViewportSize.X,
+			.height   = float(Height),//(float)m_ViewportSize.Y,
 			.minDepth = 0.0f,
 			.maxDepth = 1.0f
 		};
@@ -139,8 +146,8 @@ namespace Hydrogen
 				.y = 0
 			},
 			.extent = VkExtent2D{
-				.width  = static_cast<uint32>(m_ViewportSize.X),
-				.height = static_cast<uint32>(m_ViewportSize.Y)
+				.width  = (uint32)Width,//static_cast<uint32>(m_ViewportSize.X),
+				.height = (uint32)Height//static_cast<uint32>(m_ViewportSize.Y)
 			}
 		};
 
@@ -159,22 +166,33 @@ namespace Hydrogen
 		return glfwWindowShouldClose(m_Window);
 	}
 
-	int Window::SetViewportRatio(float pWidth, float pHeight)
+	void Window::SetViewportRatio(
+		float pWidth,
+		float pHeight
+	) noexcept
 	{
 		if (pWidth < 0.0f || pHeight < 0.0f)
 		{
 			Log::SetError("Can't use nagative value", HYD_INVALID_VALUE, __FILE__, __LINE__);
-			return HYD_INVALID_VALUE;
+			return;
 		}
 		m_ViewportRatios.X = pWidth;
 		m_ViewportRatios.Y = pHeight;
 
 		m_ViewportSize.X = (m_ViewportRatios.X / 100.0f)*float(m_Width);
 		m_ViewportSize.Y = (m_ViewportRatios.Y / 100.0f)*float(m_Height);
-		m_ViewportSize.Z = 0.0f;
-		m_ViewportSize.W = (m_Height - m_ViewportSize.Y);
+	}
 
-		return HYD_OK;
+	void Window::SetViewportPositionWithRatio(
+		float pX,
+		float pY
+	) noexcept
+	{
+		m_ViewportRatios.Z = pX;
+		m_ViewportRatios.W = pY;
+
+		m_ViewportSize.Z = (pX / 100.0f)*float(m_Width);
+		m_ViewportSize.W = (pY / 100.0f)*float(m_Height);
 	}
 
 	bool Window::IsMouseInViewPort()

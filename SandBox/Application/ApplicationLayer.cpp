@@ -1,6 +1,6 @@
 #include "ApplicationLayer.h"
 #include <glm/ext/matrix_float4x4.hpp>
-#include "Editor.h"
+#include "UI/Editor.h"
 
 
 
@@ -51,8 +51,8 @@ void AppLayer::Setup()
 
 
 	Xenon::Model model = Core::Load(
-		"/home/Volta/Desktop/Dev/Hydrogen/SandBox/Resources/Models/Pistol/scene.gltf",
-		Xenon::LF_BASE_NORMAL_ONLY
+		"/home/Volta/Desktop/Dev/Hydrogen/SandBox/Resources/Models/Interior2/scene.gltf",
+		Xenon::LF_NO_MATERIAL
 	);
 	
 
@@ -60,14 +60,16 @@ void AppLayer::Setup()
 		model[0] //first scene
 	);
 
-	Hydrogen::Quaternion Rot;  Rot.Euler(0.0f, 180.0f, 0.0f);
+	Hydrogen::Quaternion Rot;  Rot.Euler(0.0f, 0.0f, 90.0f);
 	//m_Scene->GetTransform().t_Rotate = Rot;
-	m_Scene->GetTransform().t_Scale = Hydrogen::VecF3(0.1f);
+	m_Scene->GetTransform().t_Scale = Hydrogen::VecF3(0.5f);
 
 
 
 	m_Grid.GenerateGrid();
 
+
+	SceneGraph::SetCurrentScene(m_Scene.GetPtr());
 }
 
 
@@ -92,7 +94,6 @@ void AppLayer::Event(
 void AppLayer::Update()
 {
 	//Update Grid Values:
-	Editor::Lights = &m_Scene->GetLightCollection();
 	m_Grid.SetFog(
 		Editor::FogQuad, Editor::FogLinear, Editor::FogConstant
 	);
@@ -103,10 +104,13 @@ void AppLayer::Render(
 	Hydrogen::FrameRenderConfig& pRenderConf
 )
 {
-	//Render the Grid
-	pRenderConf.PushInstruction(
-		m_Grid.Render()
-	);
+	if (Editor::RenderGrid)
+	{
+		//Render the Grid
+		pRenderConf.PushInstruction(
+			m_Grid.Render()
+		);
+	}
 	//Render the Scene:
 	pRenderConf.PushInstruction(
 		m_Scene->Render()

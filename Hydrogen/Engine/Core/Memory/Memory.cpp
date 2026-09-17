@@ -1,6 +1,7 @@
 #include "Memory.h"
 #include "Log/Log.h"
 
+#include <cstddef>
 #include <iostream>
 
 
@@ -110,6 +111,11 @@ namespace Hydrogen
 		}
 	}
 
+	void Buffer::Reset() //Resets the m_Ptr & m_ByteLength. Does NOT deallocate anything!
+	{
+		m_Ptr 		 = nullptr; 
+		m_ByteLength = 0;
+	}
 
 
 
