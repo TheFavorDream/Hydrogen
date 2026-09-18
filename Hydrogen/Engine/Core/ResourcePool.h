@@ -530,7 +530,7 @@ namespace Hydrogen
 		Type&	  Get() { return   *m_Obj; }
 		Ptr<Type> GetPtr() { return m_Obj; }
 
-		inline bool IsNull() 
+		inline bool IsNull() const
 		{
 			return (m_Obj == nullptr);
 		}

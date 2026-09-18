@@ -30,9 +30,20 @@ public:
 		Purpose: Node Editor Window
 	*/
 	static void NodeEditor(
-		Hydrogen::Node& pNode
+		Hydrogen::Node& pNode,
+		ImVec2 			pPos,
+	    ImVec2          pSize
 	) noexcept;
 
+
+	/*
+		Purpose: Node Editor Window
+	*/
+	static void MeshEditor(
+		Hydrogen::Mesh& pMesh,
+		ImVec2 			pPos,
+	    ImVec2          pSize
+	) noexcept;
 
 	/*
 		Purpose: Light Editor 
@@ -52,17 +63,43 @@ private:
 		ImGuiTreeNodeFlags  pFlags
 	) noexcept;
 
+	/*
+		Purpose: Renders the Node with a mesh
+	*/
+	static void DrawTreeMesh(
+		Hydrogen::Mesh& 	pMesh,
+		ImGuiTreeNodeFlags  pFlags
+	) noexcept;
+
 public:
 	static Hydrogen::Ptr<Hydrogen::Scene> s_CurrentScene;
 	static Hydrogen::Ptr<Hydrogen::Node>  s_SelectedNode;
 	static Hydrogen::Ptr<Hydrogen::Light> s_SelectedLight;
-
+	static Hydrogen::Ptr<Hydrogen::Mesh>  s_SelectedMesh;
+ 
 
 	static 	bool 						  s_IsNodeEditor;
 	static 	bool 						  s_IsLightEditor; 		
-
+	static  bool						  s_IsMeshEditor;
 };
 
+/*
+	Purpose: Time Line
+*/
+
+class TimeLine
+{
+public:
+
+	 TimeLine() = delete;
+	~TimeLine() = delete;
+
+
+	static void TimeLineWindow() noexcept;
+
+private:
+	
+};
 
 class Editor : public Hydrogen::Layer
 {
@@ -95,6 +132,7 @@ private:
 public:
 	bool IsGridWindow       = false;
 	bool IsSceneGraghWindow = true;
+	bool IsTimeLineWindow   = true;
 
 
 	static bool  RenderGrid;

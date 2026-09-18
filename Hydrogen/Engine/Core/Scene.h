@@ -62,6 +62,8 @@ namespace Hydrogen
 		HYD inline Instance<Mesh>& GetMesh()	  { return m_Mesh; }
 		HYD inline Transformation& GetTransform() { return m_Transform; }
 
+		HYD inline bool HasMesh() const {return !m_Mesh.IsNull();}
+
 		HYD inline bool HasChild() {return m_Children.size();} 
 
 		HYD void Destroy() noexcept;
@@ -120,8 +122,8 @@ namespace Hydrogen
 
 		HYD inline Camera& 		     GetCamera()    		 { return m_Camera; }
 		HYD inline Transformation&   GetTransform() 		 { return m_Transform;}
-		HYD inline LightCollection&  GetLightCollection() { return m_Lights;}
-		HYD inline std::vector<Node> GetChildren() {return m_Children;}
+		HYD inline LightCollection&  GetLightCollection() 	 { return m_Lights;}
+		HYD inline std::vector<Node> GetChildren() 		  	 {return m_Children;}
 
 	private:
 

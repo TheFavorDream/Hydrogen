@@ -9,11 +9,10 @@ Application::Application()
 {
 
 	float ViewportX = 80.0f;
-	float ViewportY = 80.0f;
+	float ViewportY = 85.0f;
 
-	Hydrogen::Renderer::Self().GetWindow().SetViewportRatio(ViewportX, ViewportY);
+	Hydrogen::Renderer::Self().GetWindow().SetViewportRatio(ViewportX, ViewportY, 20.0f, 0.0f);
 
-	Hydrogen::Renderer::Self().GetWindow().SetViewportPositionWithRatio(100.0f-ViewportX, 0.0f);
 
 	m_AppLayer = new AppLayer();
 	m_Editor   = new Editor();

@@ -124,6 +124,11 @@ namespace Hydrogen
 		return scene;
 	}
 
+	void Core::Terminate() noexcept
+	{
+		m_Running = false;
+	}
+
 
 	void Core::SetDeltaTime(float pDelta)
 	{

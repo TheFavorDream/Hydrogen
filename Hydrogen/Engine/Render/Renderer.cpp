@@ -1,6 +1,7 @@
 
 #include "Vulkan/Pipeline.h"
 #include <cstdint>
+#include <vulkan/vulkan_core.h>
 #define RENDERER_H
 #include "Renderer.h"
 #include "HydPch.h"
@@ -181,6 +182,21 @@ namespace Hydrogen
 		GlobalRenderCommandBuffer().ResetCommandBuffer();
 		GlobalRenderCommandBuffer().RecordCommandBuffer();
 		
+		//Update Viewport & Scissoring:
+		VkViewport CurrentViewport = m_Window.GetViewportSize();		
+		VkRect2D   CurrentScissor  = m_Window.GetViewportScissor();
+
+		vkCmdSetViewport(
+			Renderer::Self().GlobalRenderCommandBuffer().GetHandle(),
+			 0, 1, &CurrentViewport
+		);
+
+		vkCmdSetScissor(
+			Renderer::Self().GlobalRenderCommandBuffer().GetHandle(),
+			0, 1, &CurrentScissor
+		);
+
+		
 		m_RenderPass.BeginRenderPass(
 			m_FrameBuffers[ImageIndex],
 			VkRect2D{VkOffset2D{0, 0}, m_Swapchain.GetImageExtent()},
@@ -188,7 +204,8 @@ namespace Hydrogen
 		);
 		
 		
-		m_Window.UpdateViewport();		
+
+
 		
 		for (const auto& renderConf : pConfs)
 		{
@@ -266,7 +283,7 @@ namespace Hydrogen
 
 		m_FrameIndex = (m_FrameIndex + 1) % m_FramesInFlights;
 
-		Core::s_Self->m_Running = !m_Window.ShouldWindowClose();
+		Core::s_Self->m_Running &= !m_Window.ShouldWindowClose();
 	}
 
 /*

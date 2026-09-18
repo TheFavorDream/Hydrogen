@@ -33,38 +33,72 @@ namespace Hydrogen
 	public:
 
 		//Window Callback functions:
-		static void ResizeCallback  (GLFWwindow* pWindow, int32 pWidth, int32 pHeight);
-		static void MaximizeCallback(GLFWwindow* pWindow, int32 pMaximized);
-		static void FocusCallback   (GLFWwindow* pWindow, int32 pFocus);
+		static void ResizeCallback  (Ptr<GLFWwindow> pWindow, int32 pWidth, int32 pHeight);
+		static void MaximizeCallback(Ptr<GLFWwindow> pWindow, int32 pMaximized);
+		static void FocusCallback   (Ptr<GLFWwindow> pWindow, int32 pFocus);
 
 	public:
 		
-		HYD Window();
-		HYD Window(int32 pWidth, int32 pHeight, const char* pTitle);
-		HYD Window(WindowInfo pCInfo);
-		HYD ~Window();
+		HYD Window() noexcept;
 
-		HYD uint32 MakeWindow(int32 pWidth, int32 pHeight, const char* pTitle);
-		HYD uint32 CreateVulkanSurface(VkInstance pVkInstance) noexcept;
-		void 	   DestroyWindow(VkInstance pVkInstance)       noexcept;
+		HYD Window(
+			int32 	    pWidth,
+			int32 	    pHeight,
+			const char* pTitle
+		) noexcept;
+		
+		HYD Window(
+			WindowInfo pCInfo
+		) noexcept;
+
+		HYD ~Window() noexcept;
+
+		/*
+			Purpose: Create the window
+		*/
+		HYD uint32 MakeWindow(
+			int32 	    pWidth,
+			int32 	    pHeight,
+			const char* pTitle
+		) noexcept;
+
+		/*
+			Purpose: Create Vulkan Surface
+		*/
+		HYD uint32 CreateVulkanSurface(
+			VkInstance pVkInstance
+		) noexcept;
 
 
-		HYD void UpdateViewport() noexcept;
+		/*
+			Purpose: Destroy the Window
+		*/
+		void DestroyWindow(
+			VkInstance pVkInstance
+		) noexcept;
 
-		HYD int  SetViewportSize(int32 pWidth, int32 pHeight, int32 pStartX =0, int32 pStartY=0);
-		HYD bool ShouldWindowClose();
 
+		HYD VkViewport GetViewportSize()    noexcept;
+		HYD VkRect2D   GetViewportScissor() noexcept;
+
+
+		HYD int  SetViewportSize(
+			int32 pWidth,
+			int32 pHeight,
+			int32 pStartX = 0,
+			int32 pStartY = 0
+		) noexcept;
+		
 		HYD void SetViewportRatio(
 			float pWidth,
-			float pHeight
+			float pHeight,
+			float pX 		= 0.0f,
+			float pY 		= 0.0f
 		)  noexcept;
 		
-		HYD void SetViewportPositionWithRatio(
-			float pX,
-			float pY
-		) noexcept;
-		 
-		HYD bool IsMouseInViewPort();
+		
+		HYD bool ShouldWindowClose();
+		HYD bool IsMouseInViewPort() noexcept;
 		 
 
 
@@ -72,19 +106,19 @@ namespace Hydrogen
 			VkPhysicalDevice pDevice
 		) noexcept;
 
-		HYD inline GLFWwindow* GetHandle()   const { return m_Window; }
-		HYD inline const char* GetTitle()    const { return m_Title; }
-		HYD inline int32  GetWidth()		     const { return m_Width; }
-		HYD inline int32  GetHeight()         const { return m_Height; }
-		HYD inline uint32 GetFrameBufferWidth()		     const { return m_ViewportSize.X; }
-		HYD inline uint32 GetFrameBufferHeight()         const { return m_ViewportSize.Y; }
-		HYD inline VkSurfaceKHR GetSurface() const {return m_Surface;}
 
-		HYD inline uint32 GetViewportWidth()  const {return m_ViewportSize.X;}
-		HYD inline uint32 GetViewportHeight() const {return m_ViewportSize.Y;}
+		HYD inline Ptr<GLFWwindow> GetHandle()   const { return m_Window; }
+		HYD inline const char*     GetTitle()    const { return m_Title; }
+		HYD inline VkSurfaceKHR    GetSurface()  const {return m_Surface;}
 
-		HYD inline uint32 GetWindowWidth () const {return m_Width;}
-		HYD inline uint32 GetWindowHeight() const {return m_Height;}
+
+		HYD inline float GetViewportPosX()   const {return m_ViewportSize.x;}
+		HYD inline float GetViewportPosY()   const {return m_ViewportSize.y;}
+		HYD inline float GetViewportWidth()  const {return m_ViewportSize.width;}
+		HYD inline float GetViewportHeight() const {return m_ViewportSize.height;}
+
+		HYD inline uint32 GetWindowWidth () const {return m_WindowSize.X;}
+		HYD inline uint32 GetWindowHeight() const {return m_WindowSize.Y;}
 
 
 	public:
@@ -92,17 +126,19 @@ namespace Hydrogen
 
 	private:
 
-		VecF4 		m_ViewportRatios;
+		const char*  	 m_Title;
+		Ptr<GLFWwindow>  m_Window;
+		VkSurfaceKHR 	 m_Surface;
 
-		Vec4<int32> m_ViewportSize;
-
-		int32 m_Width, m_Height;
-		const char*  m_Title;
-		GLFWwindow*  m_Window;
-		VkSurfaceKHR m_Surface;
+		VecF4      m_ViewportRatios;
+		VkViewport m_ViewportSize;
+		VkRect2D   m_Scissor;
+		VecI2 m_WindowSize;
 
 
+	private:
 		friend class Renderer;
+	
 	private:
 		static Window* s_CurrentWindow;
 	};

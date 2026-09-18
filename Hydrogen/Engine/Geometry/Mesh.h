@@ -39,6 +39,11 @@ namespace Hydrogen
 		HYD uint32     PushPremitive(const Primitive& pPrimitive);
 		HYD Primitive& GetPrimitve(uint64 pIndex);
 
+		HYD void SetMeshRenderingStatus(
+			bool pEnable
+		) noexcept;
+
+		HYD inline bool& MeshEnable() {return m_Enable;} 
 		HYD inline const std::string GetName() { return m_Name; }
 
 		HYD void Render(
@@ -50,8 +55,9 @@ namespace Hydrogen
 
 
 	private:
-		std::string				m_Name; 
+		std::string						m_Name; 
 		mutable HYD_VEC<Primitive>      m_Primitives;
+		bool 						    m_Enable = true;
 	};
 
 };

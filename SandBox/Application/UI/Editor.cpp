@@ -1,5 +1,9 @@
 #include "Editor.h"
+#include <GLFW/glfw3.h>
+#include <cstddef>
+#include <ctime>
 #include <stack>
+#include <vulkan/vulkan_core.h>
 
 
 bool  Editor::RenderGrid  = true;
@@ -51,6 +55,28 @@ void Editor::Render(
     {
         if (ImGui::BeginMenu("File"))
         {
+            
+            if (ImGui::MenuItem("New"))
+            {
+
+            }
+
+            
+            if (ImGui::MenuItem("Open"))
+            {
+
+            }
+
+            
+            if (ImGui::MenuItem("Load GLTF"))
+            {
+
+            }
+
+            if (ImGui::MenuItem("Exit"))
+            {
+                Hydrogen::Core::s_Self->Terminate();
+            }
 
             ImGui::EndMenu();
         }
@@ -62,10 +88,17 @@ void Editor::Render(
                 IsGridWindow = !IsGridWindow;
             }
             
-            if (ImGui::MenuItem("Scene Graph"))
+            if (ImGui::MenuItem("Resources"))
             {
-                IsSceneGraghWindow = !IsSceneGraghWindow;
+
             }
+
+            if (ImGui::MenuItem("Renderer"))
+            {
+
+            }
+
+
 
             ImGui::EndMenu();
         }
@@ -80,6 +113,8 @@ void Editor::Render(
         Editor::GridController();
     if (IsSceneGraghWindow)
         SceneGraph::DrawGraph();
+    if (IsTimeLineWindow)
+        TimeLine::TimeLineWindow();
 
     Hydrogen::UI::Core::Self().Render();
 } 
@@ -107,7 +142,8 @@ void Editor::SetStyle() noexcept
     ImGuiStyle& style = ImGui::GetStyle();
     style.Colors[ImGuiCol_Text]                  = ImVec4(0.86f, 0.93f, 0.89f, 0.78f);
     style.Colors[ImGuiCol_TextDisabled]          = ImVec4(0.86f, 0.93f, 0.89f, 0.28f);
-    style.Colors[ImGuiCol_WindowBg]              = ImVec4(0.13f, 0.14f, 0.17f, 1.00f);
+    style.Colors[ImGuiCol_WindowBg]              = ImVec4(0.02f, 0.02f, 0.02f, 1.00f);
+    /*
     style.Colors[ImGuiCol_Border]                = ImVec4(0.31f, 0.31f, 1.00f, 0.00f);
     style.Colors[ImGuiCol_BorderShadow]          = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
     style.Colors[ImGuiCol_FrameBg]               = ImVec4(0.20f, 0.22f, 0.27f, 1.00f);
@@ -142,6 +178,8 @@ void Editor::SetStyle() noexcept
     style.Colors[ImGuiCol_PlotHistogramHovered]  = ImVec4(0.92f, 0.18f, 0.29f, 1.00f);
     style.Colors[ImGuiCol_TextSelectedBg]        = ImVec4(0.92f, 0.18f, 0.29f, 0.43f);
     style.Colors[ImGuiCol_PopupBg]               = ImVec4(0.20f, 0.22f, 0.27f, 0.9f);
+    */
+    //style.Colors[ImGuiCol_ModalWindowDarkening]  = ImVec4(0.20f, 0.22f, 0.27f, 0.73f);
     //style.Colors[ImGuiCol_ModalWindowDarkening]  = ImVec4(0.20f, 0.22f, 0.27f, 0.73f);
 }
 
@@ -167,11 +205,14 @@ void Editor::GridController() noexcept
 
 //---------------------------------------------Scene Graph--------------------------------
 
+Hydrogen::Ptr<Hydrogen::Mesh>  SceneGraph::s_SelectedMesh  = nullptr;
 Hydrogen::Ptr<Hydrogen::Node>  SceneGraph::s_SelectedNode  = nullptr;
 Hydrogen::Ptr<Hydrogen::Light> SceneGraph::s_SelectedLight = nullptr;
 Hydrogen::Ptr<Hydrogen::Scene> SceneGraph::s_CurrentScene  = nullptr;
+
 bool                           SceneGraph::s_IsNodeEditor  = false;
 bool                           SceneGraph::s_IsLightEditor = false;
+bool                           SceneGraph::s_IsMeshEditor  = false;
 
 
 /*
@@ -188,20 +229,32 @@ void SceneGraph::DrawGraph() noexcept
 {
     static bool FirstTime = true;
 
-    float Width  = (float)Hydrogen::Renderer::Self().GetWindow().GetWindowWidth() * (20.0f/100.0f);
-    float Height = (float)Hydrogen::Renderer::Self().GetWindow().GetViewportHeight();
+    float BeginX = 0.0f;
+    float BeginY = 20.0f;
+
+    VkViewport viewport = Hydrogen::Renderer::Self().GetWindow().GetViewportSize();
+
+    float WindowHeight = (float)Hydrogen::Renderer::Self().GetWindow().GetWindowHeight(); 
+
+    float Width  = (float)Hydrogen::Renderer::Self().GetWindow().GetWindowWidth() - viewport.width;
+    float Height = viewport.height*(80.0f/100.0f);
 
     if (FirstTime)
     {
+        Hydrogen::Log::SetInfo(
+            Hydrogen::Log::FmtStr("Width: %f, Height: %f", Width, Height)
+        );
+
         ImGui::SetNextWindowSize(
             ImVec2(Width, Height)
         );
-        FirstTime = false;
+
+        s_SelectedNode = s_CurrentScene;
+        s_IsNodeEditor = true;
+        FirstTime      = false;
     }
 
     //Calculate Position:
-    float BeginX = 0.0f;
-    float BeginY = 20.0f;
 
     ImGui::SetNextWindowPos(ImVec2(BeginX, BeginY));
     if (!ImGui::Begin("Scene Graph", nullptr, ImGuiWindowFlags_NoCollapse) || s_CurrentScene == nullptr)
@@ -211,16 +264,28 @@ void SceneGraph::DrawGraph() noexcept
     }
 
 
-    DrawTreeNode(*s_CurrentScene, ImGuiTreeNodeFlags_DrawLinesFull);
+    DrawTreeNode(*s_CurrentScene, ImGuiTreeNodeFlags_DrawLinesFull | ImGuiTreeNodeFlags_DefaultOpen);
     ImGui::End();
 
 
     if (s_IsNodeEditor)
-        SceneGraph::NodeEditor(*s_SelectedNode);
+        SceneGraph::NodeEditor(
+        *s_SelectedNode,
+           ImVec2(0.0f, Height+20.0f),
+          ImVec2(Width, WindowHeight-Height+20.0f)
+        );
+
+
+    if (s_IsMeshEditor)
+        SceneGraph::MeshEditor(
+            *s_SelectedMesh,
+            ImVec2(0.0f, Height+20.0f),
+            ImVec2(Width, WindowHeight-Height+20.0f)
+        );
+
     if (s_IsLightEditor)
         SceneGraph::LightEditor(*s_SelectedLight);
 
-    FirstTime = true;
 } 
 
 
@@ -237,13 +302,46 @@ void SceneGraph::DrawTreeNode(
             Hydrogen::Log::SetInfo(
                 Hydrogen::Log::FmtStr("Name:%s Selected", pNode.GetName().c_str())
             );
+            
+            s_IsMeshEditor  = false;
+            s_SelectedMesh  = nullptr;
+            
             s_SelectedNode = &pNode;
             s_IsNodeEditor = true;
         }
-
+        
+        if (pNode.HasMesh())
+            DrawTreeMesh(*pNode.GetMesh().GetPtr(), ImGuiTreeNodeFlags_Bullet);
+        
 
         for (auto& child : pNode)
             DrawTreeNode(child, pFlags);
+
+        ImGui::TreePop();
+    }
+}
+
+
+/*
+	Purpose: Renders the Node with a mesh
+*/
+void SceneGraph::DrawTreeMesh(
+	Hydrogen::Mesh& 	pMesh,
+	ImGuiTreeNodeFlags  pFlags
+) noexcept
+{
+    if (ImGui::TreeNodeEx(pMesh.GetName().c_str(), pFlags))
+    {
+
+        if (ImGui::IsItemClicked())
+        {
+            s_SelectedNode  = nullptr;
+            s_IsNodeEditor  = false;
+
+            s_IsMeshEditor  = true;
+            s_SelectedMesh  = &pMesh;
+            
+        }
 
         ImGui::TreePop();
     }
@@ -254,27 +352,81 @@ void SceneGraph::DrawTreeNode(
 */
 
 void SceneGraph::NodeEditor(
-	Hydrogen::Node& pNode
+	Hydrogen::Node& pNode,
+	ImVec2 			pPos,
+    ImVec2          pSize
 ) noexcept
 {
 
     static bool FirstTime = true;
     if (FirstTime)
     {
-        ImGui::SetNextWindowSize(ImVec2(300.0f, 200.0f));
+        ImGui::SetNextWindowSize(pSize);
         FirstTime = false;
     }
 
-    ImGui::Begin("Node Editor");
+    ImGui::SetNextWindowPos(pPos);
+    ImGui::Begin("Node Editor", nullptr, ImGuiWindowFlags_NoCollapse);
+
     ImGui::Text("Name:%s", pNode.GetName().c_str());
 
-
     //Node Transformation:
-
     Hydrogen::Transformation& trans = pNode.GetTransform();
-    ImGui::InputFloat3("Scale",     reinterpret_cast<float*>(&trans.t_Scale));
-    ImGui::InputFloat4("Rotate",    reinterpret_cast<float*>(&trans.t_Rotate));
-    ImGui::InputFloat3("Translate", reinterpret_cast<float*>(&trans.t_Translate));
+
+    ImGui::Text("Scale:");
+    ImGui::InputFloat3("##Scale",     reinterpret_cast<float*>(&trans.t_Scale));
+
+
+    const  char* RotateMethod[] = {"Quaternion", "Euler"};
+    static int32 Selection = 0;
+
+    ImGui::Combo("##RotateMethod", &Selection, RotateMethod, 2);
+
+    static float Rotation[4] = {trans.t_Rotate.X, trans.t_Rotate.Y, trans.t_Rotate.Z, trans.t_Rotate.W};
+    
+    ImGui::Text("Rotation:");
+    switch (Selection)
+    {
+    case 0: //Quaternion
+        ImGui::InputFloat4("##Rotate",    Rotation);
+        trans.t_Rotate = Hydrogen::Quaternion(Hydrogen::VecF3(Rotation[0], Rotation[1], Rotation[2]), Rotation[3]);
+        break;
+    case 1: //Euler
+        ImGui::InputFloat3("##Rotate", Rotation);
+        trans.t_Rotate = Hydrogen::Quaternion().Euler(Rotation[0], Rotation[1], Rotation[2]);
+        break;
+    }
+
+    ImGui::Text("Translation:");
+    ImGui::InputFloat3("##Translate", reinterpret_cast<float*>(&trans.t_Translate));
+
+    ImGui::End();
+}
+
+
+/*
+	Purpose: Node Editor Window
+*/
+void SceneGraph::MeshEditor(
+	Hydrogen::Mesh& pMesh,
+	ImVec2 			pPos,
+    ImVec2          pSize
+) noexcept
+{
+    static bool FirstTime = true;
+    if (FirstTime)
+    {
+        ImGui::SetNextWindowSize(pSize);
+        FirstTime = false;
+    }
+
+    ImGui::SetNextWindowPos(pPos);
+    ImGui::Begin("Mesh Editor", nullptr, ImGuiWindowFlags_NoCollapse);
+
+    ImGui::Text("Name:%s", pMesh.GetName().c_str());
+    
+    ImGui::Checkbox("Disable Mesh", &pMesh.MeshEnable());
+
 
     ImGui::End();
 }
@@ -333,3 +485,40 @@ void SceneGraph::LightEditor(
 
     ImGui::End();
 } 
+
+
+
+//-------------------------------------------Time Line----------------------------------------
+
+void TimeLine::TimeLineWindow() noexcept
+{
+
+    VkViewport viewport = Hydrogen::Renderer::Self().GetWindow().GetViewportSize();
+    
+    
+    
+    float WindowWidth  = Hydrogen::Renderer::Self().GetWindow().GetWindowWidth();
+    float WindowHeight = Hydrogen::Renderer::Self().GetWindow().GetWindowHeight();
+
+    float Height        = WindowHeight - viewport.height;
+    float Width         = viewport.width;
+
+    static bool FirstTime = true;
+    if (FirstTime)
+    {
+        ImGui::SetNextWindowSize(ImVec2(Width, Height));
+        FirstTime = false;
+    }
+
+    ImGui::SetNextWindowPos(ImVec2( WindowWidth - viewport.width,viewport.height));
+    if (ImGui::Begin("Time Line", nullptr, ImGuiWindowFlags_NoCollapse))
+    {
+
+       // float Values[10] = {1.0f, 2.0f, 3.0f, 2.0f, 1.0f, 2.0f, 3.0f, 2.0f, 1.0f, 2.0f}; 
+       // ImGui::PlotLines("Time:", Values, 10);
+
+        ImGui::End();
+    }
+
+}
+

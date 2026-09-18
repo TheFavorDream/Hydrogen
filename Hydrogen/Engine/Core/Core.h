@@ -34,6 +34,8 @@ namespace Hydrogen
 		static Xenon::Model Load(const std::string& pPath, uint32 pFlags=Xenon::LF_DEFAULT);
 
 
+		HYD void Terminate() noexcept;
+
 	protected:
 		HYD void Loop();
 	

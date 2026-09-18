@@ -33,7 +33,7 @@ namespace Hydrogen
 
 		HYD Quaternion operator*(const Quaternion& pOther) const;
 
-		HYD void Euler(float pX, float pY, float pZ) ;
+		HYD Quaternion Euler(float pX, float pY, float pZ) ;
 
 		//Calculates Rotation matrix of the quaternion:
 		HYD MatF4 CalculateMatrix() const;

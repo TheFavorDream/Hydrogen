@@ -563,8 +563,8 @@ const uint32 FragmentShaderSizeInBytes = 3524;
         Vec4<uint32> Viewport(
             0,
             0,
-            Renderer::Self().GetWindow().GetWidth(),
-            Renderer::Self().GetWindow().GetHeight()
+            Renderer::Self().GetWindow().GetViewportWidth(),
+            Renderer::Self().GetWindow().GetViewportHeight()
         );
 
         PipelineConf.SetViewport(Viewport);

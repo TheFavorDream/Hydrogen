@@ -44,12 +44,14 @@ namespace Hydrogen
 		return Quat;
 	}
 
-	void Quaternion::Euler(float pX, float pY, float pZ)
+	Quaternion Quaternion::Euler(float pX, float pY, float pZ)
 	{
-		X = SinA(pX / 2.0f)*CosA(pY / 2.0f)*CosA(pZ/2.0f) + CosA(pX / 2.0f)*SinA(pY / 2.0f)*SinA(pZ / 2.0f);
-		Y = CosA(pX / 2.0f)*SinA(pY / 2.0f)*CosA(pZ/2.0f) - SinA(pX / 2.0f)*CosA(pY / 2.0f)*SinA(pZ / 2.0f);
-		Z = SinA(pX / 2.0f)*SinA(pY / 2.0f)*CosA(pZ/2.0f) + CosA(pX / 2.0f)*CosA(pY / 2.0f)*SinA(pZ / 2.0f);
-		W = CosA(pX / 2.0f)*CosA(pY / 2.0f)*CosA(pZ/2.0f) - SinA(pX / 2.0f)*SinA(pY / 2.0f)*SinA(pZ / 2.0f);
+		Quaternion Quat;
+		Quat.X = SinA(pX / 2.0f)*CosA(pY / 2.0f)*CosA(pZ/2.0f) + CosA(pX / 2.0f)*SinA(pY / 2.0f)*SinA(pZ / 2.0f);
+		Quat.Y = CosA(pX / 2.0f)*SinA(pY / 2.0f)*CosA(pZ/2.0f) - SinA(pX / 2.0f)*CosA(pY / 2.0f)*SinA(pZ / 2.0f);
+		Quat.Z = SinA(pX / 2.0f)*SinA(pY / 2.0f)*CosA(pZ/2.0f) + CosA(pX / 2.0f)*CosA(pY / 2.0f)*SinA(pZ / 2.0f);
+		Quat.W = CosA(pX / 2.0f)*CosA(pY / 2.0f)*CosA(pZ/2.0f) - SinA(pX / 2.0f)*SinA(pY / 2.0f)*SinA(pZ / 2.0f);
+		return Quat;
 	}
 
 	MatF4 Quaternion::CalculateMatrix() const

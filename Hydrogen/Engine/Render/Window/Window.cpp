@@ -4,6 +4,7 @@
 #include "../Renderer.h"
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan_core.h>
+
 namespace Hydrogen
 {
 
@@ -32,31 +33,44 @@ namespace Hydrogen
 
 
 
-	Window::Window():
-		m_Window(NULL), m_Width(1000), m_Height(800), m_Title("Test")
+
+	Window::Window() noexcept :
+		m_Window(NULL), m_WindowSize(VecI2(0, 0)), m_Title("Test")
 	{
 		s_CurrentWindow = this;
 	}
 	
-	Window::Window(int32 pWidth, int32 pHeight, const char * pTitle):
-		m_Window(NULL), m_Width(pWidth), m_Height(pHeight), m_Title(pTitle)
+	Window::Window(
+		int32 		 pWidth,
+		int32 		 pHeight,
+		const char * pTitle
+	) noexcept:
+		m_Window(NULL),
+		m_WindowSize(VecI2(pWidth, pHeight)),
+		m_Title(pTitle)
 	{
 		s_CurrentWindow = this;
-		MakeWindow(m_Width, m_Height, m_Title);
+		MakeWindow(m_WindowSize.X, m_WindowSize.Y, m_Title);
 	}
 	
-	Window::Window(WindowInfo pCInfo)
+	Window::Window(
+		WindowInfo pCInfo
+	) noexcept
 	{
 		MakeWindow(pCInfo.Width, pCInfo.Height, pCInfo.Title);
 	}
 
 
-	Window::~Window()
+	Window::~Window() noexcept
 	{
 		//DestroyWindow(VK_NULL_HANDLE);
 	}
 	
-	uint32 Window::MakeWindow(int32 pWidth, int32 pHeight, const char* pTitle)
+	uint32 Window::MakeWindow(
+		int32 		pWidth,
+		int32 		pHeight,
+		const char* pTitle
+	) noexcept
 	{
 
 		
@@ -97,7 +111,9 @@ namespace Hydrogen
 		return HYD_OK;
 	}
 	
-	uint32 Window::CreateVulkanSurface(VkInstance pVkInstance) noexcept
+	uint32 Window::CreateVulkanSurface(
+		VkInstance pVkInstance
+	) noexcept
 	{
 		glfwCreateWindowSurface(pVkInstance, m_Window, VULKAN_ALLOCATION_CALLBACK, &m_Surface);
 		
@@ -112,54 +128,15 @@ namespace Hydrogen
 	}
 
 
-	void Window::DestroyWindow(VkInstance pVkInstance) noexcept
+	void Window::DestroyWindow(
+		VkInstance pVkInstance
+	) noexcept
 	{
 		vkDestroySurfaceKHR  (pVkInstance, m_Surface, VULKAN_ALLOCATION_CALLBACK);
 		glfwDestroyWindow(m_Window);
 		m_Window = NULL;
 	}
 
-
-	void Window::UpdateViewport() noexcept
-	{
-		int32 Width, Height; 
-		glfwGetWindowSize(m_Window, &Width, &Height);
-
-
-		m_ViewportSize.X = Width*(m_ViewportRatios.X/100.0f);
-		m_ViewportSize.Y = Height*(m_ViewportRatios.Y/100.0f);
-		m_ViewportSize.Z = Width*(m_ViewportRatios.Z/100.0f);
-		m_ViewportSize.W = Height*(m_ViewportRatios.W/100.0f);
-
-		VkViewport CurrantViewport{
-			.x		  = 0.0f,//(float)m_ViewportSize.Z,
-			.y		  = 0.0f,//(float)m_ViewportSize.W,
-			.width    = float(Width),//(float)m_ViewportSize.X,
-			.height   = float(Height),//(float)m_ViewportSize.Y,
-			.minDepth = 0.0f,
-			.maxDepth = 1.0f
-		};
-
-		VkRect2D Scissor{
-			.offset = VkOffset2D{
-				.x = 0,
-				.y = 0
-			},
-			.extent = VkExtent2D{
-				.width  = (uint32)Width,//static_cast<uint32>(m_ViewportSize.X),
-				.height = (uint32)Height//static_cast<uint32>(m_ViewportSize.Y)
-			}
-		};
-
-		vkCmdSetViewport(Renderer::Self().GlobalRenderCommandBuffer().GetHandle(), 0, 1, &CurrantViewport);
-		vkCmdSetScissor(Renderer::Self().GlobalRenderCommandBuffer().GetHandle(),0, 1, &Scissor);
-	}
-
-	int Window::SetViewportSize(int32 pWidth, int32 pHeight, int32 pStartX, int32 pStartY)
-	{
-		
-		return HYD_OK;
-	}
 
 	bool Window::ShouldWindowClose()
 	{
@@ -168,7 +145,9 @@ namespace Hydrogen
 
 	void Window::SetViewportRatio(
 		float pWidth,
-		float pHeight
+		float pHeight,
+		float pX, //= 0.0f,
+		float pY  //= 0.0f
 	) noexcept
 	{
 		if (pWidth < 0.0f || pHeight < 0.0f)
@@ -176,35 +155,58 @@ namespace Hydrogen
 			Log::SetError("Can't use nagative value", HYD_INVALID_VALUE, __FILE__, __LINE__);
 			return;
 		}
-		m_ViewportRatios.X = pWidth;
-		m_ViewportRatios.Y = pHeight;
-
-		m_ViewportSize.X = (m_ViewportRatios.X / 100.0f)*float(m_Width);
-		m_ViewportSize.Y = (m_ViewportRatios.Y / 100.0f)*float(m_Height);
+		m_ViewportRatios.X = pX;
+		m_ViewportRatios.Y = pY;
+		m_ViewportRatios.Z = pWidth;
+		m_ViewportRatios.W = pHeight;
 	}
 
-	void Window::SetViewportPositionWithRatio(
-		float pX,
-		float pY
-	) noexcept
+	VkViewport Window::GetViewportSize()    noexcept
 	{
-		m_ViewportRatios.Z = pX;
-		m_ViewportRatios.W = pY;
+		glfwGetWindowSize(
+			m_Window,
+			reinterpret_cast<int*>(&m_WindowSize.X),
+			reinterpret_cast<int*>(&m_WindowSize.Y)
+		);
 
-		m_ViewportSize.Z = (pX / 100.0f)*float(m_Width);
-		m_ViewportSize.W = (pY / 100.0f)*float(m_Height);
+		m_ViewportSize.x        = m_WindowSize.X * (m_ViewportRatios.X / 100.0f);
+		m_ViewportSize.y        = m_WindowSize.Y * (m_ViewportRatios.Y / 100.0f);
+		m_ViewportSize.width    = m_WindowSize.X * (m_ViewportRatios.Z / 100.0f);
+		m_ViewportSize.height   = m_WindowSize.Y * (m_ViewportRatios.W / 100.0f);
+		m_ViewportSize.minDepth = 0.0f;
+		m_ViewportSize.maxDepth = 1.0f;
+		
+		return m_ViewportSize;
 	}
 
-	bool Window::IsMouseInViewPort()
+	VkRect2D   Window::GetViewportScissor() noexcept
+	{
+		m_Scissor = VkRect2D
+		{
+			.offset = VkOffset2D
+			{
+				.x = static_cast<int32>(m_ViewportSize.x),
+				.y = static_cast<int32>(m_ViewportSize.y)
+			},
+			.extent = VkExtent2D
+			{
+				.width  = static_cast<uint32>(m_ViewportSize.width),
+				.height = static_cast<uint32>(m_ViewportSize.height)
+			}
+		};
+		return m_Scissor;
+	}
+
+	bool Window::IsMouseInViewPort() noexcept
 	{
 		double X = Mouse::MousePosition.X;
 		double Y = Mouse::MousePosition.Y;
 
-		if (X < m_ViewportSize.X && X > m_ViewportSize.Z)
-		{
-			if (Y < m_ViewportSize.Y && Y > m_ViewportSize.W)
-				return true;
-		}
+		//if (X < m_ViewportSize.X && X > m_ViewportSize.Z)
+		//{
+		//	if (Y < m_ViewportSize.Y && Y > m_ViewportSize.W)
+		//		return true;
+		//}
 
 		return false;
 	}

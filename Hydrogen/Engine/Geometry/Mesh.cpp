@@ -80,6 +80,12 @@ namespace Hydrogen
 		return m_Primitives[pIndex];
 	}
 
+	void Mesh::SetMeshRenderingStatus(
+		bool pEnable
+	) noexcept
+	{
+		m_Enable = pEnable;
+	}
 
 
 	void Mesh::Render(
@@ -89,6 +95,9 @@ namespace Hydrogen
 		const Transformation& 	  pTransform
 	) noexcept
 	{
+
+		if (!m_Enable)
+			return;
 
 		//if (m_Transform.IsDirty)
 		MatF4 Matrix = Transformation::CalculateMatrix(pTransform);
