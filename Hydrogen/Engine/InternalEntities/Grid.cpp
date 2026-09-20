@@ -602,7 +602,7 @@ const uint32 FragmentShaderSizeInBytes = 3524;
         instruction.Vertices    = m_VertexBuffer;
         instruction.Indices     = m_IndexBuffer;
         instruction.Pipeline    = m_Pipeline;
-        instruction.Uniform     = m_Uniform;
+        instruction.Uniforms.push_back(m_Uniform);
         instruction.MaterialPtr = nullptr;
 
         

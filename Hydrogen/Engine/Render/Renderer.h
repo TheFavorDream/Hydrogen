@@ -43,12 +43,11 @@ namespace Hydrogen
 
 	struct Instruction
 	{
-		VertexBufferRef       Vertices;
-		IndexBufferRef        Indices;
-		GraphicsPipelineRef   Pipeline;
-		UniformRef			  Uniform;
-		Ptr<Material>		  MaterialPtr;
-		Ptr<LightCollection>  Light = nullptr;
+		VertexBufferRef         Vertices;
+		IndexBufferRef          Indices;
+		GraphicsPipelineRef     Pipeline;
+		std::vector<UniformRef> Uniforms;
+		Ptr<Material>		    MaterialPtr;
 
 		 Instruction() = default;
 		~Instruction() = default; 
@@ -61,9 +60,8 @@ namespace Hydrogen
 			: Vertices(std::move(pOther.Vertices)),
 		  	  Indices(std::move(pOther.Indices)),
 		  	  Pipeline(std::move(pOther.Pipeline)),
-		  	  Uniform(std::move(pOther.Uniform)),
-		  	  MaterialPtr(pOther.MaterialPtr),
-			  Light(pOther.Light)
+		  	  Uniforms(std::move(pOther.Uniforms)),
+		  	  MaterialPtr(pOther.MaterialPtr)
 			{}
 		
 	};

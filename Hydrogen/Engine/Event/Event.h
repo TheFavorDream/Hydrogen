@@ -90,6 +90,15 @@ namespace Hydrogen
 
 		static FrameEvent Self;
 
+		//Window Events:
+		bool  IsWindowResized   = false;
+		bool  IsViewportResized = false;
+		bool  IsWindowMinimized = false;
+		bool  IsWindowFocused   = false;
+		VecF2 WindowSize  ;
+		VecF4 ViewportSize;
+
+
         //Mouse Events
         VecD2 PositionOffset;
         VecD2 ScrollOffset;

@@ -32,6 +32,7 @@ namespace Hydrogen
     LightCollection::~LightCollection() noexcept
     {
         m_Lights.clear();
+        m_LightID         = 0;
         m_DescriptorSetID = 0;
         m_LightCount      = 0;
         m_DescriptorPool  = 0;
@@ -44,11 +45,13 @@ namespace Hydrogen
     LightCollection::LightCollection(LightCollection&&      pOther) noexcept
         : m_Lights(std::move(pOther.m_Lights)),
           m_UniBuffer(std::move(pOther.m_UniBuffer)),
+          m_LightID(pOther.m_LightID),
           m_LightCount(pOther.m_LightCount),
           m_DescriptorSetID(pOther.m_DescriptorSetID),
           m_DescriptorPool(pOther.m_DescriptorPool)
 
     {
+        pOther.m_LightID         = 0;
         pOther.m_LightCount      = 0;
         pOther.m_DescriptorSetID = 0;
         pOther.m_DescriptorPool  = 0;
@@ -67,7 +70,9 @@ namespace Hydrogen
         m_UniBuffer       = std::move(pOther.m_UniBuffer);
         m_LightCount      = pOther.m_LightCount;
         m_DescriptorSetID = pOther.m_DescriptorSetID; 
+        m_LightID         = pOther.m_LightID;
     
+        pOther.m_LightID         = 0;
         pOther.m_LightCount      = 0;
         pOther.m_DescriptorSetID = 0;
         pOther.m_DescriptorPool  = 0;
@@ -104,7 +109,7 @@ namespace Hydrogen
         return HYD_OK;
     }
 
-    uint32 LightCollection::CreateLight(
+    HYD_ID_SPACE LightCollection::CreateLight(
         Light&& pNewLight
     ) noexcept
     {
@@ -112,7 +117,8 @@ namespace Hydrogen
             pNewLight
         );
         m_LightCount += 1;
-        return HYD_OK;
+
+        return ++m_LightID;
     }
 
 
@@ -137,20 +143,20 @@ namespace Hydrogen
     }
 
     const Light& LightCollection::AccessLight(
-        uint32 pIndex
+        HYD_ID_SPACE pID
     ) const noexcept
     {
-        ASSERT(pIndex < m_Lights.size(), "Light Collection: Out of Range");
-        return m_Lights.at(pIndex);
+        ASSERT(pID-1 < m_Lights.size(), "Light Collection: Out of Range");
+        return m_Lights.at(pID-1);
     } 
 
     Light& LightCollection::EditLight(
-        uint32 pIndex
+        HYD_ID_SPACE pID
     ) noexcept
     {
-        ASSERT(pIndex < m_Lights.size(), "Light Collection: Out of Range");
+        ASSERT(pID-1 < m_Lights.size(), "Light Collection: Out of Range");
         m_IsDirty = true;
-        return m_Lights.at(pIndex);
+        return m_Lights.at(pID-1);
     }
 
     /*

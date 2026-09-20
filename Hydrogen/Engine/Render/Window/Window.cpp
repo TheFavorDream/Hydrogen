@@ -14,20 +14,23 @@ namespace Hydrogen
 	void Window::ResizeCallback(GLFWwindow* pWindow, int32 pWidth, int32 pHeight)
 	{
 
-		// glfwGetFramebufferSize(pWindow,
-		// 	 &Renderer::Self().GetWindow().m_ViewportSize.X,
-		// 	&Renderer::Self().GetWindow().m_ViewportSize.Y
-		// );
+		FrameEvent::Self.IsWindowResized = true;
+		FrameEvent::Self.WindowSize = VecF2(
+			static_cast<float>(pWidth),
+			static_cast<float>(pHeight)
+		);
 
 		Renderer::Self().RecreateSwapchain();
 	}
 
 	void Window::MaximizeCallback(GLFWwindow* pWindow, int32 pMaximized)
 	{
+		FrameEvent::Self.IsWindowMinimized = (pMaximized == 1)? false : true;
 	}
 
-	void Window::FocusCallback(GLFWwindow * pWindow, int32 pFocus)
+	void Window::FocusCallback(GLFWwindow* pWindow, int32 pFocus)
 	{
+		FrameEvent::Self.IsWindowFocused = (pFocus == 1)? true : false;
 	}
 
 
@@ -159,6 +162,10 @@ namespace Hydrogen
 		m_ViewportRatios.Y = pY;
 		m_ViewportRatios.Z = pWidth;
 		m_ViewportRatios.W = pHeight;
+
+
+		FrameEvent::Self.IsViewportResized = true;
+		FrameEvent::Self.ViewportSize      = m_ViewportRatios;
 	}
 
 	VkViewport Window::GetViewportSize()    noexcept

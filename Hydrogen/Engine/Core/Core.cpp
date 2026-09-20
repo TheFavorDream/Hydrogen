@@ -161,6 +161,7 @@ namespace Hydrogen
 	void Core::Event() noexcept
 	{
 		glfwPollEvents();
+
 		for (int32 Iter = m_Layers.size()-1 ; Iter >= 0 ; --Iter)
 		{
 			m_Layers.at(Iter)->Event(FrameEvent::Self);

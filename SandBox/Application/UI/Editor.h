@@ -3,16 +3,30 @@
 #include <vulkan/vulkan_core.h>
 
 
-
-/*
-	Purpose: Scene Graph UI
-*/
-class SceneGraph
+class Editor : public Hydrogen::Layer
 {
 public:
 
-	 SceneGraph() = delete;
-	~SceneGraph() = delete;
+     Editor() = default;
+    ~Editor() = default;
+
+	//Layer Methods:
+
+	void Setup()    override;
+	void Shutdown() override;
+
+	void Event(
+		Hydrogen::FrameEvent& pEvents
+	)  override;
+
+	void Update() override;
+
+	void Render(
+		Hydrogen::FrameRenderConfig& pRenderConf
+	) override; 
+
+
+	//UI Methods:
 
 	/*
 		Purpose: Call this to set the Scene to be graphed
@@ -21,40 +35,47 @@ public:
 		Hydrogen::Ptr<Hydrogen::Scene> pScene
 	) noexcept;
 
+//---------------------------Main Widgets----------------------------
+	
+	/*
+		Purpose: Draw the Editor Window
+	*/
+	static void EditorWindow() noexcept;
+
+	/*
+		Purpose: Renders the Utility Window
+	*/
+	static void UtilityWindow()  noexcept;
+
+//--------------------------Controller Widgets-------------------
+
+	static void GridController() noexcept; 
+
+private:
+
+	void SetStyle() noexcept;
+
+	/*
+		Purpose: Main Menu Bar Handling
+	*/
+
+	static void RenderMainMenuBar() noexcept;
+
 	/*
 		Purpose: Draw the Graph window
 	*/
-	static void DrawGraph() noexcept;
+	static void DrawGraph(
+		ImVec2 pSize
+	) noexcept;
 
 	/*
 		Purpose: Node Editor Window
 	*/
 	static void NodeEditor(
-		Hydrogen::Node& pNode,
-		ImVec2 			pPos,
-	    ImVec2          pSize
+		ImVec2 pSize
 	) noexcept;
 
 
-	/*
-		Purpose: Node Editor Window
-	*/
-	static void MeshEditor(
-		Hydrogen::Mesh& pMesh,
-		ImVec2 			pPos,
-	    ImVec2          pSize
-	) noexcept;
-
-	/*
-		Purpose: Light Editor 
-	*/
-	static void LightEditor(
-		Hydrogen::Light& pLight
-	) noexcept; 
-
-
-private:
-	
 	/*
 		Purpose: Calls itself recursevly to draw each node in the tree
 	*/
@@ -71,69 +92,60 @@ private:
 		ImGuiTreeNodeFlags  pFlags
 	) noexcept;
 
+
+	/*
+		Purpose: Controll for Node Transformation:
+	*/
+	static void NodeTransformation(
+		Hydrogen::Transformation& pTrans
+	) noexcept;
+
+	/*
+		Purpose: Node's Mesh Editor
+	*/
+	static void MeshEditor(
+		Hydrogen::Mesh& pMesh
+	) noexcept;
+
+	/*
+		Purpose: Node's Camera Editor:
+	*/
+
+	static void CameraEditor(
+		Hydrogen::Camera& pCamera
+	) noexcept;
+
+	/*
+		Purpose: Node's Light Editor
+	*/
+	static void LightEditor(
+		Hydrogen::Light& pLight
+	) noexcept;
+
+
+
+	/*
+		Purpose: Handles the Resizing of the windows
+	*/
+	static void HandleResize() noexcept;
+
+
 public:
-	static Hydrogen::Ptr<Hydrogen::Scene> s_CurrentScene;
+
+	static Hydrogen::Ptr<Hydrogen::Scene> s_SelectedScene;
 	static Hydrogen::Ptr<Hydrogen::Node>  s_SelectedNode;
-	static Hydrogen::Ptr<Hydrogen::Light> s_SelectedLight;
-	static Hydrogen::Ptr<Hydrogen::Mesh>  s_SelectedMesh;
- 
 
-	static 	bool 						  s_IsNodeEditor;
-	static 	bool 						  s_IsLightEditor; 		
-	static  bool						  s_IsMeshEditor;
-};
+	static float 		   s_WindowWidth;
+	static float 		   s_WindowHeight;
+	static float 		   s_WindowBoarderSize;
+	static float 		   s_LeftPanelWidthRatio;
+	static Hydrogen::VecF2 s_UtilityWindowRatio;
+	static Hydrogen::VecF4 s_ViewportRatio;
 
-/*
-	Purpose: Time Line
-*/
+	static bool s_UpdateEditorWindowSize;
+	static bool s_UpdateUtilityWindowSize;
 
-class TimeLine
-{
-public:
-
-	 TimeLine() = delete;
-	~TimeLine() = delete;
-
-
-	static void TimeLineWindow() noexcept;
-
-private:
-	
-};
-
-class Editor : public Hydrogen::Layer
-{
-public:
-
-     Editor() = default;
-    ~Editor() = default;
-
-
-	void Setup()    override;
-	void Shutdown() override;
-
-	void Event(
-		Hydrogen::FrameEvent& pEvents
-	)  override;
-
-	void Update() override;
-
-	void Render(
-		Hydrogen::FrameRenderConfig& pRenderConf
-	) override; 
-
-
-	static void GridController()  	   noexcept; 
-
-private:
-
-	void SetStyle() noexcept;
-
-public:
 	bool IsGridWindow       = false;
-	bool IsSceneGraghWindow = true;
-	bool IsTimeLineWindow   = true;
-
 
 	static bool  RenderGrid;
 	static float FogQuad     ;

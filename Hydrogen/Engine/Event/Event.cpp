@@ -234,6 +234,10 @@ namespace Hydrogen
 
 		PositionOffset = VecD2(0.0);
 		ScrollOffset   = VecD2(0.0);
+
+
+		IsWindowResized   = false;
+		IsViewportResized = false;
 	}
 
 

@@ -99,7 +99,7 @@ namespace Hydrogen
             Purpose: Add a new Light to the Collection
         */
 
-        HYD uint32 CreateLight(
+        HYD HYD_ID_SPACE CreateLight(
             Light&& pNewLight
         ) noexcept;
 
@@ -114,11 +114,11 @@ namespace Hydrogen
             Access An Light inside the Collection
         */
         HYD const Light& AccessLight(
-            uint32 pIndex
+            HYD_ID_SPACE pID
         ) const noexcept; 
 
         HYD Light& EditLight(
-            uint32 pIndex
+            HYD_ID_SPACE pID
         ) noexcept; 
 
         /*
@@ -127,12 +127,14 @@ namespace Hydrogen
 
         HYD void UploadData() noexcept;
 
-        HYD inline uint32 GetLightCount() const {return m_LightCount;}
+        HYD inline uint32     GetLightCount()    const {return m_LightCount;}
+        HYD inline UniformRef GetUniformBuffer() const {return m_UniBuffer;}
 
     private:
         std::vector<Light>               m_Lights;
         UniformRef                       m_UniBuffer;
         uint32                           m_LightCount      = 0;    
+        HYD_ID_SPACE                     m_LightID         = 0;
         HYD_ID_SPACE                     m_DescriptorPool  = 0;
         HYD_ID_SPACE                     m_DescriptorSetID = 0;
         bool                             m_IsDirty         = false;

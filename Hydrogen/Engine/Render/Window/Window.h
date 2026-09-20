@@ -117,6 +117,8 @@ namespace Hydrogen
 		HYD inline float GetViewportWidth()  const {return m_ViewportSize.width;}
 		HYD inline float GetViewportHeight() const {return m_ViewportSize.height;}
 
+		HYD inline VecF4 GetViewportRatio() const {return m_ViewportRatios;}
+
 		HYD inline uint32 GetWindowWidth () const {return m_WindowSize.X;}
 		HYD inline uint32 GetWindowHeight() const {return m_WindowSize.Y;}
 

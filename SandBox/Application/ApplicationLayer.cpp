@@ -51,8 +51,8 @@ void AppLayer::Setup()
 
 
 	Xenon::Model model = Core::Load(
-		"/home/Volta/Desktop/Dev/Hydrogen/SandBox/Resources/Models/StudyRoom/scene.gltf",
-		Xenon::LF_NO_MATERIAL
+		"/home/Volta/Desktop/Dev/Hydrogen/SandBox/Resources/Models/ChainSaw/scene.gltf",
+		Xenon::LF_BASE_NORMAL_ONLY
 	);
 	
 
@@ -62,14 +62,14 @@ void AppLayer::Setup()
 
 	Hydrogen::Quaternion Rot;  Rot.Euler(0.0f, 0.0f, 90.0f);
 	//m_Scene->GetTransform().t_Rotate = Rot;
-	m_Scene->GetTransform().t_Scale = Hydrogen::VecF3(0.1f);
+	m_Scene->GetTransform().t_Scale = Hydrogen::VecF3(1.2f);
 
 
 
 	m_Grid.GenerateGrid();
 
 
-	SceneGraph::SetCurrentScene(m_Scene.GetPtr());
+	Editor::SetCurrentScene(m_Scene.GetPtr());
 }
 
 

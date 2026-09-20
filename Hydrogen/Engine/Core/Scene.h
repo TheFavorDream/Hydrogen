@@ -62,15 +62,18 @@ namespace Hydrogen
 		HYD inline Instance<Mesh>& GetMesh()	  { return m_Mesh; }
 		HYD inline Transformation& GetTransform() { return m_Transform; }
 
-		HYD inline bool HasMesh() const {return !m_Mesh.IsNull();}
-
+		HYD inline bool HasMesh()  const {return !m_Mesh.IsNull();}
+		HYD inline bool HasLight() const {return (m_Light != 0);}
 		HYD inline bool HasChild() {return m_Children.size();} 
+
 
 		HYD void Destroy() noexcept;
 
 
 	private:
 		Instance<Mesh>	m_Mesh;
+		HYD_ID_SPACE    m_Light  = 0;
+		HYD_ID_SPACE    m_Camera = 0;
 		Ptr<Node>	    m_PointerToParent;
 		friend class Scene;
 	

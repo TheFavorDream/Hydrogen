@@ -80,14 +80,25 @@ namespace Hydrogen
 			Renderer::Self().AccessUniformBuffer(m_Uniforms).UploadData(m_Camera.GetViewPtr(),sizeof(glm::mat4),sizeof(MatF4));
 			Renderer::Self().AccessUniformBuffer(m_Uniforms).UploadData(m_Camera.GetProjectionPtr(),sizeof(glm::mat4),2*sizeof(MatF4));
 			
-			if (!Current.GetMesh().IsNull())
-					Current.GetMesh()->Render(
-						InstructionSet,
-						m_Uniforms,
-						m_Lights,
-						Current.GetTransform()
-					);
+			if (Current.HasMesh())
+			{
 
+				uint32 Index = InstructionSet.size();
+
+				Current.GetMesh()->Render(
+					InstructionSet,
+					m_Uniforms,
+					Current.GetTransform()
+				);
+
+				//Add the light buffer
+				for ( ; Index < InstructionSet.size() ; ++Index)
+				{
+					InstructionSet.at(Index).Uniforms.push_back(m_Lights.GetUniformBuffer());
+				}
+			}
+
+			
 			for (auto node : Current)
 			{
 				node.GetTransform() = Current.GetTransform() * node.GetTransform();

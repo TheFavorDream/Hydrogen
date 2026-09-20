@@ -64,7 +64,7 @@ namespace Hydrogen
 		return HYD_OK;
 	}
 
-/*
+/*	
 	Purpose: Frees All Allocated Buffers, Textures, Samplers etc
 */
 	uint32 Renderer::Shutdown() noexcept
@@ -204,7 +204,7 @@ namespace Hydrogen
 		);
 		
 		
-
+//vampyveyda
 
 		
 		for (const auto& renderConf : pConfs)
@@ -213,19 +213,21 @@ namespace Hydrogen
 			//Actual Rendering
 			for (const auto& instruction : renderConf.m_Instructions)
 			{
+				
+				
+				Internal::Vulkan::PipelineLayout& PipelineLayout = AccessPipelineLayout(instruction.Pipeline->GetPipelineLayout()); 
+				
+				for (auto& uniform : instruction.Uniforms)
+				{
+					AccessUniformBuffer(uniform).Bind(
+						PipelineLayout
+					);
+				}
+
 				//Bind 
 				instruction.Pipeline->BindPipeline();
 				instruction.Vertices->Bind();
 				instruction.Indices->Bind();
-			
-
-				Internal::Vulkan::PipelineLayout& PipelineLayout = AccessPipelineLayout(instruction.Pipeline->GetPipelineLayout()); 
-
-
-				AccessUniformBuffer(instruction.Uniform).Bind(
-					PipelineLayout
-				);
-	
 				
 				//Bind Material If Present
 				if (instruction.MaterialPtr)
@@ -235,14 +237,6 @@ namespace Hydrogen
 					);
 				}
 
-				//Bind the Light Collection:
-				if (instruction.Light)
-				{
-					instruction.Light->BindCollection(
-						PipelineLayout
-					);
-				}
-	
 				uint32 IndexCount = instruction.Indices->GetCount();
 				 //Issue a draw call
 				 vkCmdDrawIndexed(
@@ -267,7 +261,7 @@ namespace Hydrogen
 		m_RenderPass.EndRenderPass();
 		GlobalRenderCommandBuffer().EndRecordingCommandBuffer();
 
-		//Submit Work to the queues
+		//Submit Work to the queue
 		ExecuteCommandBuffers(
 			m_Device.m_Queues.Graphics,
 			{m_RenderCommandBuffers[m_FrameIndex].GetHandle()},
