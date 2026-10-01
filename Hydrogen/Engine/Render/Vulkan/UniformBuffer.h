@@ -30,17 +30,11 @@ namespace Vulkan
             uint64 pOffset = 0
         ) noexcept override;
 
-        void Bind(
-            const PipelineLayout& pPipelineLayout 
-        ) noexcept;
-
         void SetDescriptorSet(HYD_ID_SPACE pSetID) noexcept;
 
     private:
 
-        HYD_ID_SPACE                   m_DescriptorSetID = 0;
-        Hydrogen::ShaderUniformBinding m_Binding; 
-    
+        HYD_ID_SPACE                   m_DescriptorSetID = 0;    
     private:
         friend class Hydrogen::Renderer;
         friend class DescriptorSetLayout;

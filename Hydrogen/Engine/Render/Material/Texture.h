@@ -48,7 +48,6 @@ namespace Hydrogen
 
 
 		Buffer 	         	 Data;
-		SamplerConfiguration ImageSampler;
 		uint32 				 TexCoordSet = 0;
 		ShaderUniformBinding BindingLocation;
 	};
@@ -75,12 +74,9 @@ namespace Hydrogen
 
 		HYD void   DestroyTexture() noexcept;
 
-		HYD void Bind();
-
 	private:
 		Internal::Vulkan::Image     m_Image;
 		Internal::Vulkan::ImageView m_View;
-		Internal::Vulkan::Sampler   m_Sampler;
 		uint32 				        m_TexCoordSet = 0;
 		ShaderUniformBinding        m_BindingLocation;
 

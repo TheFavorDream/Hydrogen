@@ -165,6 +165,7 @@ namespace Hydrogen
 			class BasicBuffer;
 			class VertexBuffer;
 			class IndexBuffer;
+			class StorageBuffer;
 			class StagingBuffer;
 			class UniformBuffer;
 			class DescriptorPool;
@@ -184,8 +185,15 @@ namespace Hydrogen
     typedef Instance<Internal::Vulkan::GraphicsPipeline> 		     GraphicsPipelineRef;
 	typedef Instance<Internal::Vulkan::VertexBuffer>	 		     VertexBufferRef;
 	typedef Instance<Internal::Vulkan::IndexBuffer>	     		     IndexBufferRef;
+	typedef Instance<Internal::Vulkan::StorageBuffer>	     		 StorageBufferRef;
 	typedef Instance<std::vector<Internal::Vulkan::UniformBuffer>>	 UniformRef;
+	typedef Instance<Internal::Vulkan::PipelineLayout>			     PipelineLayoutRef;		
+	typedef Instance<Texture2D>			     					     Texture2DRef;					
 	typedef Internal::Vulkan::DescriptorSetLayout        			 UniformLayoutRef;
+	
+
+
+	//typedef std::vector<Instruction> InstructionSet;
 };
 
 

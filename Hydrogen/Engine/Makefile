@@ -98,6 +98,7 @@ GENERATED += $(OBJDIR)/FrameBuffer.o
 GENERATED += $(OBJDIR)/Grid.o
 GENERATED += $(OBJDIR)/HydPch.o
 GENERATED += $(OBJDIR)/Image.o
+GENERATED += $(OBJDIR)/InstructionSet.o
 GENERATED += $(OBJDIR)/Light.o
 GENERATED += $(OBJDIR)/Log.o
 GENERATED += $(OBJDIR)/Material.o
@@ -134,6 +135,7 @@ OBJECTS += $(OBJDIR)/FrameBuffer.o
 OBJECTS += $(OBJDIR)/Grid.o
 OBJECTS += $(OBJDIR)/HydPch.o
 OBJECTS += $(OBJDIR)/Image.o
+OBJECTS += $(OBJDIR)/InstructionSet.o
 OBJECTS += $(OBJDIR)/Light.o
 OBJECTS += $(OBJDIR)/Log.o
 OBJECTS += $(OBJDIR)/Material.o
@@ -241,7 +243,7 @@ $(OBJDIR)/Event.o: Event/Event.cpp
 $(OBJDIR)/Mesh.o: Geometry/Mesh.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/MeshGenerator.o: Geometry/MeshGenerator/MeshGenerator.cpp
+$(OBJDIR)/MeshGenerator.o: Geometry/MeshGenerator.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/Primitive.o: Geometry/Primitive.cpp
@@ -260,6 +262,9 @@ $(OBJDIR)/Log.o: Log/Log.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/Attachment.o: Render/Attachment.cpp
+	@echo "$(notdir $<)"
+	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/InstructionSet.o: Render/InstructionSet.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/Material.o: Render/Material/Material.cpp

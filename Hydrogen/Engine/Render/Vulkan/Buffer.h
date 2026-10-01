@@ -48,7 +48,7 @@ namespace Vulkan
             uint64 pOffset=0
         ) noexcept;
         
-        virtual uint32 DestroyBuffer() noexcept;
+        virtual void DestroyBuffer() noexcept;
 
         uint32 MapMemory(
             uint32 pSize,
@@ -85,8 +85,51 @@ namespace Vulkan
 
 
 
-    //Staging Buffer:
+    /*
+        Storage Buffers:
+    */
 
+
+    class StorageBuffer : public BasicBuffer
+    {
+    public:
+
+         StorageBuffer() = default;
+        ~StorageBuffer() = default;
+
+
+        /*
+            Purpose: Create the Buffer
+        */
+        uint32 CreateBuffer(
+            uint32              pSize,
+            VkSharingMode       pSharingMode        = VK_SHARING_MODE_EXCLUSIVE,
+            std::vector<uint32> pQueueFamilyIndices = {}
+        ) noexcept;
+
+        /*
+            Purpose: Upload Data 
+        */
+
+        uint32 UploadData(
+            void*  pData,
+            uint64 pSize,
+            uint64 pOffset=0
+        ) noexcept override;
+
+
+        /*
+            Purpose: Destroy
+        */
+
+        void DestroyBuffer() noexcept override;
+
+
+    private:
+        uint8*          m_VirtualAddress = nullptr; 
+    };
+
+    //Staging Buffer:
 
     class StagingBuffer final : public BasicBuffer
     {

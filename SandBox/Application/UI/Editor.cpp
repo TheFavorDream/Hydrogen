@@ -320,6 +320,11 @@ void Editor::NodeEditor(
         MeshEditor(*s_SelectedNode->GetMesh().GetPtr());
     }
 
+    if (s_SelectedNode->HasLight() && ImGui::CollapsingHeader("Light"))
+    {
+        //LightEditor(s_SelectedScene->EditLight(s_SelectedNode->GetLight()));
+    }
+
     ImGui::EndChild();
 }
 
@@ -342,7 +347,8 @@ void Editor::DrawTreeNode(
         
         if (pNode.HasMesh())
             DrawTreeMesh(*pNode.GetMesh().GetPtr(), ImGuiTreeNodeFlags_Bullet);
-        
+        if (pNode.HasLight())
+            DrawTreeLight(pNode.GetLight(), ImGuiTreeNodeFlags_Bullet);
 
         for (auto& child : pNode)
             DrawTreeNode(child, pFlags);
@@ -366,65 +372,43 @@ void Editor::DrawTreeMesh(
     }
 }
 
-
+/*
+	Purpose: Renders the Node's Light
+*/
+void Editor::DrawTreeLight(
+	HYD_ID_SPACE 		pLight,
+	ImGuiTreeNodeFlags  pFlags
+) noexcept
+{
+    //const Hydrogen::Light& light = s_SelectedScene->AccessLight(pLight); 
+    //if (ImGui::TreeNodeEx(light.Name().c_str(), pFlags))
+    //{
+    //    ImGui::TreePop();
+    //}
+}
 
 
 /*
 	Purpose: Light Editor 
 */
 
-/*
-void SceneGraph::LightEditor(
+
+void Editor::LightEditor(
     Hydrogen::Light& pLight
 ) noexcept
 {
-    ImGui::SetNextWindowSize(ImVec2(300.0f, 450.0f));
-    ImGui::Begin("Light Editor", nullptr, ImGuiWindowFlags_NoResize);
     
-    static int32       SelectedLightIndex = (Lights->GetLightCount())? 0 : -1;
-    static const char* SelectedLightName  = "";
-    if (SelectedLightIndex >= 0)
-        SelectedLightName =  Lights->AccessLight(SelectedLightIndex).Name().c_str();
-
-
-
-    if(ImGui::BeginCombo("Lights", SelectedLightName))
-    {
-        uint32 Counter = 0 ;
-        for (auto& light : (*Lights))
-        {
-            if (ImGui::Selectable(light.Name().c_str()))
-            {
-                Hydrogen::Log::SetInfo(
-                    Hydrogen::Log::FmtStr("Light: %s Selected In Light Editor", light.Name().c_str())
-                );
-                SelectedLightName  = light.Name().c_str();
-                SelectedLightIndex = Counter; 
-            }
-            Counter ++;
-        }
-        ImGui::EndCombo();
-    }
-
-   
-    if (SelectedLightIndex >= 0)
-    {
-        Hydrogen::Light& CurrentLight = Lights->EditLight(SelectedLightIndex);
-        
-        ImGui::ColorPicker3("Light Color", reinterpret_cast<float*>(&CurrentLight.Color()));        
-        ImGui::InputFloat3("Position:", reinterpret_cast<float*>(&CurrentLight.Position()));
-
-
-        ImGui::Text("Ligth Properties:");
-        ImGui::InputFloat3("Ambient:",  reinterpret_cast<float*>(&CurrentLight.Ambient()));
-        ImGui::InputFloat3("Diffuse:",  reinterpret_cast<float*>(&CurrentLight.Diffuse()));
-        ImGui::InputFloat3("Specular:", reinterpret_cast<float*>(&CurrentLight.Specular()));
-    }    
+    ImGui::ColorPicker3("Light Color", reinterpret_cast<float*>(&pLight.Color()));        
+    ImGui::InputFloat3("Position:", reinterpret_cast<float*>(&pLight.Position()));
     
+    ImGui::Text("Ligth Properties:");
+    
+    ImGui::InputFloat3("Ambient:",  reinterpret_cast<float*>(&pLight.Ambient()));
+    ImGui::InputFloat3("Diffuse:",  reinterpret_cast<float*>(&pLight.Diffuse()));
+    ImGui::InputFloat3("Specular:", reinterpret_cast<float*>(&pLight.Specular()));
 
-    ImGui::End();
 } 
-*/
+
 
 
 /*
@@ -443,18 +427,17 @@ void Editor::NodeTransformation(
 
     ImGui::Combo("##RotateMethod", &Selection, RotateMethod, 2);
 
-    static float Rotation[4] = {pTrans.t_Rotate.X, pTrans.t_Rotate.Y, pTrans.t_Rotate.Z, pTrans.t_Rotate.W};
-        
+
     ImGui::Text("Rotation:");
     switch (Selection)
     {
     case 0: //Quaternion
-        ImGui::InputFloat4("##Rotate",    Rotation);
-        pTrans.t_Rotate = Hydrogen::Quaternion(Hydrogen::VecF3(Rotation[0], Rotation[1], Rotation[2]), Rotation[3]);
+        ImGui::InputFloat4("##Rotate",    reinterpret_cast<float*>(&pTrans.t_Rotate));
         break;
     case 1: //Euler
-        ImGui::InputFloat3("##Rotate", Rotation);
-        pTrans.t_Rotate = Hydrogen::Quaternion().Euler(Rotation[0], Rotation[1], Rotation[2]);
+        float EulerRot[3] = {};
+        ImGui::InputFloat3("##Rotate", EulerRot);
+        pTrans.t_Rotate = Hydrogen::Quaternion().Euler(EulerRot[0], EulerRot[1], EulerRot[2]);
         break;
     }
     
@@ -470,7 +453,7 @@ void Editor::MeshEditor(
 ) noexcept
 {
     ImGui::Text("Name:%s", pMesh.GetName().c_str());
-    ImGui::Checkbox("Disable Mesh", &pMesh.MeshEnable());
+    //ImGui::Checkbox("Disable Mesh", pMesh.IsEnable());
 
 }
 
@@ -479,16 +462,6 @@ void Editor::MeshEditor(
 */
 void Editor::CameraEditor(
 	Hydrogen::Camera& pCamera
-) noexcept
-{
-
-}
-
-/*
-	Purpose: Node's Light Editor
-*/
-void Editor::LightEditor(
-	Hydrogen::Light& pLight
 ) noexcept
 {
 

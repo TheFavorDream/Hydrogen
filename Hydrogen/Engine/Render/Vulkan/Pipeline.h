@@ -25,6 +25,13 @@ namespace Hydrogen{
     
 
 
+    struct PushConstantData
+    {
+        uint8             Data[128];
+        uint32            Size;
+        uint32            Offset;
+        ShaderStages      Stages; 
+    };
 
     struct PipelineLayoutConfiguration
     {
@@ -112,7 +119,7 @@ namespace Hydrogen{
 
 
         HYD void SetPipelineLayout(
-            HYD_ID_SPACE pLayoutID
+            PipelineLayoutRef pLayout
         ) noexcept;
 
         //Set the parent
@@ -122,7 +129,7 @@ namespace Hydrogen{
 
     private:
 
-        HYD_ID_SPACE                          m_LayoutID;
+        PipelineLayoutRef                     m_Layout;
 
         std::vector<ShaderConfiguration>      m_Shaders;
         uint32                                m_Subpass;
@@ -233,6 +240,9 @@ namespace Vulkan{
         GraphicsPipeline(GraphicsPipeline&&            pOther) noexcept;
         GraphicsPipeline& operator=(GraphicsPipeline&& pOther) noexcept;
 
+
+        inline PipelineLayoutRef GetPipelineLayout() const noexcept {return m_PipelineLayout;}
+
     private: //friend accessable 
         //inline const VkPipelineLayout GetLayoutHandle() const {return m_PipelineLayout;};
 
@@ -245,17 +255,14 @@ namespace Vulkan{
         //Bind this pipeline
         void BindPipeline() const noexcept ;
 
-
-        inline HYD_ID_SPACE GetPipelineLayout() const noexcept {return m_PipelineLayout;}
-
     private: //Member Accessable
         uint32 CreatePipelineObject() noexcept;
 
     private:
 
-        VkPipeline   m_Handle = VK_NULL_HANDLE;
+        VkPipeline        m_Handle = VK_NULL_HANDLE;
 
-        HYD_ID_SPACE m_PipelineLayout;
+        PipelineLayoutRef m_PipelineLayout;
 
         uint32 m_Subpass;
         std::vector<VkPipelineShaderStageCreateInfo> m_Stages;

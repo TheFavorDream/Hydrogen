@@ -1,5 +1,8 @@
 
+#include "InstructionSet.h"
+#include "Vulkan/Descriptors.h"
 #include "Vulkan/Pipeline.h"
+#include <GLFW/glfw3.h>
 #include <cstdint>
 #include <vulkan/vulkan_core.h>
 #define RENDERER_H
@@ -17,27 +20,41 @@ namespace Hydrogen
 */
 
 	void FrameRenderConfig::PushInstruction(
-		Instruction 			 pInstruction
+		Instruction&& 			 pInstruction
 	) noexcept
 	{
-		m_Instructions.push_back(std::move(pInstruction));
+		m_Instructions.PushInstruction(std::move(pInstruction));
 	}
 	
 	void FrameRenderConfig::PushInstruction(
-		std::vector<Instruction> pInstruction
+		InstructionSet&& pInstruction
 	) noexcept
 	{
-		m_Instructions.insert(
-			m_Instructions.cend(),
-			pInstruction.cbegin(),
-			pInstruction.cend()
-		);
+		m_Instructions.Append(std::move(pInstruction));
 	}
 
 
+	void FrameRenderConfig::BindDescriptorSet(
+		std::pair<HYD_ID_SPACE, DescriptorBindInfo> pBindInfo
+	) noexcept
+	{
+		m_DescriptorBinds.push_back(pBindInfo);
+	}
+
+	void FrameRenderConfig::BindDescriptorSet(
+		HYD_ID_SPACE	   pID,
+		DescriptorBindInfo pBindInfo
+	) noexcept
+	{
+		m_DescriptorBinds.push_back(
+			std::pair<HYD_ID_SPACE, DescriptorBindInfo>(pID, pBindInfo)
+		);
+	}
+
 	void FrameRenderConfig::Reset() noexcept
 	{
-		m_Instructions.clear();
+		m_DescriptorBinds.clear();
+		m_Instructions.Reset();
 	}
 
 	Ptr<Renderer> Renderer::s_Self = nullptr;
@@ -96,25 +113,29 @@ namespace Hydrogen
 			descSetLayout.second.DestroyDescriptorSetLayout();
 
 		for (auto& pipelineLayout : m_PipelineLayouts)
-			pipelineLayout.second.DestroyLayout();
+			pipelineLayout.Object.DestroyLayout();
 
 
 
 		m_DescriptorSets.clear();
 		m_DescriptorPools.clear();
 		m_DescSetLayouts.clear();
-		m_PipelineLayouts.clear();
-
 
 		for (auto& vbo : m_VertexBuffers)
 			vbo.Object.DestroyBuffer();
 		for (auto& ebo : m_IndexBuffers)
 			ebo.Object.DestroyBuffer();
-		for (auto& tex : m_Textures)
-			tex.Object.DestroyTexture();
+		for (auto& sbo : m_StorageBuffers)
+			sbo.Object.DestroyBuffer();
+		
+
 		for (auto& pipeline : m_Pipelines)
 			pipeline.Object.DestroyPipeline();
 
+		for (auto& layout : m_PipelineLayouts)
+			layout.Object.DestroyLayout();
+
+			
 		for (auto& Uniforms : m_UniformBuffers)
 		{
 			for(auto& Uniform : Uniforms.Object)
@@ -128,9 +149,10 @@ namespace Hydrogen
 
 		CHECK_ERROR(m_VertexBuffers.Shutdown());
 		CHECK_ERROR(m_IndexBuffers.Shutdown());
+		CHECK_ERROR(m_StorageBuffers.Shutdown());
 
 		CHECK_ERROR(m_Pipelines.Shutdown());
-		CHECK_ERROR(m_Textures.Shutdown());
+		CHECK_ERROR(m_PipelineLayouts.Shutdown());
 
 		CHECK_ERROR(m_TransferCommandPool.DestroyPool());
 		CHECK_ERROR(m_RenderCommandPool.DestroyPool());
@@ -165,7 +187,7 @@ namespace Hydrogen
 */
 
 	void Renderer::Render(
-		const std::vector<FrameRenderConfig>& pConfs // = {}
+		std::vector<FrameRenderConfig>& pConfs // = {}
 	) noexcept
 	{
 
@@ -204,36 +226,41 @@ namespace Hydrogen
 		);
 		
 		
-//vampyveyda
-
 		
-		for (const auto& renderConf : pConfs)
+		for (auto& renderConf : pConfs)
 		{
 
-			//Actual Rendering
-			for (const auto& instruction : renderConf.m_Instructions)
+
+			//Binding Descriptors:
+			for (auto& Desc : renderConf.m_DescriptorBinds)
 			{
-				
-				
-				Internal::Vulkan::PipelineLayout& PipelineLayout = AccessPipelineLayout(instruction.Pipeline->GetPipelineLayout()); 
-				
-				for (auto& uniform : instruction.Uniforms)
-				{
-					AccessUniformBuffer(uniform).Bind(
-						PipelineLayout
-					);
-				}
+				AccessDescriptorSet(Desc.first).Bind(Desc.second);
+			}
+
+			//Actual Rendering
+			for (auto& instruction : renderConf.m_Instructions)
+			{				
+			
+				//Upload Model Transformation Data:
 
 				//Bind 
 				instruction.Pipeline->BindPipeline();
 				instruction.Vertices->Bind();
 				instruction.Indices->Bind();
 				
-				//Bind Material If Present
-				if (instruction.MaterialPtr)
+				//Bind the Descriptor Sets
+				for (auto& Desc : instruction.DescriptorBinds)
 				{
-					instruction.MaterialPtr->Bind(
-						PipelineLayout
+					AccessDescriptorSet(Desc.first).Bind(Desc.second);
+				}
+
+				for (auto& pc : instruction.PushConstants)
+				{
+					pc.first->UpdatePushConstant(
+						VkShaderStageFlags(pc.second.Stages),
+						pc.second.Offset,
+						pc.second.Size, 
+						pc.second.Data
 					);
 				}
 
@@ -408,6 +435,12 @@ namespace Hydrogen
 	{
 		return std::move(m_IndexBuffers.Resource());
 	}
+
+	Instance<Internal::Vulkan::StorageBuffer>  Renderer::InstanceStorageBuffer() noexcept
+	{
+		return std::move(m_StorageBuffers.Resource());
+	}
+
 
 /*
 	Purpose: Create Graphics Pipeline object
@@ -667,32 +700,14 @@ namespace Hydrogen
 */
 	
 	//Creates a Pipeline Layout and returns the handle
-	HYD_ID_SPACE Renderer::CreatePipelineLayout(
+	PipelineLayoutRef Renderer::CreatePipelineLayout(
 		PipelineLayoutConfiguration pConf
 	) noexcept
 	{
-		Internal::Vulkan::PipelineLayout Layout;
-		Layout.CreateLayout(pConf);
-		HYD_ID_SPACE Id = m_PipelineLayoutsIDGen++;
-		m_PipelineLayouts.emplace(
-			Id, std::move(Layout)
-		);
-
-
-		return Id;
+		PipelineLayoutRef ins = m_PipelineLayouts.Resource();
+		ins->CreateLayout(pConf);
+		return std::move(ins);
 	}
-
-	Internal::Vulkan::PipelineLayout& Renderer::AccessPipelineLayout(
-		HYD_ID_SPACE pID
-	) noexcept
-	{
-		ASSERT(
-			(m_PipelineLayouts.find(pID) != m_PipelineLayouts.end()),
-			"Requested Pipeline Layout does not exist"
-		);
-		return m_PipelineLayouts.at(pID);
-	}
-
 
 
 //--------------------------------------------------Creates a Descriptor Set Layout and returns the handle-----------------------------
@@ -772,6 +787,21 @@ namespace Hydrogen
 		return m_DescriptorSets.at(pID).at(m_FrameIndex);
 	}
 
+	/*
+		Purpose: Frames packed Set Access
+	*/
+	std::vector<Internal::Vulkan::DescriptorSet>& Renderer::AccessDescriptorSets(
+		HYD_ID_SPACE pID
+	) noexcept
+	{
+		ASSERT(
+			(m_DescriptorSets.find(pID) != m_DescriptorSets.end()),
+			"Requested Descriptor Set  does not exist"
+		);
+		return m_DescriptorSets.at(pID);	
+	}
+
+
 //-----------------------------------------------------------Descriptor Pool-------------------------------------
 	HYD_ID_SPACE Renderer::CreateDescriptorPool(
 	   std::vector<DescriptorPoolSize>    pPoolSizes,
@@ -812,81 +842,19 @@ namespace Hydrogen
 	   return m_DescriptorPools.at(pPoolID);
    }
 
-//---------------------------------------------------------Sampelers---------------------------------------------
-
-	HYD_ID_SPACE Renderer::CreateSampler(
-		SamplerConfiguration pConf
-	) noexcept
-	{
-		HYD_ID_SPACE ID = m_SamplerIDGen; 
-		m_Samplers.at(m_SamplerIDGen++).CreateSampler(pConf);
-		return ID;
-	}
-
-	Internal::Vulkan::Sampler& Renderer::AccessSampler(
-		HYD_ID_SPACE pID
-	) noexcept
-	{
-		ASSERT((m_Samplers.find(pID) != m_Samplers.end()), "Requested  Sampler does not exist");
-		return m_Samplers.at(pID);
-	}
-
-//------------------------------------------------------Textures------------------------------------
-
-	std::vector<Instance<Texture2D>> Renderer::CreateTextures(
-		std::vector<TextureConfiguration>& pConfs
-	) noexcept
-	{
-		std::vector<Instance<Texture2D>> TextureInstances;
-		TextureInstances.resize(pConfs.size());
-
-		for (uint32 TexIndex = 0 ; TexIndex < TextureInstances.size() ; ++TexIndex)
-		{
-			Instance<Texture2D> texture = m_Textures.Resource();
-			texture->CreateTexture(std::move(pConfs.at(TexIndex)));
-			TextureInstances.push_back(std::move(texture));
-		}
-
-		return std::move(TextureInstances);
-	}
-
-	Instance<Texture2D> Renderer::CreateTexture(
-		TextureConfiguration&& pConf
-	) noexcept
-	{
-		Instance<Texture2D> texture = m_Textures.Resource();
-		texture->CreateTexture(std::move(pConf));
-		return std::move(texture);
-	}
 
 //---------------------------------------Uniform Buffers-------------------------------------
 
 	UniformRef Renderer::CreateUniformBuffer(
-		uint64 		 			pSize,
-		ShaderUniformBinding    pBinding,
-		HYD_ID_SPACE 			pUniformBufferSetID
+		uint64 		 			pSize
 	) noexcept
 	{
 		UniformRef NewUniform = m_UniformBuffers.Resource();
 		NewUniform->resize(m_FramesInFlights);
 
-
-		auto& DescriptorSets = m_DescriptorSets.at(pUniformBufferSetID);
-
 		for (uint32 FrameIndex = 0 ; FrameIndex < m_FramesInFlights ; ++FrameIndex)
-		{
 			NewUniform->at(FrameIndex).CreateUniformBuffer(pSize);
-			NewUniform->at(FrameIndex).SetDescriptorSet(pUniformBufferSetID);
-
-			DescriptorSets.at(FrameIndex).AttachUniformBuffer(
-				pBinding.Binding, 
-				NewUniform->at(FrameIndex)
-			);
-
-			DescriptorSets.at(FrameIndex).UpdateDescriptorSet();
-			NewUniform->at(FrameIndex).m_Binding = pBinding;
-		}
-
+		
 		return std::move(NewUniform);
 	}
 

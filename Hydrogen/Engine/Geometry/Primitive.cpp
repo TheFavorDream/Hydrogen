@@ -1,143 +1,218 @@
 #include "Primitive.h"
 #include "../Render/Renderer.h"
+#include <algorithm>
+#include <utility>
 #include <vulkan/vulkan_core.h>
 
 namespace Hydrogen
 {
 
 
-	Primitive::Primitive() noexcept
+	Primitive Primitive::CreatePrimitive(
+		Xenon::Primitive& pPrimitive
+	) noexcept
     {
-
-    }
-
-	Primitive::~Primitive() noexcept
-	{
-		//m_IndexBuffer.ResetWithoutRefDrop();
-		//m_VertexBuffer.ResetWithoutRefDrop();
-		//m_Pipeline.ResetWithoutRefDrop();
-	}
-
-	Primitive::Primitive(const Primitive& pOther) noexcept
-    {
-
-    }
-
-	Primitive::Primitive(Primitive&& pOther) noexcept
-    {
-		m_Transform = std::move(pOther.m_Transform);
-		m_Material  = std::move(pOther.m_Material);
-
-		m_Pipeline        = std::move(pOther.m_Pipeline);
-        
-		
-		m_Attributes    = pOther.m_Attributes;
-		m_VertexBuffer  = std::move(pOther.m_VertexBuffer);
-		m_IndexBuffer   = std::move(pOther.m_IndexBuffer);
-    }
-
-
-		
-	Primitive Primitive::CreatePrimitive(Xenon::Primitive& pPrimitive) noexcept
-    {
-
         Primitive NewPrimitive;
 
-        
-		const Xenon::Accessor&   IndexAccessor     = pPrimitive.GetIndices();
-		Xenon::BinaryData        Data 			   = IndexAccessor.RetriveData();
-        
-        NewPrimitive.m_VertexBuffer  = Renderer::Self().InstanceVertexBuffer(); 
-        NewPrimitive.m_IndexBuffer = Renderer::Self().InstanceIndexBuffer();
-        
+		if (pPrimitive.HasPosition())
+		{
+			Xenon::BinaryData Positions = pPrimitive.GetPosition().RetriveData();
+			NewPrimitive.m_Positions.resize(Positions.ByteLength / sizeof(VecF3));
+			memmove(NewPrimitive.m_Positions.data(), Positions.Ptr, Positions.ByteLength);
+		}
 
+		if (pPrimitive.HasNormal())
+		{
+			Xenon::BinaryData Normals = pPrimitive.GetNormal().RetriveData();
+			NewPrimitive.m_Normals.resize(Normals.ByteLength / sizeof(VecF3));
+			memmove(NewPrimitive.m_Normals.data(), Normals.Ptr, Normals.ByteLength);		
+		}
 
-		NewPrimitive.m_IndexBuffer->CreateBuffer(
-			Data.ByteLength, 
-			IndexAccessor.Count,
-			(VkIndexType)Xenon::Accessor::GetVulkanIndexTypeEnum(IndexAccessor.ComponentType));
-        
-		Internal::Vulkan::StagingBuffer stagingBuffer;
-		stagingBuffer.CreateBuffer(Data.ByteLength);
-		stagingBuffer.UploadData(Data.Ptr, Data.ByteLength);
-		stagingBuffer.CopyBuffer(*NewPrimitive.m_IndexBuffer);
-		stagingBuffer.DestroyBuffer();
-		Data.Free();
-		
-		
-		//Vertex Buffer:
-		std::vector<Vertex> Vertices = std::move(RepackVertexData(pPrimitive));
-		uint32 DataSize = Vertices.size() * sizeof(Vertex);
+		if (pPrimitive.HasTangent())
+		{
+			Xenon::BinaryData Tangents = pPrimitive.GetTangent().RetriveData();
+			NewPrimitive.m_Tangent.resize(Tangents.ByteLength / sizeof(VecF4));
+			memmove(NewPrimitive.m_Tangent.data(), Tangents.Ptr, Tangents.ByteLength);
+		}
 
-		NewPrimitive.m_VertexBuffer->CreateBuffer(DataSize);
-		stagingBuffer.CreateBuffer(DataSize);
-		stagingBuffer.UploadData(Vertices.data(), DataSize);
-		stagingBuffer.CopyBuffer(*NewPrimitive.m_VertexBuffer);
-		stagingBuffer.DestroyBuffer();
+		if (pPrimitive.HasTexCoord_0())
+		{
+			Xenon::BinaryData TexCoord00 = pPrimitive.GetTexCoord_0().RetriveData();
+			NewPrimitive.m_TexCoord00.resize(TexCoord00.ByteLength / sizeof(VecF2));
+			memmove(NewPrimitive.m_TexCoord00.data(), TexCoord00.Ptr, TexCoord00.ByteLength);
+		}
 
-		Vertices.clear();
+		if (pPrimitive.HasTexCoord_1())
+		{
+			Xenon::BinaryData TexCoord01 = pPrimitive.GetTexCoord_1().RetriveData();
+			NewPrimitive.m_TexCoord01.resize(TexCoord01.ByteLength / sizeof(VecF2));
+			memmove(NewPrimitive.m_TexCoord01.data(), TexCoord01.Ptr, TexCoord01.ByteLength);
+		}
+
+		if (pPrimitive.HasColor())
+		{
+			Xenon::BinaryData Color = pPrimitive.GetColor().RetriveData();
+			NewPrimitive.m_Color00.resize(Color.ByteLength / sizeof(VecF3));
+			memmove(NewPrimitive.m_Color00.data(), Color.Ptr, Color.ByteLength);
+		}
+
+		if (pPrimitive.HasIndices())
+		{
+			Xenon::BinaryData Indices = pPrimitive.GetIndices().RetriveData();
+			NewPrimitive.m_IndicesRaw = Buffer(Indices.ByteLength);
+			memcpy(NewPrimitive.m_IndicesRaw.AccessPtr(), Indices.Ptr, Indices.ByteLength); 
+
+			NewPrimitive.m_IndexCount = pPrimitive.GetIndices().Count;
+			NewPrimitive.m_IndexType  = pPrimitive.GetIndices().GetVulkanIndexTypeEnum(pPrimitive.GetIndices().ComponentType);
+		}
+
+		NewPrimitive.UpdateVertexData();
+
+		switch(pPrimitive.GetTopology())
+		{
+			case 0: //Points
+				NewPrimitive.m_Topology = HYD_PRIMITIVE_TOPOLOGY_POINT_LIST;
+			break;
+			case 1: //Lines
+				NewPrimitive.m_Topology = HYD_PRIMITIVE_TOPOLOGY_LINE_LIST;
+			break;
+			case 4: //Triangles
+				NewPrimitive.m_Topology = HYD_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+			break;
+			case 5: //Triangle Strips
+				NewPrimitive.m_Topology = HYD_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
+			break;
+			case 6: //Triangle Fan
+				NewPrimitive.m_Topology = HYD_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN;
+			break;
+		}
 
         return std::move(NewPrimitive);
     }
 
 
-
-	std::vector<Vertex> RepackVertexData(
-		Xenon::Primitive& pPrimitive
+	Primitive::Primitive(
+		const Primitive& pOther
 	) noexcept
-	{
-		std::vector<Vertex> Vertices;
+    {
 
-		Xenon::BinaryData PosData     = pPrimitive.GetPosition().RetriveData();
-		Xenon::BinaryData NormalData; 
-		Xenon::BinaryData TangentData;
-		Xenon::BinaryData TexCoord0Data;
-		Xenon::BinaryData TexCoord1Data;
+    }
+
+	Primitive::Primitive(
+		Primitive&& pOther
+	) noexcept
+		: m_Material(    std::move(pOther.m_Material)),
+		  m_Pipeline(    std::move(pOther.m_Pipeline)),
+		  m_Attributes(pOther.m_Attributes),
+		  m_VertexBuffer(std::move(pOther.m_VertexBuffer)),
+		  m_IndexBuffer( std::move(pOther.m_IndexBuffer)),
+		  m_Positions(   std::move(pOther.m_Positions)),
+		  m_Normals(     std::move(pOther.m_Normals)),
+		  m_Tangent(     std::move(pOther.m_Tangent)),
+		  m_TexCoord00(  std::move(pOther.m_TexCoord00)),
+		  m_TexCoord01(  std::move(pOther.m_TexCoord01)),
+		  m_Color00(	 std::move(pOther.m_Color00)),
+		  m_IndicesRaw(  std::move(pOther.m_IndicesRaw)),
+		  m_IndexCount(  pOther.m_IndexCount),
+		  m_IndexType (  pOther.m_IndexType),
+		  m_Topology  (  pOther.m_Topology)
+    {	
+    }
 
 
-		if (pPrimitive.HasNormal())
-			NormalData  = pPrimitive.GetNormal().RetriveData();
+	/*
+		Purpose: Uploads the Vertex Data to the GPU Buffers, if they don't exist, creates them
+	*/
+	uint32 Primitive::UpdateVertexData() noexcept
+	{   
+        
 
-		if (pPrimitive.HasTangent())
-			TangentData = pPrimitive.GetTangent().RetriveData();
-		
-		if (pPrimitive.HasTexCoord_0())
-			TexCoord0Data = pPrimitive.GetTexCoord_0().RetriveData();
-
-		if (pPrimitive.HasTexCoord_1())
-			TexCoord1Data = pPrimitive.GetTexCoord_1().RetriveData();
-
-		uint32 Vec3Offset   = 0;
-		uint32 Vec4Offset   = 0;
-		uint32 Vec2Offset   = 0;
-
-		while (Vec3Offset <= PosData.ByteLength)
+		if (m_IndexBuffer.IsNull())
 		{
-			Vertex vertex;
+			m_IndexBuffer = Renderer::Self().InstanceIndexBuffer();
+			m_IndexBuffer->CreateBuffer(
+				m_IndicesRaw.Length(), 
+				m_IndexCount,
+				VkIndexType(m_IndexType)
+			);
+		}
+        
+		Internal::Vulkan::StagingBuffer stagingBuffer;
+		stagingBuffer.CreateBuffer(m_IndicesRaw.Length());
+		stagingBuffer.UploadData(m_IndicesRaw.GetPtr(), m_IndicesRaw.Length());
+		stagingBuffer.CopyBuffer(*m_IndexBuffer);
+		stagingBuffer.DestroyBuffer();
+		
 
-			memcpy((void*)&vertex.Position, (void*)(PosData.Ptr+Vec3Offset), sizeof(VecF3));
+		uint32 VertexCount = std::max({
+			m_Positions.size(),
+			m_Normals.size(),
+			m_Tangent.size(),
+			m_TexCoord00.size(),
+			m_TexCoord01.size()
+	});
 
-			if (NormalData.Ptr)
-				memcpy((void*)&vertex.Normal, (void*)(NormalData.Ptr+Vec3Offset), sizeof(VecF3));
-			
-			if (TangentData.Ptr)
-				memcpy((void*)&vertex.Tangent, (void*)(TangentData.Ptr+Vec4Offset), sizeof(VecF4));
+		std::vector<Vertex> Vertices; Vertices.resize(VertexCount);
 
-			if (TexCoord0Data.Ptr)
-				memcpy((void*)&vertex.TexCoord00, (void*)(TexCoord0Data.Ptr+Vec2Offset), sizeof(VecF2));
+		for (uint32 PosIndex = 0 ; PosIndex < m_Positions.size() ; ++PosIndex)
+		{
+			Vertices.at(PosIndex).Position   = m_Positions.at(PosIndex);
+		}
 
-			if (TexCoord1Data.Ptr)
-				memcpy((void*)&vertex.TexCoord01, (void*)(TexCoord1Data.Ptr+Vec2Offset), sizeof(VecF2));
-
-			
-			Vertices.push_back(vertex);
-
-			Vec4Offset  += sizeof(VecF4);
-			Vec3Offset  += sizeof(VecF3);
-			Vec2Offset  += sizeof(VecF2);
+		for (uint32 NormIndex = 0 ; NormIndex < m_Normals.size() ; ++NormIndex)
+		{
+			Vertices.at(NormIndex).Normal     = m_Normals.at(NormIndex);
 		}
 		
-		return std::move(Vertices);
+		for (uint32 TanIndex = 0 ; TanIndex < m_Tangent.size() ; ++TanIndex)
+		{
+			Vertices.at(TanIndex).Tangent    = m_Tangent.at(TanIndex);
+		}
+				
+		for (uint32 TexCoordIndex = 0 ; TexCoordIndex < m_TexCoord00.size() ; ++TexCoordIndex)
+		{
+			Vertices.at(TexCoordIndex).TexCoord00 = m_TexCoord00.at(TexCoordIndex);
+		}	
+		
+		for (uint32 TexCoordIndex = 0 ; TexCoordIndex < m_TexCoord01.size() ; ++TexCoordIndex)
+		{
+			Vertices.at(TexCoordIndex).TexCoord01 = m_TexCoord01.at(TexCoordIndex);
+		}
+
+
+		uint32 DataSize = VertexCount * sizeof(Vertex);
+	
+		//Create the Vertex Buffer
+		if (m_VertexBuffer.IsNull())
+		{
+			m_VertexBuffer  = Renderer::Self().InstanceVertexBuffer(); 
+			m_VertexBuffer->CreateBuffer(DataSize);
+
+		}
+
+		//Vertex Buffer:
+		stagingBuffer.CreateBuffer(DataSize);
+		stagingBuffer.UploadData(Vertices.data(), DataSize);
+		stagingBuffer.CopyBuffer(*m_VertexBuffer);
+		stagingBuffer.DestroyBuffer();
+
+		Vertices.clear();
+
+
+		return HYD_OK;
+	}
+
+
+
+	/*
+		Purpose: Set the Material used by this primitive
+	*/
+	
+	void Primitive::SetMaterial(
+		Material&& pMaterial
+	) noexcept
+	{
+		m_Material = std::move(pMaterial);
 	}
 
 };

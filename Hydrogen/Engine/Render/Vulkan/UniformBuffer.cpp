@@ -38,17 +38,6 @@ namespace Internal
     }
 
 
-    void Vulkan::UniformBuffer::Bind(
-        const PipelineLayout& pPipelineLayout 
-    ) noexcept
-    {
-
-        if (!m_DescriptorSetID)
-            return;
-
-        Renderer::Self().AccessDescriptorSet(m_DescriptorSetID).Bind(pPipelineLayout, m_Binding.Set);
-    }
-
 
     void Vulkan::UniformBuffer::SetDescriptorSet(HYD_ID_SPACE pSetID) noexcept
     {   

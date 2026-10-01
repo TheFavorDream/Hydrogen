@@ -497,4 +497,12 @@ namespace Hydrogen
         HYD_BLEND_OP_MIN              = VK_BLEND_OP_MIN,
         HYD_BLEND_OP_MAX              = VK_BLEND_OP_MAX
     };
+
+
+
+    enum PipelineBindPoint
+    {
+        HYD_PIPELINE_BIND_POINT_GRAPHICS  = VK_PIPELINE_BIND_POINT_GRAPHICS,
+        HYD_PIPELINE_BIND_POINT_COMPUTE   = VK_PIPELINE_BIND_POINT_COMPUTE
+    };
 };

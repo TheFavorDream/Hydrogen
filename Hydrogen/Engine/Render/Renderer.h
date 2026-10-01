@@ -15,7 +15,6 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_core.h>
-#include "Vulkan/Image.h"
 #include "Window/Window.h"
 #include "../Geometry/Mesh.h"
 #include "../Geometry/Primitive.h"
@@ -23,6 +22,7 @@
 #include "../InternalEntities/Light.h"
 #include "../Camera/Camera.h"
 #include "UI/UI.h"
+#include "Vulkan/Image.h"
 #include "Vulkan/Swapchain.h"
 #include "Vulkan/Renderpass.h"
 #include "Vulkan/FrameBuffer.h"
@@ -34,37 +34,11 @@
 #include "Vulkan/VertexAttribute.h"
 #include "Vulkan/Descriptors.h"
 #include "Vulkan/Device.h"
+#include "InstructionSet.h"
 
 
 namespace Hydrogen
 {
-
-
-
-	struct Instruction
-	{
-		VertexBufferRef         Vertices;
-		IndexBufferRef          Indices;
-		GraphicsPipelineRef     Pipeline;
-		std::vector<UniformRef> Uniforms;
-		Ptr<Material>		    MaterialPtr;
-
-		 Instruction() = default;
-		~Instruction() = default; 
-	
-		Instruction(const Instruction& ) 			= default;
-		Instruction& operator=(const Instruction& ) = default;
-
-
-		Instruction(Instruction&& pOther)
-			: Vertices(std::move(pOther.Vertices)),
-		  	  Indices(std::move(pOther.Indices)),
-		  	  Pipeline(std::move(pOther.Pipeline)),
-		  	  Uniforms(std::move(pOther.Uniforms)),
-		  	  MaterialPtr(pOther.MaterialPtr)
-			{}
-		
-	};
 
 
 	struct FrameRenderConfig
@@ -72,22 +46,44 @@ namespace Hydrogen
 	public:
 	
 		void PushInstruction(
-			Instruction 			 pInstruction
+			Instruction&& 	 pInstruction
 		) noexcept;
 
 		void PushInstruction(
-			std::vector<Instruction> pInstruction
+			InstructionSet&& pInstruction
 		) noexcept;
+
+
+		/*
+			Purpose: List of Descriptors that will be binded for a FrameRenderConfig obj
+		*/
+
+		void BindDescriptorSet(
+			std::pair<HYD_ID_SPACE, DescriptorBindInfo> pBindInfo
+		) noexcept;
+
+		void BindDescriptorSet(
+			HYD_ID_SPACE	   pID,
+			DescriptorBindInfo pBindInfo
+		) noexcept;
+
 
 
 		void Reset() noexcept;
 
 	private:
-		std::vector<Instruction> m_Instructions;
+		InstructionSet 			  								 m_Instructions;
+        std::vector<std::pair<HYD_ID_SPACE, DescriptorBindInfo>> m_DescriptorBinds;
+
 	private:
 		friend class Renderer;
 	};
 
+
+
+	/*
+		Purpose: Main Renderer Class
+	*/
 
 	class Renderer final
 	{
@@ -97,6 +93,8 @@ namespace Hydrogen
 	public:
 
 		HYD inline uint32 FramesInFlight() const {return m_FramesInFlights;}
+		HYD inline uint32 CurrentFrame()   const {return m_FrameIndex;}
+
 
 //----------------------------Pushes a Render Instruction to the Instruction Queue-------------------------------
 		HYD void PushInstruction(Instruction pIns) noexcept;
@@ -105,8 +103,9 @@ namespace Hydrogen
 		HYD void SetCamera(Ptr<Camera> pCamera) noexcept;
 			
 //---------------------------------------Creates New Vertex & Index Buffers---------------------------------
-		HYD Instance<Internal::Vulkan::VertexBuffer>     InstanceVertexBuffer() noexcept;
-		HYD Instance<Internal::Vulkan::IndexBuffer>      InstanceIndexBuffer()  noexcept;
+		HYD Instance<Internal::Vulkan::VertexBuffer>     InstanceVertexBuffer()  noexcept;
+		HYD Instance<Internal::Vulkan::IndexBuffer>      InstanceIndexBuffer()   noexcept;
+		HYD Instance<Internal::Vulkan::StorageBuffer>    InstanceStorageBuffer() noexcept;
 		
 //-------------------------Creates a Graphics Pipeline Object------------------------------------------
 		HYD Instance<Internal::Vulkan::GraphicsPipeline> CreatePipeline(
@@ -130,12 +129,8 @@ namespace Hydrogen
 		HYD inline  Window& 						 GetWindow()  		{return m_Window;}
 		HYD inline 	Ptr<Camera>					     GetCurrentCamera() {return m_DefCam;}							 
 //--------------------------------------Creates a Pipeline Layout---------------------------------------------
-		HYD_ID_SPACE CreatePipelineLayout(
+		PipelineLayoutRef CreatePipelineLayout(
 			PipelineLayoutConfiguration pConf
-		) noexcept;
-	
-		Internal::Vulkan::PipelineLayout& AccessPipelineLayout(
-			HYD_ID_SPACE pID
 		) noexcept;
 	
 //---------------------------------Creates a Descriptor Set Layout-------------------------------------------
@@ -163,35 +158,24 @@ namespace Hydrogen
 			HYD_ID_SPACE pSetLayoutID
 		) noexcept;
 		
+		/*
+			Purpose: Current Frame Set Access
+		*/
+
 		Internal::Vulkan::DescriptorSet& AccessDescriptorSet(
 			HYD_ID_SPACE pID
 		) noexcept;
 	
-//------------------------------------------Sampler Creation--------------------------------------------------
-
-		HYD_ID_SPACE CreateSampler(
-			SamplerConfiguration pConf
-		) noexcept;
-	
-		Internal::Vulkan::Sampler& AccessSampler(
+		/*
+			Purpose: Frames packed Set Access
+		*/
+		std::vector<Internal::Vulkan::DescriptorSet>& AccessDescriptorSets(
 			HYD_ID_SPACE pID
-		) noexcept; 
-	
-//-------------------------------------------Texture Creation---------------------------------------------------
-
-		HYD std::vector<Instance<Texture2D>> CreateTextures(
-			std::vector<TextureConfiguration>& pConfs
-		) noexcept;
-	
-		HYD Instance<Texture2D> CreateTexture(
-			TextureConfiguration&& pConf
 		) noexcept;
 
 //-----------------------------------------Shader Uniform Buffer-----------------------------------------------	
 		HYD UniformRef CreateUniformBuffer(
-			uint64 		 			pSize,
-			ShaderUniformBinding    pBinding,
-			HYD_ID_SPACE 		    pUniformBufferSetID
+			uint64 		 			pSize
 		) noexcept;
 
 		HYD Internal::Vulkan::UniformBuffer& AccessUniformBuffer(
@@ -209,7 +193,7 @@ namespace Hydrogen
 
 		//Main Rendering Happens here 
 		void Render(
-			const std::vector<FrameRenderConfig>& pConfs = {}
+			std::vector<FrameRenderConfig>& pConfs
 		) noexcept;
 
 		//Takes care of Resizing
@@ -268,23 +252,20 @@ namespace Hydrogen
 		
 
 
-		HYD_ID_SPACE m_PipelineLayoutsIDGen = 1;
 		HYD_ID_SPACE m_DescSetLayoutsIDGen  = 1;
 		HYD_ID_SPACE m_DescriptorSetIDGen   = 1;
 		HYD_ID_SPACE m_DescriptorPoolIDGen  = 0;
 		HYD_ID_SPACE m_SamplerIDGen 	    = 1;
 
 		std::unordered_map<HYD_ID_SPACE, Internal::Vulkan::DescriptorPool>   		   m_DescriptorPools;
-		std::unordered_map<HYD_ID_SPACE, Internal::Vulkan::PipelineLayout>             m_PipelineLayouts;
 		std::unordered_map<HYD_ID_SPACE, Internal::Vulkan::DescriptorSetLayout>        m_DescSetLayouts;
 		std::unordered_map<HYD_ID_SPACE, std::vector<Internal::Vulkan::DescriptorSet>> m_DescriptorSets;
-		std::unordered_map<HYD_ID_SPACE, Internal::Vulkan::Sampler> 				   m_Samplers;
 
-
-		ResourcePool<Texture2D>              			   			   m_Textures;
+		ResourcePool<Internal::Vulkan::PipelineLayout>   			   m_PipelineLayouts;
 		ResourcePool<Internal::Vulkan::GraphicsPipeline>   			   m_Pipelines;
 		ResourcePool<Internal::Vulkan::VertexBuffer> 	   			   m_VertexBuffers;
 		ResourcePool<Internal::Vulkan::IndexBuffer>  	   			   m_IndexBuffers;
+		ResourcePool<Internal::Vulkan::StorageBuffer>  	   			   m_StorageBuffers;
 		ResourcePool<std::vector<Internal::Vulkan::UniformBuffer>>	   m_UniformBuffers;
 
 		Attachment DepthAttachment;
@@ -315,6 +296,7 @@ namespace Hydrogen
 		friend class Internal::Vulkan::BasicBuffer;
 		friend class Internal::Vulkan::VertexBuffer;
 		friend class Internal::Vulkan::StagingBuffer;
+		friend class Internal::Vulkan::StorageBuffer;
 		friend class Internal::Vulkan::IndexBuffer;
 		friend class Internal::Vulkan::UniformBuffer;
 		friend class Internal::Vulkan::DescriptorPool;

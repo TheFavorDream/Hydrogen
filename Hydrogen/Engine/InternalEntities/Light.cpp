@@ -95,14 +95,7 @@ namespace Hydrogen
         uint32 BuffSize = sizeof(Light) * m_Lights.size();
 
         m_UniBuffer = Renderer::Self().CreateUniformBuffer(
-            BuffSize,
-            ShaderUniformBinding{
-                .Binding     = 0,
-                .Set         = int32(pSet), 
-                .ShaderStage = HYD_SHADER_STAGE_FRAGMENT_BIT,
-                .Type        = HYD_DESCRIPTOR_TYPE_UNIFORM_BUFFER
-            },
-            m_DescriptorSetID
+            BuffSize
         );
 
         UploadData();
@@ -118,29 +111,11 @@ namespace Hydrogen
         );
         m_LightCount += 1;
 
+        m_IsDirty = true;
+
         return ++m_LightID;
     }
 
-
-    /*
-        Purpose: Bind the Entire Light Collection to the specified Descriptor Set
-    */
-    HYD void LightCollection::BindCollection(
-        const Internal::Vulkan::PipelineLayout& pPipelineLayout 
-    ) noexcept
-    {
-
-        if (m_IsDirty)
-        {
-            //Reupload Light data:
-            UploadData();
-        }
-
-
-       Renderer::Self().AccessUniformBuffer(m_UniBuffer).Bind(
-            pPipelineLayout
-       );
-    }
 
     const Light& LightCollection::AccessLight(
         HYD_ID_SPACE pID
@@ -165,6 +140,10 @@ namespace Hydrogen
 
     void LightCollection::UploadData() noexcept
     {
+
+        if (!m_IsDirty)
+            return;
+
         struct Data
         {
             alignas(16) VecF3        Position;

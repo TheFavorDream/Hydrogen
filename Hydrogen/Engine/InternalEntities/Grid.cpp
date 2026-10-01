@@ -468,23 +468,26 @@ const uint32 FragmentShaderSizeInBytes = 3524;
         //Pipeline Layout:
         PipelineLayoutConfiguration LayoutConf;
         LayoutConf.AttachDescriptorLayout(DescLayout);
-        HYD_ID_SPACE LayoutID = Renderer::Self().CreatePipelineLayout(LayoutConf);
+        PipelineLayoutRef LayoutRef = Renderer::Self().CreatePipelineLayout(LayoutConf);
 
 
         //Uniform Buffers:
-		HYD_ID_SPACE UniformBufferSetID = Renderer::Self().AllocateDescriptorSet(DescLayout);
+		m_DescriptorSet = Renderer::Self().AllocateDescriptorSet(DescLayout);
 
 		m_Uniform = Renderer::Self().CreateUniformBuffer(
-			sizeof(GridUniformData),
-			ShaderUniformBinding{
-                .Binding     = 0,
-                .Set         = 0,
-                .ShaderStage = HYD_SHADER_STAGE_VERTEX_BIT,
-                .Type        = HYD_DESCRIPTOR_TYPE_UNIFORM_BUFFER
-            },
-			UniformBufferSetID
+			sizeof(GridUniformData)
 		);
 
+        
+        const uint32 Frames = Renderer::Self().FramesInFlight();
+        auto& DescRef       = Renderer::Self().AccessDescriptorSets(m_DescriptorSet);
+        for (uint32 frame = 0 ; frame < Frames ; ++frame)
+        {
+            DescRef.at(frame).AttachUniformBuffer(
+                0, (*m_Uniform).at(frame)
+            );
+            DescRef.at(frame).UpdateDescriptorSet();
+        }
 
         //Create Pipeline:
         Hydrogen::Internal::Vulkan::VertexAttribute Attribute;
@@ -531,7 +534,7 @@ const uint32 FragmentShaderSizeInBytes = 3524;
 
 
 
-        PipelineConf.SetPipelineLayout(LayoutID);
+        PipelineConf.SetPipelineLayout(LayoutRef);
         PipelineConf.AddVertexBufferLayout(Attribute);
         PipelineConf.AttachShader(VertexSh);
         PipelineConf.AttachShader(FragmentSh);
@@ -599,11 +602,16 @@ const uint32 FragmentShaderSizeInBytes = 3524;
 
 
         Instruction instruction;
-        instruction.Vertices    = m_VertexBuffer;
-        instruction.Indices     = m_IndexBuffer;
-        instruction.Pipeline    = m_Pipeline;
-        instruction.Uniforms.push_back(m_Uniform);
-        instruction.MaterialPtr = nullptr;
+        instruction.Vertices     = m_VertexBuffer;
+        instruction.Indices      = m_IndexBuffer;
+        instruction.Pipeline     = m_Pipeline;
+        instruction.DescriptorBinds.push_back(
+            std::pair<HYD_ID_SPACE, DescriptorBindInfo>(m_DescriptorSet, DescriptorBindInfo{
+                .Index          = 0,
+                .BindingPoint   = HYD_PIPELINE_BIND_POINT_GRAPHICS,
+                .PipelineLayout = m_Pipeline->GetPipelineLayout() 
+            })
+        ); 
 
         
         return std::move(instruction);

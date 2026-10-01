@@ -52,12 +52,6 @@ namespace Hydrogen
 		HYD Material& operator=(Material&& pOther);
 
 
-		//Bind Material:
-		HYD void Bind(
-			const Internal::Vulkan::PipelineLayout& pLayout
-		)   noexcept;
-
-
 	private:
 
 		float m_MatallicnessFactor = 0.0f;

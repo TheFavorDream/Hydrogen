@@ -1,10 +1,9 @@
 #pragma once
 
 #include "../../Common.h"
+#include "Image.h"
 #include "Shader.h"
-#include <cstdint>
-#include <vulkan/vulkan.h>
-#include <vulkan/vulkan_core.h>
+#include "../../Core/ResourcePool.h"
 #include "VkEnumReDefs.h"
 
 namespace Hydrogen
@@ -68,17 +67,29 @@ namespace Hydrogen
 
     
 
+    /*
+        Purpose: Information for binding a Descriptor Set
+    */
+
+    struct DescriptorBindInfo
+    {
+        uint32              Index;
+        PipelineBindPoint   BindingPoint;
+        PipelineLayoutRef   PipelineLayout;
+    };
+
 namespace Internal
 {
 namespace Vulkan
 {
     struct DescriptorWriteBufferInfo
     {
-        uint32   Binding    = UINT32_MAX;
-        uint32   ArrayIndex = 0;
-        uint32   Offset     = 0;
-        uint32   Range      = UINT32_MAX;
-        VkBuffer Buffer     = VK_NULL_HANDLE;
+        uint32          Binding    = UINT32_MAX;
+        uint32          ArrayIndex = 0;
+        uint32          Offset     = 0;
+        uint32          Range      = UINT32_MAX;
+        VkBuffer        Buffer     = VK_NULL_HANDLE;
+        DescriptorType  Type;
     }; 
 
 
@@ -183,6 +194,9 @@ namespace Vulkan
         ~DescriptorSet() noexcept;
 
 
+        /*
+            Purpose: Use to Attach a Uniform Buffer to this DescriptorSet
+        */
         void AttachUniformBuffer(
             uint32         pBinding,
             UniformBuffer& pBuffer,
@@ -190,7 +204,20 @@ namespace Vulkan
             uint32         pOffset = 0
         ) noexcept;
 
+        /*
+            Purpose: Use to Attach a Storage Buffer to this DescriptorSet
+        */
 
+        void AttachStorageBuffer(
+            uint32          pBinding,
+            StorageBuffer&  pBuffer,
+            uint32          pRange  = UINT32_MAX,
+            uint32          pOffset = 0
+        );
+
+        /*
+            Purpose: Use to Attach an Image with Sample to this DescriptorSet
+        */
         void AttachTextureSampler(
             uint32      pBinding,
             Sampler&    pSampler,
@@ -198,12 +225,19 @@ namespace Vulkan
             ImageLayout pLayout
         ) noexcept;
 
+        /*
+            Purpose: Use to Attach Image(s)
+        */
+
+        void AttachImages(
+            uint32 pBinding,
+            Image& pImage
+        ) noexcept;
 
         void UpdateDescriptorSet() noexcept;
 
         void Bind(
-            const PipelineLayout& pLayout,
-            uint32                pFirstSet
+            DescriptorBindInfo pBindInfo
         ) noexcept;
 
     private:

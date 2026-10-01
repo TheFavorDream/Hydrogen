@@ -196,6 +196,11 @@ namespace Hydrogen
 		Renderer::Self().Render(
 			m_LayerRenderConfigurations
 		);
+
+		//Reseting
+		for (auto& LayerConf : m_LayerRenderConfigurations)
+			LayerConf.Reset();
+		
 	}
 
 }

@@ -45,8 +45,9 @@ namespace Hydrogen
         GridUniformData m_UniData;
 
     private:
-        float      m_Spacing = 1.0f;
-        UniformRef m_Uniform;
+        float        m_Spacing = 1.0f;
+        UniformRef   m_Uniform;
+        HYD_ID_SPACE m_DescriptorSet = 0;
     };
 
 };

@@ -132,10 +132,10 @@ namespace Hydrogen
     }
 
     void GraphicsPipelineConfiguration::SetPipelineLayout(
-        HYD_ID_SPACE pLayoutID
+        PipelineLayoutRef pLayout
     ) noexcept
     {
-        m_LayoutID = pLayoutID;
+        m_Layout = pLayout;
     }
 
 
@@ -240,7 +240,7 @@ namespace Internal
             m_Handle,
             pStageFlags,
             pOffset,
-            pSize,
+              pSize,
             pValue
         );
     }
@@ -475,7 +475,7 @@ namespace Internal
 
 
         m_Subpass        = pConfig.m_Subpass;
-        m_PipelineLayout = pConfig.m_LayoutID;
+        m_PipelineLayout = pConfig.m_Layout;
 
         m_Parent = pConfig.m_ParentPipeline;
 
@@ -540,7 +540,7 @@ namespace Internal
 
         //Pipeline Layout:
         CInfo.pDynamicState       = &m_DynamicStatesInfo;
-        CInfo.layout              = Renderer::Self().AccessPipelineLayout(m_PipelineLayout).m_Handle;
+        CInfo.layout              = m_PipelineLayout->m_Handle;
 
         CInfo.renderPass = Renderer::Self().RenderPass().m_Handle;
         CInfo.subpass    = m_Subpass;

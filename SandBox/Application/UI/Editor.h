@@ -85,10 +85,18 @@ private:
 	) noexcept;
 
 	/*
-		Purpose: Renders the Node with a mesh
+		Purpose: Renders the Node' mesh
 	*/
 	static void DrawTreeMesh(
 		Hydrogen::Mesh& 	pMesh,
+		ImGuiTreeNodeFlags  pFlags
+	) noexcept;
+
+	/*
+		Purpose: Renders the Node's Light
+	*/
+	static void DrawTreeLight(
+		HYD_ID_SPACE 		pLight,
 		ImGuiTreeNodeFlags  pFlags
 	) noexcept;
 

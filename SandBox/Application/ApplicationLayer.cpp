@@ -13,7 +13,6 @@ void AppLayer::Setup()
 	//Camera Setup
 	m_Scene->GetCamera().SetupCamera(45.0f, glm::vec3(-3.0f, 0.5f, 0.0f), 2.0f, 0.1f, 1000.0f);
 	
-	Renderer::Self().SetCamera(&m_Scene->GetCamera());
 	
 	//Layout Setup:
 	Hydrogen::SceneShaderLayout SceneUniformLayout;
@@ -34,42 +33,39 @@ void AppLayer::Setup()
 	SceneUniformLayout.Material.Type		 			   = Hydrogen::HYD_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 
 
-	//Set Up the Lights:
-	m_Scene->GetLightCollection().CreateLight(
-		Hydrogen::Light(
-			"MainLight1",
-			Hydrogen::VecF3(0.0f, 5.0f, 0.0f),
-			Hydrogen::VecF3(1.0f)
-		)
-	);
-	//Pipeline Creation:
-	m_Scene->ConfigurePipeline(
-		ConfigPipeline(),
-		SceneUniformLayout,
-		Hydrogen::HYD_SCENE_EXTERNAL_LIGHT
-	);
-
 
 	Xenon::Model model = Core::Load(
-		"/home/Volta/Desktop/Dev/Hydrogen/SandBox/Resources/Models/ChainSaw/scene.gltf",
-		Xenon::LF_BASE_NORMAL_ONLY
+		"/home/Volta/Desktop/Dev/Hydrogen/SandBox/Resources/Models/Interior2/scene.gltf",
+		Xenon::LF_NO_MATERIAL
 	);
 	
+	std::vector<Hydrogen::ShaderConfiguration> Shaders = {	//Shader Compliation:
+		Hydrogen::ShaderConfiguration{
+			.Type = HYD_STAGE_VERTEX_SHADER,
+ 			.Path = "/home/Volta/Desktop/Dev/Hydrogen/SandBox/Shaders/Vertex.spv"
+		},
+
+		Hydrogen::ShaderConfiguration{
+			.Type = HYD_STAGE_FRAGMENT_SHADER,
+ 			.Path = "/home/Volta/Desktop/Dev/Hydrogen/SandBox/Shaders/Fragment.spv"
+		}
+	};
 
 	m_Scene->LoadScene(
+		std::move(Shaders),
 		model[0] //first scene
 	);
 
-	Hydrogen::Quaternion Rot;  Rot.Euler(0.0f, 0.0f, 90.0f);
+	Hydrogen::Quaternion Rot = Rot.Euler(0.0f, 0.0f, 180.0f);
 	//m_Scene->GetTransform().t_Rotate = Rot;
-	m_Scene->GetTransform().t_Scale = Hydrogen::VecF3(1.2f);
+	m_Scene->GetTransform().t_Scale = Hydrogen::VecF3(0.5f);
 
 
 
-	m_Grid.GenerateGrid();
-
-
+	
+	
 	Editor::SetCurrentScene(m_Scene.GetPtr());
+	m_Grid.GenerateGrid();
 }
 
 
@@ -104,6 +100,7 @@ void AppLayer::Render(
 	Hydrogen::FrameRenderConfig& pRenderConf
 )
 {
+	/*
 	if (Editor::RenderGrid)
 	{
 		//Render the Grid
@@ -111,29 +108,27 @@ void AppLayer::Render(
 			m_Grid.Render()
 		);
 	}
+	*/
+	
+	pRenderConf.BindDescriptorSet(m_Scene->PrimitiveListBind());
+	pRenderConf.BindDescriptorSet(m_Scene->CameraBind());
 	//Render the Scene:
 	pRenderConf.PushInstruction(
 		m_Scene->Render()
 	);
+	
 
 } 
 
 Hydrogen::GraphicsPipelineConfiguration AppLayer::ConfigPipeline() noexcept
 {
-	//Shader Compliation:
-	Hydrogen::ShaderConfiguration VertexShaderConf;
-	VertexShaderConf.Type = HYD_STAGE_VERTEX_SHADER;
- 	VertexShaderConf.Path = "/home/Volta/Desktop/Dev/Hydrogen/SandBox/Shaders/Vertex.spv";
-	
 
-	Hydrogen::ShaderConfiguration FragmentShaderConf;
-	FragmentShaderConf.Type = HYD_STAGE_FRAGMENT_SHADER;
- 	FragmentShaderConf.Path = "/home/Volta/Desktop/Dev/Hydrogen/SandBox/Shaders/Fragment.spv";
 
 
 
 	Hydrogen::GraphicsPipelineConfiguration PipelineConf;
 
+	/*
 	PipelineConf.SetSubpass(0);
 
 	PipelineConf.AttachShader(VertexShaderConf);
@@ -144,7 +139,7 @@ Hydrogen::GraphicsPipelineConfiguration AppLayer::ConfigPipeline() noexcept
 	PipelineConf.SetViewport(Viewport);
 	PipelineConf.SetRasterizer(Hydrogen::HYD_POLYGON_MODE_FILL, Hydrogen::HYD_CULL_MODE_BACK, Hydrogen::HYD_FRONT_FACE_COUNTER_CLOCKWISE);
 	PipelineConf.SetDepthStencil(true, true,Hydrogen::HYD_COMPARE_OP_GREATER);
-
+	*/
 
 	return PipelineConf;
 }

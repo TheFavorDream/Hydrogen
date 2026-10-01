@@ -74,9 +74,8 @@ namespace Hydrogen
 	TextureConfiguration::TextureConfiguration(
 		TextureConfiguration&& pOther
 	) noexcept
-	 : Data(std::move(pOther.Data)), ImageSampler(pOther.ImageSampler), BindingLocation(pOther.BindingLocation)
+	 : Data(std::move(pOther.Data)),  BindingLocation(pOther.BindingLocation)
 	{
-		pOther.ImageSampler    = SamplerConfiguration{};
 		pOther.BindingLocation = ShaderUniformBinding{};
 	}
 
@@ -84,10 +83,8 @@ namespace Hydrogen
 	{
 
 		Data 		    = std::move(pOther.Data);
-		ImageSampler 	= pOther.ImageSampler;
 		BindingLocation = pOther.BindingLocation;
 
-		pOther.ImageSampler    = SamplerConfiguration{};
 		pOther.BindingLocation = ShaderUniformBinding{};
 	}
 
@@ -203,9 +200,6 @@ namespace Hydrogen
 
 		CHECK_ERROR(m_View.CreateImageView(ViewConf));
 
-		//Create the Sampler:
-		CHECK_ERROR(m_Sampler.CreateSampler(pConf.ImageSampler));
-
 		return HYD_OK;
 	}
 
@@ -213,7 +207,6 @@ namespace Hydrogen
 	{
 		m_Image.DestroyImage();
 		m_View.DestroyImageView();
-		m_Sampler.DestroySampler();
 	}
 
 };

@@ -30,12 +30,7 @@ namespace Hydrogen
 
 			for (auto& set : Set)
 			{
-				set.AttachTextureSampler(
-				 	pBindings.BaseColorBinding,
-					NewMaterial.m_BaseColor->m_Sampler,
-				   	NewMaterial.m_BaseColor->m_View,
-					HYD_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-				);
+
 			}
 		}
 
@@ -44,12 +39,7 @@ namespace Hydrogen
 			NewMaterial.m_NormalMap = pTextureTable[pMaterial.GetNormalMap().value()];
 			for (auto& set : Set)
 			{
-				set.AttachTextureSampler(
-				 pBindings.NormalMapBinding,
-				NewMaterial.m_NormalMap->m_Sampler,
-				   NewMaterial.m_NormalMap->m_View,
-				  HYD_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-				);
+
 			}
 		}
 		
@@ -60,12 +50,7 @@ namespace Hydrogen
 			
 			for (auto& set : Set)
 			{
-				set.AttachTextureSampler(
-				 	pBindings.MettallicRoughnessBinding,
-					NewMaterial.m_MetallicMap->m_Sampler,
-				    NewMaterial.m_MetallicMap->m_View,
-				    HYD_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-				);
+
 			}
 		}
 
@@ -75,12 +60,7 @@ namespace Hydrogen
 
 			for (auto& set : Set)
 			{
-				set.AttachTextureSampler(
-				 	pBindings.EmissiveBinding,
-					NewMaterial.m_EmissiveMap->m_Sampler,
-					NewMaterial.m_EmissiveMap->m_View,
-				  	HYD_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-				);
+
 			}
 		}
 
@@ -90,12 +70,7 @@ namespace Hydrogen
 
 			for (auto& set : Set)
 			{
-				set.AttachTextureSampler(
-				 	pBindings.OcolusionBinding,
-					NewMaterial.m_OcclusionMap->m_Sampler,
-				    NewMaterial.m_OcclusionMap->m_View,
-				  	HYD_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-				);
+
 			}
 		}
 
@@ -141,15 +116,4 @@ namespace Hydrogen
 
 		return *this;
 	}
-
-	
-	void Material::Bind(
-		const Internal::Vulkan::PipelineLayout& pLayout
-	) noexcept
-	{
-		if (!m_SetID)
-			return;
-		Renderer::Self().AccessDescriptorSet(m_SetID).Bind(pLayout, m_Binding.Set);
-	}
-
 };

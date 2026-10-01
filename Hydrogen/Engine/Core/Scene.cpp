@@ -2,50 +2,214 @@
 #include "../HydPch.h"
 #include "../Render/Renderer.h"
 #include <cstddef>
+#include <cstdint>
+#include <vector>
 #include <vulkan/vulkan_core.h>
 
 namespace Hydrogen
 {
 
-	Scene::Scene()
+
+
+/*
+	Node Implementation:
+*/
+
+
+	Node::Node(
+		const std::string& pName
+	) noexcept
+		: m_Name(pName)
+	{
+
+	}
+
+	Node::Node(
+		const Node& pOther
+	) noexcept
+	{
+		m_Name	    = pOther.m_Name;
+		m_Mesh	    = pOther.m_Mesh;
+		m_Children  = pOther.m_Children;
+		m_Transform = pOther.m_Transform;
+		m_Light     = pOther.m_Light;
+		m_Camera    = pOther.m_Camera;
+		m_PointerToParent = pOther.m_PointerToParent;
+	}
+
+	Node::Node(
+		Node&& pOther
+	) noexcept
+	{
+		m_Name		= std::move(pOther.m_Name);
+		m_Mesh		= std::move(pOther.m_Mesh);
+		m_Children	= std::move(pOther.m_Children);
+		m_Transform = std::move(pOther.m_Transform);
+		m_Camera    = pOther.m_Camera;
+		m_Light     = pOther.m_Light;
+
+		pOther.m_Light  = 0;
+		pOther.m_Camera = 0;
+
+		m_PointerToParent	     = pOther.m_PointerToParent;
+		pOther.m_PointerToParent = nullptr;
+	}
+		
+	Node& Node::operator=(
+		const Node& pOther
+	)
+	{
+		if (&pOther == this)
+			return *this;
+
+		m_Name		= pOther.m_Name;
+		m_Mesh		= pOther.m_Mesh;
+		m_Children  = pOther.m_Children;
+		m_Transform = pOther.m_Transform;
+		m_Light     = pOther.m_Light;
+		m_Camera    = pOther.m_Camera;
+
+		m_PointerToParent = pOther.m_PointerToParent;
+
+		return *this;
+	}
+
+	Node& Node::operator=(Node&& pOther)
+	{
+
+		if (&pOther == this)
+			return *this;
+
+		m_Name		= std::move(pOther.m_Name);
+		m_Mesh		= std::move(pOther.m_Mesh);
+		m_Children  = std::move(pOther.m_Children);
+		m_Transform = std::move(pOther.m_Transform);
+
+		m_Light     = pOther.m_Light;
+		m_Camera    = pOther.m_Camera;
+		
+		pOther.m_Light  = 0;
+		pOther.m_Camera = 0;
+
+		m_PointerToParent		 = pOther.m_PointerToParent;
+		pOther.m_PointerToParent = nullptr;
+
+		return *this;
+
+	}
+
+	
+	void Node::SetLight(
+		HYD_ID_SPACE pLight
+	) noexcept
+	{
+		m_Light = pLight;
+	}
+
+
+	void Node::InsertChildNode(
+		Node pNode
+	) noexcept
+	{
+		m_Children.push_back(std::move(pNode));
+	}
+
+
+	void Node::Destroy() noexcept
+	{
+		m_Mesh.Reset();
+		m_Light  = 0;
+		m_Camera = 0;
+		for (auto& node : m_Children)
+			node.Destroy();
+	}
+
+
+//-------------------------Scene-------------------------------------------------------
+
+	Scene::Scene() noexcept
 	{
 		m_Camera.SetupCamera(60.0f, glm::vec3(0.0f), 2.0f, 0.001f, 10000.0f);
 
 		Renderer::Self().SetCamera(&m_Camera);
 	}
 
-	Scene::~Scene()
+	Scene::~Scene() noexcept
 	{
 		FreeScene();
 	}
 
 
-	Scene::Scene(Scene&& pOther)
+	Scene::Scene(
+		Scene&& pOther
+	) noexcept
 	{
 		m_Meshes    = std::move(pOther.m_Meshes);
-		m_Name		= std::move(pOther.m_Name);
-		m_Children	= std::move(pOther.m_Children);
+		m_Materials = std::move(pOther.m_Materials);
+		m_Textures  = std::move(pOther.m_Textures);
+		m_Samplers  = std::move(pOther.m_Samplers);
+		m_Camera    = std::move(pOther.m_Camera);
+
+		//LightCollection				  m_Lights;
+
+		//For Bindless Rendering
+		m_PrimitiveList = std::move(pOther.m_PrimitiveList);
+		m_MaterialList  = std::move(pOther.m_MaterialList);
+		m_ImageList     = std::move(pOther.m_ImageList);
+		m_SamplerList   = std::move(pOther.m_SamplerList);
+
+		m_PipelineLayout = std::move(m_PipelineLayout);
+		m_Pipeline 		 = std::move(m_Pipeline);
+		m_CameraData 	 = std::move(m_CameraData);
+		
+
+		//Descriptor Set Layouts:
+		m_SceneDataDescLayoutID  = pOther.m_SceneDataDescLayoutID;
+		m_CameraDataDescLayoutID = pOther.m_CameraDataDescLayoutID;
+
+		pOther.m_SceneDataDescLayoutID  = 0;
+		pOther.m_CameraDataDescLayoutID = 0;
+
 	}
 
-	Scene& Scene::operator=(Scene&& pOther)
+	Scene& Scene::operator=(
+		Scene&& pOther
+	) noexcept
 	{
 		if (&pOther == this)
 			return *this;
+
 		m_Meshes    = std::move(pOther.m_Meshes);
-		m_Name      = std::move(pOther.m_Name);
-		m_Children  = std::move(pOther.m_Children);
+		m_Materials = std::move(pOther.m_Materials);
+		m_Textures  = std::move(pOther.m_Textures);
+		m_Samplers  = std::move(pOther.m_Samplers);
+		m_Camera    = std::move(pOther.m_Camera);
+
+		//LightCollection				  m_Lights;
+
+		//For Bindless Rendering
+		m_PrimitiveList = std::move(pOther.m_PrimitiveList);
+		m_MaterialList  = std::move(pOther.m_MaterialList);
+		m_ImageList     = std::move(pOther.m_ImageList);
+		m_SamplerList   = std::move(pOther.m_SamplerList);
+
+		m_PipelineLayout = std::move(m_PipelineLayout);
+		m_Pipeline 		 = std::move(m_Pipeline);
+		m_CameraData 	 = std::move(m_CameraData);
+		
+
+		//Descriptor Set Layouts:
+		m_SceneDataDescLayoutID  = pOther.m_SceneDataDescLayoutID;
+		m_CameraDataDescLayoutID = pOther.m_CameraDataDescLayoutID;
+
+		pOther.m_SceneDataDescLayoutID  = 0;
+		pOther.m_CameraDataDescLayoutID = 0;
 
 		return *this;
 	}
 
 
-	uint32 Scene::PushNode(Node pNode)
-	{
-		m_Children.push_back(std::move(pNode));
-		return HYD_OK;
-	}
-
-	uint32 Scene::FreeScene()
+	uint32 Scene::FreeScene() noexcept
 	{
 		for (auto& node : m_Children)
 		{
@@ -56,7 +220,7 @@ namespace Hydrogen
 		return HYD_OK;
 	}
 
-	std::vector<Instruction> Scene::Render() noexcept
+	InstructionSet Scene::Render() noexcept
 	{
 		//Start the Travers:
 		std::stack<Node> Travers;
@@ -68,7 +232,21 @@ namespace Hydrogen
 		}
 
 
-		std::vector<Instruction> InstructionSet;
+		//Upload Camera Data:
+
+		Renderer::Self().AccessUniformBuffer(m_CameraData).UploadData(
+			m_Camera.GetViewPtr(),
+			sizeof(glm::mat4),
+			0
+		);
+		
+		Renderer::Self().AccessUniformBuffer(m_CameraData).UploadData(
+			m_Camera.GetProjectionPtr(),
+			sizeof(glm::mat4),
+			sizeof(glm::mat4)
+		);
+		
+		InstructionSet Instructions;
 
 		while (!Travers.empty())
 		{
@@ -76,26 +254,22 @@ namespace Hydrogen
 			Travers.pop();
 
 
-			//Upload Camera Data:
-			Renderer::Self().AccessUniformBuffer(m_Uniforms).UploadData(m_Camera.GetViewPtr(),sizeof(glm::mat4),sizeof(MatF4));
-			Renderer::Self().AccessUniformBuffer(m_Uniforms).UploadData(m_Camera.GetProjectionPtr(),sizeof(glm::mat4),2*sizeof(MatF4));
-			
+
 			if (Current.HasMesh())
 			{
 
-				uint32 Index = InstructionSet.size();
+				Instance<Mesh>& mesh = Current.GetMesh();
 
-				Current.GetMesh()->Render(
-					InstructionSet,
-					m_Uniforms,
+				Instructions.Append(mesh->Render(
 					Current.GetTransform()
-				);
+				));
 
-				//Add the light buffer
-				for ( ; Index < InstructionSet.size() ; ++Index)
-				{
-					InstructionSet.at(Index).Uniforms.push_back(m_Lights.GetUniformBuffer());
-				}
+				MatF4 Model 	  = mesh->GetModelMatrix();
+				
+				uint32 BaseOffset =	(m_MeshCount*sizeof(MeshData))*Renderer::Self().CurrentFrame(); 
+				m_PrimitiveList->UploadData(
+					(void*)Model.GetPointer(),sizeof(MeshData), BaseOffset +  (mesh->GetID()*sizeof(MeshData))
+				);
 			}
 
 			
@@ -107,18 +281,163 @@ namespace Hydrogen
 		
 		}
 
-		return std::move(InstructionSet);
+		return std::move(Instructions);
 	}
 
 
+	/*
+		Purpose: Load a scene from gltf file & Configure the buffers
+	*/
 	uint32 Scene::LoadScene(
-		const Xenon::Scene& pSourceScene
+		std::vector<ShaderConfiguration> pShaders,
+		const Xenon::Scene& 			 pSourceScene,
+		SceneFlags						 pFlags,
+		GraphicsPipelineConfiguration    pPipelineConf// = GraphicsPipelineConfiguration{} 
 	) noexcept
 	{
 
 
-		Internal::Vulkan::VertexAttribute Attrib;
+		//Shaders:
+		for(auto& shader : pShaders)
+		{
+			pPipelineConf.AttachShader(shader);
+		}
+		
+		CreatePiplines(pPipelineConf);
 
+		
+		std::vector<Instance<Mesh>>		 				MeshInstances;
+		//std::vector<Instance<Material>>					MaterialInstances;
+		//std::unordered_map<uint64, Instance<Texture2D>> TextureInstances;
+
+
+		//std::set<Xenon::Sampler> XenonSamplers;
+
+		//Set the name for the scene:
+		m_Name = pSourceScene.GetName();
+
+		/*
+		//Texture Loading:
+		for (auto& texture : pSourceScene.GetTextures())
+		{
+			TextureConfiguration TextureConfiguration;
+
+			Xenon::BinaryData Img 	   		 = texture.second.RetriveImageData();
+			TextureConfiguration.Data  		 = Buffer(Img.Ptr, Img.ByteLength);
+			Img.Ptr 	   			   		 = nullptr;
+			Img.ByteLength 			   		 = 0;
+			TextureConfiguration.TexCoordSet = texture.second.TexCoordSet;
+
+			XenonSamplers.emplace(texture.second.TextureSample);
+
+			Texture2DRef NewTexture = m_Textures.Resource();
+			NewTexture->CreateTexture(TextureConfiguration);
+
+			TextureInstances.emplace(texture.first, std::move(NewTexture));
+		}
+
+		*/
+
+
+
+
+		uint32 MeshIDGen = 0;		
+		for (auto& mesh : pSourceScene.GetMeshes())
+		{
+			Mesh NewMesh = Mesh::CreateGLTFMesh(mesh, MeshIDGen++, m_Pipeline);
+			m_MeshCount++;
+
+			MeshInstances.push_back(
+				m_Meshes.PushObject(std::move(NewMesh))
+			);
+		}
+
+
+
+		//Node-Tree:
+		using NODE = std::pair<Xenon::Node, Ptr<Node>>;
+
+		std::stack<NODE> Travers;
+
+		for (auto& node : pSourceScene)
+		{
+			Travers.push(NODE(node, (Node*)this));
+		}
+
+		Ptr<Node> Parent = nullptr;
+		while (!Travers.empty())
+		{
+			NODE node = std::move(Travers.top());
+			Travers.pop();
+
+			//Create and Configure the node:
+			Node NewNode;
+			NewNode.GetName()		  = node.first.GetName();
+			NewNode.m_PointerToParent = node.second;
+			if (!node.first.IsMeshEmpty())
+			{
+				NewNode.GetMesh() = MeshInstances.at(node.first.GetMeshIndex());
+			}
+			NewNode.m_Transform.t_Scale      = node.first.Scale();
+			NewNode.m_Transform.t_Rotate     = node.first.Rotation();
+			NewNode.m_Transform.t_Translate  = node.first.Translation();
+
+				
+
+			//Dumb shit
+			//Push it to the parent node: (starting with scene as parent)
+			NewNode.m_Children.reserve(node.first.ChildCount());
+			node.second->m_Children.push_back(std::move(NewNode));
+			Parent = &node.second->m_Children.at(node.second->m_Children.size() - 1);
+			for (auto& Child : node.first)
+			{
+				Travers.push(NODE(Child, Parent));
+			}
+		}
+
+
+
+		//Create the Pipeline & Descriptors:
+
+		//Storage Buffers:
+		m_PrimitiveList = Renderer::Self().InstanceStorageBuffer();
+		m_PrimitiveList->CreateBuffer(
+			sizeof(MeshData)*m_MeshCount*Renderer::Self().FramesInFlight()
+		);
+
+		//Camera Uniform
+		m_CameraData = Renderer::Self().CreateUniformBuffer(sizeof(MatF4)*2);
+
+		
+		//Pipeline Layout:
+		AllocateDescriptors(
+			m_MeshCount, 0, 0, 0
+		);
+
+		return HYD_OK;
+	}
+
+		
+
+	/*
+		Purpose: Create a New Light, Add to the Scene's Light Pool & and Return a handle to the light
+		Note: Create a Light doesn't Render it in the scene, User must Add the Light to a node 
+	*/
+	
+	HYD HYD_ID_SPACE Scene::NewLight(
+		Light pLight
+	) noexcept
+	{
+		return 0;//m_Lights.CreateLight(std::move(pLight));
+	}
+
+
+	void Scene::CreatePiplines(
+		GraphicsPipelineConfiguration pPipelineConf
+	) noexcept
+	{
+		//Vertex Buffer Layout Config:
+		Internal::Vulkan::VertexAttribute Attrib;
 		Attrib.m_BindingDescriptions.push_back(
 			{
 				.binding   = 0,
@@ -172,305 +491,127 @@ namespace Hydrogen
 			}
 		);
 
-		m_PipelineConf.AddVertexBufferLayout(Attrib);
-		m_PipelineConf.SetPrimitiveTogology();
-		m_Pipeline = Renderer::Self().CreatePipeline(m_PipelineConf);
+		pPipelineConf.AddVertexBufferLayout(Attrib);
+		pPipelineConf.SetPrimitiveTogology();
 
+		pPipelineConf.SetRasterizer(HYD_POLYGON_MODE_FILL, HYD_CULL_MODE_BACK, HYD_FRONT_FACE_COUNTER_CLOCKWISE);
+		pPipelineConf.SetDepthStencil(true, true,HYD_COMPARE_OP_GREATER);
 
-
-		std::vector<Instance<Mesh>>		 MeshIns;
-		std::vector<Instance<Scene>>     SceneIns;
-		std::unordered_map<uint64, Instance<Texture2D>> TexIns;
-
-		//Set the name for the scene:
-		m_Name = pSourceScene.GetName();
-
-		//Texture Loading:
-		for (auto& texture : pSourceScene.GetTextures())
-		{
-			TextureConfiguration TextureConfiguration;
-
-			Log::SetInfo("Loading Texture");
-
-
-			Xenon::BinaryData Img = texture.second.RetriveImageData();
-			TextureConfiguration.Data      = Buffer(Img.Ptr, Img.ByteLength);
-			Img.Ptr 	   = nullptr;
-			Img.ByteLength = 0;
-
-			TextureConfiguration.ImageSampler = SamplerConfiguration{
-				.Minification     = FilterMode(Xenon::Sampler::VulkanFilterEnum(texture.second.TextureSample.Min)),
-				.Magnification    = FilterMode(Xenon::Sampler::VulkanFilterEnum(texture.second.TextureSample.Mag)),
-				.MipMapFilter     = MipMapFilterMode(Xenon::Sampler::VulkanMipmapFilterEnum(texture.second.TextureSample.Min)),
-				.WrapU            = WrapMode(Xenon::Sampler::VulkanWrapEnum(texture.second.TextureSample.WrapS)),
-				.WrapV            = WrapMode(Xenon::Sampler::VulkanWrapEnum(texture.second.TextureSample.WrapT)),
-				.WrapW            = HYD_SAMPLER_WRAP_MODE_CLAMP_TO_EDGE,
-				.AnisotropyEnable = false,
-				.MaxAnisotropy    = 0,
-			};
-			
-			TextureConfiguration.TexCoordSet = texture.second.TexCoordSet;
-			TexIns.emplace(texture.first, Renderer::Self().CreateTexture(std::move(TextureConfiguration)));
-		}
-
-
-
-		//Mesh Creation:
-		for (auto& mesh : pSourceScene.GetMeshes())
-		{
-			Mesh NewMesh = Mesh::CreateGLTFMesh(mesh, m_Pipeline);
-			
-			uint64 Index = 0;
-			for (auto& pri : mesh)
-			{
-				NewMesh.GetPrimitve(Index++).m_Material = Material::CreateMaterialGLTF(
-					pri.GetMatrial(),
-					TexIns,
-					m_MaterialLayoutID,
-					m_ShaderBinding.Material
-				);
-			}
-			MeshIns.push_back(m_Meshes.PushObject(std::move(NewMesh)));
-		}
-
-
-		//Node-Tree:
-
-		using NODE = std::pair<Xenon::Node, Ptr<Node>>;
-
-		std::stack<NODE> Travers;
-
-		for (auto& node : pSourceScene)
-		{
-			Travers.push(NODE(node, (Node*)this));
-		}
-
-		Ptr<Node> Parent = nullptr;
-		while (!Travers.empty())
-		{
-			NODE node = std::move(Travers.top());
-			Travers.pop();
-
-			//Create and Configure the node:
-			Node NewNode;
-			NewNode.GetName()		  = node.first.GetName();
-			NewNode.m_PointerToParent = node.second;
-			if (!node.first.IsMeshEmpty())
-			{
-				NewNode.GetMesh() = MeshIns.at(node.first.GetMeshIndex());
-			}
-			NewNode.m_Transform.t_Scale      = node.first.Scale();
-			NewNode.m_Transform.t_Rotate     = node.first.Rotation();
-			NewNode.m_Transform.t_Translate  = node.first.Translation();
-
-				
-
-			//Dumb shit
-			//Push it to the parent node: (starting with scene as parent)
-			NewNode.m_Children.reserve(node.first.ChildCount());
-			node.second->m_Children.push_back(std::move(NewNode));
-			Parent = &node.second->m_Children.at(node.second->m_Children.size() - 1);
-			for (auto& Child : node.first)
-			{
-				Travers.push(NODE(Child, Parent));
-			}
-
-		}
-
-
-
-
-		return HYD_OK;
+		ConfigureDescriptors();		
+		pPipelineConf.SetPipelineLayout(m_PipelineLayout);
+		m_Pipeline = Renderer::Self().CreatePipeline(pPipelineConf);
 	}
 
-	uint32 Scene::ConfigurePipeline(
-		const GraphicsPipelineConfiguration& pConf,
-		const SceneShaderLayout&			 pShaderLayout,
-		SceneFlags							 pFlags //= HYD_SCENE_NONE
+	void Scene::ConfigureDescriptors() noexcept
+	{
+		//Bindless Resources:
+
+		DescriptorSetLayoutConfiguration SceneResourcesDescLayoutConf;
+
+		//Primitive Info
+		SceneResourcesDescLayoutConf.AddBinding(
+			DescriptorBinding{
+				.Binding = 0,
+				.Count   = 1,
+				.Stage   = HYD_SHADER_STAGE_VERTEX_BIT,
+				.Type    = HYD_DESCRIPTOR_TYPE_STORAGE_BUFFER 
+			}
+		);
+
+		/*
+		//Materials
+		SceneResourcesDescLayoutConf.AddBinding(
+			DescriptorBinding{
+				.Binding = 1, 
+				.Count   = pMaterialCount,
+				.Stage   = HYD_SHADER_STAGE_FRAGMENT_BIT,
+				.Type    = HYD_DESCRIPTOR_TYPE_STORAGE_BUFFER 
+			}
+		);
+
+		//Images Info
+		SceneResourcesDescLayoutConf.AddBinding(
+			DescriptorBinding{
+				.Binding = 2, 
+				.Count   = pImageCount,
+				.Stage   = HYD_SHADER_STAGE_FRAGMENT_BIT,
+				.Type    = HYD_DESCRIPTOR_TYPE_SAMPLED_IMAGE 
+			}
+		);
+
+		//Samplers Info
+		SceneResourcesDescLayoutConf.AddBinding(
+			DescriptorBinding{
+				.Binding = 3,
+				.Count   = pSamplerCount,
+				.Stage   = HYD_SHADER_STAGE_FRAGMENT_BIT,
+				.Type    = HYD_DESCRIPTOR_TYPE_SAMPLER  
+			}
+		);
+		*/
+		m_SceneDataDescLayoutID  = Renderer::Self().CreateDescriptorSetLayout(SceneResourcesDescLayoutConf);
+
+		//Camera Descriptor Set Layout:
+
+		DescriptorSetLayoutConfiguration CameraDescLayoutConf;
+		CameraDescLayoutConf.AddBinding(
+			DescriptorBinding{
+				.Binding = 0,
+				.Count   = 1,
+				.Stage   = HYD_SHADER_STAGE_VERTEX_BIT,
+				.Type    = HYD_DESCRIPTOR_TYPE_UNIFORM_BUFFER 
+			}
+		);
+
+		m_CameraDataDescLayoutID = Renderer::Self().CreateDescriptorSetLayout(CameraDescLayoutConf);
+
+
+		m_SceneDataDescSetID  = Renderer::Self().AllocateDescriptorSet(m_SceneDataDescLayoutID);
+		m_CameraDataDescSetID = Renderer::Self().AllocateDescriptorSet(m_CameraDataDescLayoutID);
+
+		PipelineLayoutConfiguration LayoutConf;
+		LayoutConf.AttachDescriptorLayout(m_SceneDataDescLayoutID);
+		LayoutConf.AttachDescriptorLayout(m_CameraDataDescLayoutID);
+
+		LayoutConf.SetPushConstant(0, sizeof(uint32)*2, HYD_SHADER_STAGE_VERTEX_BIT);
+
+		m_PipelineLayout = Renderer::Self().CreatePipelineLayout(LayoutConf);
+	}
+
+
+	void Scene::AllocateDescriptors(
+		uint32 pPrimitiveCount,
+		uint32 pMaterialCount,
+		uint32 pImageCount,
+		uint32 pSamplerCount
 	) noexcept
 	{
 
+		const uint32 Frames = Renderer::Self().FramesInFlight();
 
-		std::vector<DescriptorSetLayoutConfiguration> DescriptorLayoutConfs;
+		//Bindless
+		for (uint32 frame = 0 ; frame < Frames ; ++frame)
+		{
+			auto& Descriptor = Renderer::Self().AccessDescriptorSets(m_SceneDataDescSetID);
+			
+			Descriptor.at(frame).AttachStorageBuffer(
+				0, *m_PrimitiveList, sizeof(MeshData)*pPrimitiveCount, frame*(sizeof(MeshData)*pPrimitiveCount)  
+			);
 
-		DescriptorLayoutConfs.resize(
-			 3
-		);
-		
+			Descriptor.at(frame).UpdateDescriptorSet();
+		}
 
-		//MVP DescriptorSet Layout
-		DescriptorLayoutConfs.at(0).AddBinding(DescriptorBinding{
-			.Binding = pShaderLayout.MVP.Binding,
-			.Count   = 1,
-			.Stage   = pShaderLayout.MVP.ShaderStage,
-			.Type    = pShaderLayout.MVP.Type
-		});
+		//Camera Data:
+		for (uint32 frame = 0 ; frame < Frames ; ++frame)
+		{
+			auto& Descriptor = Renderer::Self().AccessDescriptorSets(m_CameraDataDescSetID);
+			
+			Descriptor.at(frame).AttachUniformBuffer(
+				0, (*m_CameraData).at(frame) 
+			);
 
-
-		//Material DescriptorSet Layout
-		DescriptorLayoutConfs.at(1).AddBinding(DescriptorBinding{
-			.Binding = pShaderLayout.Material.BaseColorBinding,
-			.Count   = 1,
-			.Stage   = pShaderLayout.Material.ShaderStage,
-			.Type    = pShaderLayout.Material.Type
-		});
-		DescriptorLayoutConfs.at(1).AddBinding(DescriptorBinding{
-			.Binding = pShaderLayout.Material.NormalMapBinding,
-			.Count   = 1,
-			.Stage   = pShaderLayout.Material.ShaderStage,
-			.Type    = pShaderLayout.Material.Type
-		});
-		DescriptorLayoutConfs.at(1).AddBinding(DescriptorBinding{
-			.Binding = pShaderLayout.Material.MettallicRoughnessBinding,
-			.Count   = 1,
-			.Stage   = pShaderLayout.Material.ShaderStage,
-			.Type    = pShaderLayout.Material.Type
-		});
-		DescriptorLayoutConfs.at(1).AddBinding(DescriptorBinding{
-			.Binding = pShaderLayout.Material.EmissiveBinding,
-			.Count   = 1,
-			.Stage   = pShaderLayout.Material.ShaderStage,
-			.Type    = pShaderLayout.Material.Type
-		});
-		DescriptorLayoutConfs.at(1).AddBinding(DescriptorBinding{
-			.Binding = pShaderLayout.Material.OcolusionBinding,
-			.Count   = 1,
-			.Stage   = pShaderLayout.Material.ShaderStage,
-			.Type    = pShaderLayout.Material.Type
-		});
-		
-		//Lights:
-		DescriptorLayoutConfs.at(2).AddBinding(DescriptorBinding{
-			.Binding = 0,
-			.Count   = m_Lights.GetLightCount(),
-			.Stage   = HYD_SHADER_STAGE_FRAGMENT_BIT,
-			.Type    = HYD_DESCRIPTOR_TYPE_UNIFORM_BUFFER
-		});
-		
-
-		PipelineLayoutConfiguration PipelineLayoutConf;
-		
-
-		m_MVPLayoutID      = Renderer::Self().CreateDescriptorSetLayout(DescriptorLayoutConfs[0]);
-		m_MaterialLayoutID = Renderer::Self().CreateDescriptorSetLayout(DescriptorLayoutConfs[1]);
-		m_LightLayoutID    = Renderer::Self().CreateDescriptorSetLayout(DescriptorLayoutConfs[2]);
-
-
-		Internal::Vulkan::DescriptorSetLayout& MVPDescSetLayout      = Renderer::Self().AccessDescriptorSetLayout(m_MVPLayoutID);
-		Internal::Vulkan::DescriptorSetLayout& MaterialDescSetLayout = Renderer::Self().AccessDescriptorSetLayout(m_MaterialLayoutID);
-
-
-		PipelineLayoutConf.AttachDescriptorLayout(
-			m_MVPLayoutID
-		);
-
-		PipelineLayoutConf.AttachDescriptorLayout(
-			m_MaterialLayoutID
-		);
-
-		PipelineLayoutConf.AttachDescriptorLayout(
-		m_LightLayoutID
-		);
-		
-
-		m_PipelineLayoutID = Renderer::Self().CreatePipelineLayout(PipelineLayoutConf);
-	
-
-		const uint32 FramesInFlight = Renderer::Self().FramesInFlight();
-		
-		//MVP uniform buffers:
-		HYD_ID_SPACE UniformBufferSetID = Renderer::Self().AllocateDescriptorSet(m_MVPLayoutID);
-		m_Uniforms = Renderer::Self().CreateUniformBuffer(
-			sizeof(MatF4)*3,
-			pShaderLayout.MVP,
-			UniformBufferSetID
-		);
-
-		
-		m_ShaderBinding = pShaderLayout;
-		m_ShaderBinding.Material.DescriptorSetLayoutID = m_MaterialLayoutID;
-		
-		m_PipelineConf   = pConf;
-		m_PipelineConf.SetPipelineLayout(m_PipelineLayoutID);
-
-
-		m_Lights.CreateCollection(
-			2, 
-			m_LightLayoutID
-		);
-		
-		return HYD_OK;
-	}
-
-
-/*
-	Node Implementation:
-*/
-
-
-
-	Node::Node(const Node& pOther)
-	{
-		m_Name	    = pOther.m_Name;
-		m_Mesh	    = pOther.m_Mesh;
-		m_Children  = pOther.m_Children;
-		m_Transform = pOther.m_Transform;
-
-		m_PointerToParent = pOther.m_PointerToParent;
-		
-
-	}
-
-	Node::Node(Node&& pOther)
-	{
-		m_Name		= std::move(pOther.m_Name);
-		m_Mesh		= std::move(pOther.m_Mesh);
-		m_Children	= std::move(pOther.m_Children);
-		m_Transform = std::move(pOther.m_Transform);
-
-		m_PointerToParent	     = pOther.m_PointerToParent;
-		pOther.m_PointerToParent = nullptr;
-	}
-		
-	Node& Node::operator=(const Node& pOther)
-	{
-		if (&pOther == this)
-			return *this;
-
-		m_Name		= pOther.m_Name;
-		m_Mesh		= pOther.m_Mesh;
-		m_Children  = pOther.m_Children;
-		m_Transform = pOther.m_Transform;
-
-		m_PointerToParent = pOther.m_PointerToParent;
-
-		return *this;
-	}
-
-	Node& Node::operator=(Node&& pOther)
-	{
-
-		if (&pOther == this)
-			return *this;
-
-		m_Name		= std::move(pOther.m_Name);
-		m_Mesh		= std::move(pOther.m_Mesh);
-		m_Children  = std::move(pOther.m_Children);
-		m_Transform = std::move(pOther.m_Transform);
-
-		m_PointerToParent		 = pOther.m_PointerToParent;
-		pOther.m_PointerToParent = nullptr;
-
-		return *this;
-
-	}
-
-
-	void Node::Destroy() noexcept
-	{
-		m_Mesh.Reset();
-		for (auto& node : m_Children)
-			node.Destroy();
+			Descriptor.at(frame).UpdateDescriptorSet();
+		}
 	}
 
 

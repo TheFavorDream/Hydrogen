@@ -40,7 +40,7 @@ namespace Hydrogen
         HYD Light& operator=(Light&&)      = default;
 
 
-        HYD inline std::string Name()       const noexcept {return m_Name;}
+        HYD inline std::string  Name()       const noexcept {return m_Name;}
         HYD inline VecF3&       Position()  noexcept {return m_Position;}
         HYD inline VecF3&       Color()     noexcept {return m_Color;}
         HYD inline VecF3&       Ambient()   noexcept {return m_Ambient;}
@@ -103,12 +103,6 @@ namespace Hydrogen
             Light&& pNewLight
         ) noexcept;
 
-        /*
-            Purpose: Bind the Entire Light Collection to the specified Descriptor Set
-        */
-        HYD void BindCollection(
-            const Internal::Vulkan::PipelineLayout& pPipelineLayout 
-        ) noexcept;   
 
         /*
             Access An Light inside the Collection

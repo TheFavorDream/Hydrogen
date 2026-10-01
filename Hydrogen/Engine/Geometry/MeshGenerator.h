@@ -1,11 +1,11 @@
 #pragma once
 
 
-#include "Common.h"
-#include "Geometry/Mesh.h"
-#include "Core/Scene.h"
-#include "VecMath/Math.h"
-#include "VecMath/Transform/Transformation.h"
+#include "../Common.h"
+#include "../Geometry/Mesh.h"
+#include "../Core/Scene.h"
+#include "../VecMath/Math.h"
+#include "../VecMath/Transform/Transformation.h"
 
 
 namespace Hydrogen

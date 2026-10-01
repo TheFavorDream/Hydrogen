@@ -1,6 +1,7 @@
 #include "Descriptors.h"
 #include "../Renderer.h"
 #include "Pipeline.h"
+#include "VkEnumReDefs.h"
 #include <cstdint>
 #include <vulkan/vulkan_core.h>
 
@@ -308,10 +309,41 @@ namespace Internal
                 .ArrayIndex = 0,
                 .Offset     = pOffset,
                 .Range      = pRange,
-                .Buffer     = pBuffer.m_BufferHandle
+                .Buffer     = pBuffer.GetHandle(),
+                .Type       = HYD_DESCRIPTOR_TYPE_UNIFORM_BUFFER
             }
         );
     }
+
+
+
+    /*
+        Purpose: Use to Attach a Storage Buffer to this DescriptorSet
+    */
+    
+    void Vulkan::DescriptorSet::AttachStorageBuffer(
+        uint32          pBinding,
+        StorageBuffer&  pBuffer,
+        uint32          pRange,  //= UINT32_MAX,
+        uint32          pOffset  //= 0
+    )
+    {
+        if (pBinding == UINT32_MAX)
+            return;
+
+        m_BufferInfos.emplace_back(
+            DescriptorWriteBufferInfo
+            {
+                .Binding    = pBinding,
+                .ArrayIndex = 0,
+                .Offset     = pOffset,
+                .Range      = pRange,
+                .Buffer     = pBuffer.GetHandle(),
+                .Type       = HYD_DESCRIPTOR_TYPE_STORAGE_BUFFER
+            }
+        );
+    }
+
 
     void Vulkan::DescriptorSet::AttachTextureSampler(
         uint32      pBinding,
@@ -357,7 +389,7 @@ namespace Internal
                 .dstBinding      = BufferInfo.Binding,
                 .dstArrayElement = BufferInfo.ArrayIndex,
                 .descriptorCount = 1,
-                .descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                .descriptorType  = VkDescriptorType(BufferInfo.Type),
                 .pBufferInfo     = &BufferInfos.at(Iter)
             }; 
 
@@ -398,15 +430,14 @@ namespace Internal
 
 
     void Vulkan::DescriptorSet::Bind(
-        const Vulkan::PipelineLayout& pLayout,
-        uint32                        pFirstSet
+        DescriptorBindInfo pBindInfo
     ) noexcept
     {
         vkCmdBindDescriptorSets(
             Renderer::Self().GlobalRenderCommandBuffer().GetHandle(),
-            VK_PIPELINE_BIND_POINT_GRAPHICS,
-            pLayout.m_Handle,
-            pFirstSet,1, &m_Handle,
+            (VkPipelineBindPoint)pBindInfo.BindingPoint,
+            pBindInfo.PipelineLayout->m_Handle,
+            pBindInfo.Index,1, &m_Handle,
             0, nullptr
         );
     }

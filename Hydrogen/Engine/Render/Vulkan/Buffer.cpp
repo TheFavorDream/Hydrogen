@@ -180,7 +180,7 @@ namespace Internal
         return HYD_OK;
     }
 
-    uint32 Vulkan::BasicBuffer::DestroyBuffer() noexcept
+    void Vulkan::BasicBuffer::DestroyBuffer() noexcept
     {
 
 
@@ -189,7 +189,6 @@ namespace Internal
         m_BufferHandle = VK_NULL_HANDLE;
         m_Size   = 0;
         m_Format = VK_FORMAT_UNDEFINED;
-        return HYD_OK;
     }
 
 
@@ -381,6 +380,57 @@ namespace Internal
             Renderer::Self().GlobalRenderCommandBuffer().GetHandle(),
             m_BufferHandle, 0, m_IndexType
         );
+    }
+
+
+
+
+//--------------------------------Storage Buffers------------------------------------------------
+
+    /*
+        Purpose: Create the Buffer
+    */
+    uint32 Vulkan::StorageBuffer::CreateBuffer(
+        uint32              pSize,
+        VkSharingMode       pSharingMode,       //= VK_SHARING_MODE_EXCLUSIVE,
+        std::vector<uint32> pQueueFamilyIndices //= {}
+    ) noexcept
+    {
+
+        uint32 Err =  CreateGeneralBuffer(pSize, 
+            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            pSharingMode, pQueueFamilyIndices
+        );
+
+
+        vkMapMemory(
+            Renderer::Self().GetDevice(),
+            m_MemoryHandle, 0, VK_WHOLE_SIZE, 0, (void**)&m_VirtualAddress
+        );
+        return Err;
+    }
+
+
+    /*
+        Purpose: Upload Data 
+    */
+    uint32 Vulkan::StorageBuffer::UploadData(
+        void*  pData,
+        uint64 pSize,
+        uint64 pOffset//=0
+    ) noexcept
+    {
+        memcpy(m_VirtualAddress+pOffset, pData,  pSize);
+        return HYD_OK;
+    }
+
+    void Vulkan::StorageBuffer::DestroyBuffer() noexcept
+    {
+        vkDestroyBuffer(Renderer::Self().GetDevice(), m_BufferHandle, VK_NULL_HANDLE);
+        vkUnmapMemory(Renderer::Self().GetDevice(), m_MemoryHandle);
+        m_VirtualAddress = nullptr;
+        Renderer::Self().m_Device.FreeMemory(&m_MemoryHandle);
     }
 
 
