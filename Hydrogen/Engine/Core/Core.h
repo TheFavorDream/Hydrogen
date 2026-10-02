@@ -8,10 +8,10 @@
 #pragma once
 #include "../Common.h"
 #include "../Log/Log.h"
-#include "../Render/Renderer.h"
 #include "../Event/Event.h"
-#include "Scene.h"
 #include "Timer/Timer.h"
+#include "../Render/Renderer.h"
+#include "Scene.h"
 
 #include "Layer.h"
 
@@ -54,8 +54,6 @@ namespace Hydrogen
 
 		std::vector<Ptr<Layer>>        m_Layers;
 		bool  					       m_Running = false; 
-		std::vector<FrameRenderConfig> m_LayerRenderConfigurations;
-
 	public:
 		static float		       s_DeltaTime;
 		static ResourcePool<Scene> s_Scenes;

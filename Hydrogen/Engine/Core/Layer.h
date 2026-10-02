@@ -17,8 +17,7 @@ namespace Hydrogen
 		HYD virtual void Shutdown()            					 = 0;
 		HYD virtual void Event(FrameEvent& pEvents) 			 = 0;
 		HYD virtual void Update() 			   					 = 0;
-		HYD virtual void Render(FrameRenderConfig& pRenderConf)  = 0;
-
+		HYD virtual void Render(RenderStates& pRenderStates)     = 0;
 
 
 	

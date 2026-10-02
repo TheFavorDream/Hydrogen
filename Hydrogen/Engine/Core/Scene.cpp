@@ -220,7 +220,7 @@ namespace Hydrogen
 		return HYD_OK;
 	}
 
-	InstructionSet Scene::Render() noexcept
+	RenderState Scene::Render() noexcept
 	{
 		//Start the Travers:
 		std::stack<Node> Travers;
@@ -246,7 +246,23 @@ namespace Hydrogen
 			sizeof(glm::mat4)
 		);
 		
-		InstructionSet Instructions;
+		RenderState State;
+
+		State.Binds.push_back(
+			std::pair<HYD_ID_SPACE, DescriptorBindInfo>(m_SceneDataDescSetID, DescriptorBindInfo{
+				.Index 		    = 0,
+				.BindingPoint   = HYD_PIPELINE_BIND_POINT_GRAPHICS,
+				.PipelineLayout = m_PipelineLayout
+			})
+		);
+
+		State.Binds.push_back(
+			std::pair<HYD_ID_SPACE, DescriptorBindInfo>(m_CameraDataDescSetID, DescriptorBindInfo{
+				.Index 		    = 1,
+				.BindingPoint   = HYD_PIPELINE_BIND_POINT_GRAPHICS,
+				.PipelineLayout = m_PipelineLayout
+			})
+		);
 
 		while (!Travers.empty())
 		{
@@ -254,22 +270,25 @@ namespace Hydrogen
 			Travers.pop();
 
 
-
 			if (Current.HasMesh())
 			{
 
 				Instance<Mesh>& mesh = Current.GetMesh();
 
-				Instructions.Append(mesh->Render(
-					Current.GetTransform()
-				));
+				if (mesh->IsEnable())
+				{
+					State.Instructions.Append(mesh->Render(
+						Current.GetTransform()
+					));
 
-				MatF4 Model 	  = mesh->GetModelMatrix();
-				
-				uint32 BaseOffset =	(m_MeshCount*sizeof(MeshData))*Renderer::Self().CurrentFrame(); 
-				m_PrimitiveList->UploadData(
-					(void*)Model.GetPointer(),sizeof(MeshData), BaseOffset +  (mesh->GetID()*sizeof(MeshData))
-				);
+					//Update Mesh's model matrix
+					MatF4 Model 	  = mesh->GetModelMatrix();
+
+					uint32 BaseOffset =	(m_MeshCount*sizeof(MeshData))*Renderer::Self().CurrentFrame(); 
+					m_PrimitiveList->UploadData(
+						(void*)Model.GetPointer(),sizeof(MeshData), BaseOffset +  (mesh->GetID()*sizeof(MeshData))
+					);
+				}
 			}
 
 			
@@ -281,7 +300,7 @@ namespace Hydrogen
 		
 		}
 
-		return std::move(Instructions);
+		return std::move(State);
 	}
 
 

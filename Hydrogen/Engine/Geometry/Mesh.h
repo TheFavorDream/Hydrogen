@@ -101,6 +101,7 @@ namespace Hydrogen
 		HYD inline MatF4 			 GetModelMatrix() const {return m_ModelMatrix;}
 		HYD inline uint32 		     PrimitiveCount() const {return m_Primitives.size();}
 		HYD inline uint32 		     GetID() 		  const {return m_ObjectID;}
+		HYD inline bool&		     GetEnbaleState()       {return m_Enable;}
 
 
 	private:

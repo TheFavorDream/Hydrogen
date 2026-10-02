@@ -40,41 +40,52 @@
 namespace Hydrogen
 {
 
-
-	struct FrameRenderConfig
+	/*
+		Purpose: A Rendering State is all the instructions for draw calls with global Descriptor Binds and General States
+	*/
+	struct RenderState
 	{
-	public:
-	
-		void PushInstruction(
-			Instruction&& 	 pInstruction
+
+		 RenderState() = default;
+		~RenderState() = default;
+
+		RenderState(
+			RenderState&& pOther
+		) noexcept;
+		 
+		RenderState(
+			const RenderState& pOther
+		) noexcept;
+		 
+
+		InstructionSet 											 Instructions;
+        std::vector<std::pair<HYD_ID_SPACE, DescriptorBindInfo>> Binds;
+	};
+
+	/*
+		Purpose: RenderStates Is a collection of RenderState Objects
+		Usage:   Passed to Layers as Render() methods' input 
+	*/
+	struct RenderStates
+	{
+
+		 RenderStates() = default;
+		~RenderStates() = default;
+
+		RenderStates(
+			RenderStates&& pOther
 		) noexcept;
 
-		void PushInstruction(
-			InstructionSet&& pInstruction
+		RenderStates(
+			const RenderStates& pOther
 		) noexcept;
 
-
-		/*
-			Purpose: List of Descriptors that will be binded for a FrameRenderConfig obj
-		*/
-
-		void BindDescriptorSet(
-			std::pair<HYD_ID_SPACE, DescriptorBindInfo> pBindInfo
+		void PushRenderState(
+			RenderState pState
 		) noexcept;
-
-		void BindDescriptorSet(
-			HYD_ID_SPACE	   pID,
-			DescriptorBindInfo pBindInfo
-		) noexcept;
-
-
-
-		void Reset() noexcept;
 
 	private:
-		InstructionSet 			  								 m_Instructions;
-        std::vector<std::pair<HYD_ID_SPACE, DescriptorBindInfo>> m_DescriptorBinds;
-
+        std::vector<RenderState> m_RenderStates;
 	private:
 		friend class Renderer;
 	};
@@ -193,7 +204,7 @@ namespace Hydrogen
 
 		//Main Rendering Happens here 
 		void Render(
-			std::vector<FrameRenderConfig>& pConfs
+			RenderStates& pRenderStates
 		) noexcept;
 
 		//Takes care of Resizing

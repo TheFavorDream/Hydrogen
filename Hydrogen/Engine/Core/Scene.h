@@ -136,7 +136,7 @@ namespace Hydrogen
 		/*
 			Purpose: Returns an Instruction List to Render the Scene
 		*/
-		HYD InstructionSet Render() noexcept;
+		HYD RenderState Render() noexcept;
 
 		/*
 			Purpose: Load a scene from gltf file & Configure the buffers

@@ -588,7 +588,7 @@ const uint32 FragmentShaderSizeInBytes = 3524;
     }
 
 
-    Instruction Grid::Render() noexcept
+    RenderState Grid::Render() noexcept
     {
 
         m_UniData.View           = Renderer::Self().GetCurrentCamera()->GetView();
@@ -600,21 +600,23 @@ const uint32 FragmentShaderSizeInBytes = 3524;
             sizeof(GridUniformData)
         );
 
-
-        Instruction instruction;
-        instruction.Vertices     = m_VertexBuffer;
-        instruction.Indices      = m_IndexBuffer;
-        instruction.Pipeline     = m_Pipeline;
-        instruction.DescriptorBinds.push_back(
+        
+        Instruction ins;
+        ins.Vertices     = m_VertexBuffer;
+        ins.Indices      = m_IndexBuffer;
+        ins.Pipeline     = m_Pipeline;
+        ins.DescriptorBinds.push_back(
             std::pair<HYD_ID_SPACE, DescriptorBindInfo>(m_DescriptorSet, DescriptorBindInfo{
                 .Index          = 0,
                 .BindingPoint   = HYD_PIPELINE_BIND_POINT_GRAPHICS,
                 .PipelineLayout = m_Pipeline->GetPipelineLayout() 
             })
         ); 
-
         
-        return std::move(instruction);
+        RenderState state;
+        state.Instructions.PushInstruction(std::move(ins));
+
+        return std::move(state);
     }
 
     void Grid::DestroyGrid()  noexcept

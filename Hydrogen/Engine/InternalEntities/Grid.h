@@ -23,7 +23,7 @@ namespace Hydrogen
         HYD Grid& operator=(Grid&& pOther) noexcept;
 
         HYD void        GenerateGrid() noexcept;
-        HYD Instruction Render()       noexcept;
+        HYD RenderState Render()       noexcept;
         HYD void        DestroyGrid()  noexcept;
 
         HYD void SetFog(

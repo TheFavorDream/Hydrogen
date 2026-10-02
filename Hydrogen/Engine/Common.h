@@ -100,6 +100,11 @@ enum DataType {
 namespace Hydrogen
 {
 
+
+	struct RenderState;
+	struct RenderStates;
+
+
 	template <typename Type>
 	class ResourcePool;
 	

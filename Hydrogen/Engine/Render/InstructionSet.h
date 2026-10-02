@@ -61,9 +61,9 @@ namespace Hydrogen
         HYD  InstructionSet() noexcept;
         HYD ~InstructionSet() noexcept;
 
-        // Instruction Sets are not Copiable right now
-        HYD InstructionSet(const InstructionSet& )            = delete;
-        HYD InstructionSet& operator=(const InstructionSet& ) = delete;
+
+        HYD InstructionSet(const InstructionSet& )            noexcept;
+        HYD InstructionSet& operator=(const InstructionSet& ) noexcept;
 
 
         HYD InstructionSet(InstructionSet&& pOther)            noexcept;

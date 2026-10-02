@@ -15,6 +15,27 @@ namespace Hydrogen
     }
 
 
+
+    InstructionSet::InstructionSet(
+        const InstructionSet& pOther
+    ) noexcept
+        : m_Instructions(pOther.m_Instructions), m_ReadPtr(pOther.m_ReadPtr)
+    {}
+
+    InstructionSet& InstructionSet::operator=(
+        const InstructionSet& pOther
+    ) noexcept
+    {
+        if (this == &pOther)
+            return *this;
+
+        m_Instructions = pOther.m_Instructions;
+        m_ReadPtr      = pOther.m_ReadPtr;
+
+        return *this;
+    }
+
+
     InstructionSet::InstructionSet(
         InstructionSet&& pOther
     ) noexcept

@@ -22,7 +22,7 @@ public:
 	void Update() override;
 
 	void Render(
-		Hydrogen::FrameRenderConfig& pRenderConf
+		Hydrogen::RenderStates& pRenderStates
 	) override; 
 
 

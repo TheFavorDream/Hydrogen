@@ -24,12 +24,9 @@ public:
 
 
 	void Render(
-		Hydrogen::FrameRenderConfig& pRenderConf
+		Hydrogen::RenderStates& pRenderStates
 	) override; 
 
-private:
-
-	Hydrogen::GraphicsPipelineConfiguration ConfigPipeline() noexcept;
 
 private:
 	Hydrogen::Instance<Hydrogen::Scene>  m_Scene;

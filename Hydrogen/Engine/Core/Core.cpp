@@ -4,7 +4,6 @@
 #include "../../Xenon/include/Loader.h"
 
 #include "Timer/Timer.h"
-#include <vector>
 
 using namespace std::chrono_literals;
 
@@ -62,10 +61,6 @@ namespace Hydrogen
 
 		Renderer::Self().WaitOnDeviceCompletion();
 
-
-		for (auto& renderConf : m_LayerRenderConfigurations)
-			renderConf.Reset();
-
 		//Scene Shutdown:
 		for (auto& scene : s_Scenes)
 		{
@@ -105,8 +100,6 @@ namespace Hydrogen
 
 		pLayer->Setup();
 		m_Layers.push_back(pLayer);
-
-		m_LayerRenderConfigurations.emplace_back();
 
 		return HYD_OK;
 	}
@@ -180,27 +173,22 @@ namespace Hydrogen
 
 	void Core::Render() noexcept
 	{
-		static uint32 LayerCount = m_Layers.size();
 
+		RenderStates LayerRenderStates;
+
+		static uint32 LayerCount = m_Layers.size(); 
 		for (uint32 LayerIndex = 0; LayerIndex < LayerCount ; ++LayerIndex)
 		{
 			
-			m_LayerRenderConfigurations.at(LayerIndex).Reset();
-
 			m_Layers.at(LayerIndex)->Render(
-				m_LayerRenderConfigurations.at(LayerIndex)
+				LayerRenderStates
 			);
 			
 		}
 
 		Renderer::Self().Render(
-			m_LayerRenderConfigurations
+			LayerRenderStates
 		);
-
-		//Reseting
-		for (auto& LayerConf : m_LayerRenderConfigurations)
-			LayerConf.Reset();
-		
 	}
 
 }

@@ -58,7 +58,7 @@ void Editor::Update()
 }
 
 void Editor::Render(
-    Hydrogen::FrameRenderConfig& pRenderConf
+	Hydrogen::RenderStates& pRenderStates
 ) 
 {
     Hydrogen::UI::Core::Self().NewFrame();
@@ -453,7 +453,7 @@ void Editor::MeshEditor(
 ) noexcept
 {
     ImGui::Text("Name:%s", pMesh.GetName().c_str());
-    //ImGui::Checkbox("Disable Mesh", pMesh.IsEnable());
+    ImGui::Checkbox("Disable Mesh", &pMesh.GetEnbaleState());
 
 }
 

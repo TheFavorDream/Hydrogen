@@ -14,53 +14,49 @@ namespace Hydrogen
 {
 
 
+	RenderState::RenderState(
+		RenderState&& pOther
+	) noexcept
+		: Instructions(std::move(pOther.Instructions)), Binds(std::move(pOther.Binds))
+	{
+		//ASSERT(false, "Render State Moved");
+	}
+		 
+	RenderState::RenderState(
+		const RenderState& pOther
+	) noexcept
+		: Instructions(pOther.Instructions), Binds(pOther.Binds)
+	{
+		//ASSERT(false, "Render State Copied");
+	}
 
-/*
-	Purpose: FrameRenderConfig Difnitions:
-*/
 
-	void FrameRenderConfig::PushInstruction(
-		Instruction&& 			 pInstruction
+
+	RenderStates::RenderStates(
+		RenderStates&& pOther
+	) noexcept
+	 : m_RenderStates(std::move(pOther.m_RenderStates))
+	{}
+
+	RenderStates::RenderStates(
+		const RenderStates& pOther
+	) noexcept
+	 : m_RenderStates(pOther.m_RenderStates)	
+	{}
+
+	void RenderStates::PushRenderState(
+		RenderState pState
 	) noexcept
 	{
-		m_Instructions.PushInstruction(std::move(pInstruction));
-	}
-	
-	void FrameRenderConfig::PushInstruction(
-		InstructionSet&& pInstruction
-	) noexcept
-	{
-		m_Instructions.Append(std::move(pInstruction));
+		m_RenderStates.emplace_back(std::move(pState));
 	}
 
 
-	void FrameRenderConfig::BindDescriptorSet(
-		std::pair<HYD_ID_SPACE, DescriptorBindInfo> pBindInfo
-	) noexcept
-	{
-		m_DescriptorBinds.push_back(pBindInfo);
-	}
-
-	void FrameRenderConfig::BindDescriptorSet(
-		HYD_ID_SPACE	   pID,
-		DescriptorBindInfo pBindInfo
-	) noexcept
-	{
-		m_DescriptorBinds.push_back(
-			std::pair<HYD_ID_SPACE, DescriptorBindInfo>(pID, pBindInfo)
-		);
-	}
-
-	void FrameRenderConfig::Reset() noexcept
-	{
-		m_DescriptorBinds.clear();
-		m_Instructions.Reset();
-	}
+//---------------------------------------Main Renderer--------------------------------------------
 
 	Ptr<Renderer> Renderer::s_Self = nullptr;
 	Renderer& Renderer::Self() { return *(Renderer::s_Self); }
 	
-
 /*
 	Purpose: Initializes the Renderer, Creates Window etc 
 */
@@ -187,7 +183,7 @@ namespace Hydrogen
 */
 
 	void Renderer::Render(
-		std::vector<FrameRenderConfig>& pConfs // = {}
+		RenderStates& pRenderStates
 	) noexcept
 	{
 
@@ -227,18 +223,18 @@ namespace Hydrogen
 		
 		
 		
-		for (auto& renderConf : pConfs)
+		for (auto& renderState : pRenderStates.m_RenderStates)
 		{
 
 
 			//Binding Descriptors:
-			for (auto& Desc : renderConf.m_DescriptorBinds)
+			for (auto& Desc : renderState.Binds)
 			{
 				AccessDescriptorSet(Desc.first).Bind(Desc.second);
 			}
 
 			//Actual Rendering
-			for (auto& instruction : renderConf.m_Instructions)
+			for (auto& instruction : renderState.Instructions)
 			{				
 			
 				//Upload Model Transformation Data:

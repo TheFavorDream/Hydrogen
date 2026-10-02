@@ -143,7 +143,7 @@ namespace Hydrogen
 			pc.Offset = 0;
 			pc.Stages = HYD_SHADER_STAGE_VERTEX_BIT;
 
-			*reinterpret_cast<uint32*>(&pc.Data) 				= m_ObjectID;
+			*reinterpret_cast<uint32*>(&pc.Data) 				    = m_ObjectID;
 			*reinterpret_cast<uint32*>((&pc.Data) + sizeof(uint32)) = 0; 
 
 			ins.Topology	 = pri.m_Topology;
